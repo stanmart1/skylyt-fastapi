@@ -510,6 +510,108 @@ async def cancel_booking_admin(booking_id: int, cancel_data: dict, current_user 
     
     return {"message": "Booking cancelled successfully"}
 
+# Hotel-specific booking endpoints
+@app.get("/api/v1/admin/hotel-bookings")
+async def get_hotel_bookings(
+    search: str = None,
+    status: str = None,
+    payment_status: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    per_page: int = 20,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Get hotel bookings only"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from app.services.booking_service import BookingService
+    from datetime import datetime
+    
+    booking_service = BookingService(db)
+    
+    # Parse date strings
+    parsed_start_date = None
+    parsed_end_date = None
+    if start_date:
+        try:
+            parsed_start_date = datetime.fromisoformat(start_date).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid start_date format")
+    if end_date:
+        try:
+            parsed_end_date = datetime.fromisoformat(end_date).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid end_date format")
+    
+    return booking_service.get_bookings_with_filters(
+        search=search,
+        status=status,
+        payment_status=payment_status,
+        booking_type="hotel",  # Filter for hotel bookings only
+        start_date=parsed_start_date,
+        end_date=parsed_end_date,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+        per_page=per_page
+    )
+
+# Car-specific booking endpoints
+@app.get("/api/v1/admin/car-bookings")
+async def get_car_bookings(
+    search: str = None,
+    status: str = None,
+    payment_status: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    per_page: int = 20,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Get car bookings only"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from app.services.booking_service import BookingService
+    from datetime import datetime
+    
+    booking_service = BookingService(db)
+    
+    # Parse date strings
+    parsed_start_date = None
+    parsed_end_date = None
+    if start_date:
+        try:
+            parsed_start_date = datetime.fromisoformat(start_date).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid start_date format")
+    if end_date:
+        try:
+            parsed_end_date = datetime.fromisoformat(end_date).date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid end_date format")
+    
+    return booking_service.get_bookings_with_filters(
+        search=search,
+        status=status,
+        payment_status=payment_status,
+        booking_type="car",  # Filter for car bookings only
+        start_date=parsed_start_date,
+        end_date=parsed_end_date,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+        per_page=per_page
+    )
+
 @app.get("/api/v1/admin/payments")
 async def get_admin_payments(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get all payments for admin"""

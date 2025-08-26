@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Car, Hotel, Users, DollarSign, TrendingUp, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EnhancedBookingManagement } from '@/components/admin/EnhancedBookingManagement';
+import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
+import CarBookingManagement from '@/components/admin/CarBookingManagement';
 import { BookingProvider } from '@/contexts/BookingContext';
 import { ToastProvider } from '@/components/ui/toast';
 import { PaymentManagement } from '@/components/admin/PaymentManagement';
@@ -672,13 +674,18 @@ const AdminDashboard = () => {
 
           {activeTab === 'bookings' && hasPermission('dashboard.view_bookings') && (
             <div className="space-y-6">
-            <ErrorBoundary>
-              <BookingProvider>
-                <ToastProvider>
-                  <EnhancedBookingManagement />
-                </ToastProvider>
-              </BookingProvider>
-            </ErrorBoundary>
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Booking Management</h1>
+                <p className="text-gray-600">Manage hotel and car bookings separately</p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ErrorBoundary>
+                  <HotelBookingManagement />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <CarBookingManagement />
+                </ErrorBoundary>
+              </div>
             </div>
           )}
 
