@@ -1,0 +1,150 @@
+/* Hero Section Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+/* Hero Title Animation */
+.hero-title {
+  animation: fadeInUp 1s ease-out;
+}
+
+.hero-subtitle {
+  animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+/* Tab Animations */
+.tab-list {
+  animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+.tab-trigger {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-trigger:hover {
+  transform: translateY(-2px);
+}
+
+.tab-trigger:hover .tab-icon {
+  transform: scale(1.1);
+}
+
+.tab-icon {
+  transition: transform 0.3s ease;
+}
+
+/* Search Button Animations */
+.search-button {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.search-button:hover .search-icon {
+  transform: scale(1.1) rotate(15deg);
+}
+
+.search-icon {
+  transition: transform 0.3s ease;
+}
+
+/* Floating Particles */
+.particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.particle-1 {
+  width: 60px;
+  height: 60px;
+  top: 20%;
+  left: 10%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.particle-2 {
+  width: 40px;
+  height: 40px;
+  top: 60%;
+  right: 15%;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+.particle-3 {
+  width: 80px;
+  height: 80px;
+  top: 40%;
+  left: 80%;
+  animation: float 10s ease-in-out infinite;
+}
+
+/* Input Focus Animations */
+input:focus {
+  animation: glow 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+/* Card Hover Effects */
+.bg-white\/95 {
+  transition: all 0.3s ease;
+}
+
+.bg-white\/95:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Scroll Animation Classes */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+
+.animate-on-scroll.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
