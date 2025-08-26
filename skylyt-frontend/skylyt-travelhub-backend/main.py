@@ -50,7 +50,7 @@ app = FastAPI(
 # CORS - Add explicit CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080", "*"],
+    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080", "https://skylyt.scaleitpro.com"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
