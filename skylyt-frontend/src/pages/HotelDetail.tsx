@@ -145,7 +145,7 @@ const HotelDetail = () => {
                   {/* Main Image */}
                   <img
                     src={hotelImages.length > 0 
-                      ? `http://localhost:8000${hotelImages[selectedImageIndex]?.image_url}` 
+                      ? `https://skylytapi.scaleitpro.com${hotelImages[selectedImageIndex]?.image_url}` 
                       : (hotel.images && hotel.images.length > 0 ? hotel.images[0] : '/placeholder.svg')
                     }
                     alt={hotel.name}
@@ -154,7 +154,7 @@ const HotelDetail = () => {
                       // Simple lightbox - could be enhanced with a proper modal
                       window.open(
                         hotelImages.length > 0 
-                          ? `http://localhost:8000${hotelImages[selectedImageIndex]?.image_url}` 
+                          ? `https://skylytapi.scaleitpro.com${hotelImages[selectedImageIndex]?.image_url}` 
                           : (hotel.images && hotel.images.length > 0 ? hotel.images[0] : '/placeholder.svg'),
                         '_blank'
                       );
@@ -183,7 +183,7 @@ const HotelDetail = () => {
                       {hotelImages.map((image, index) => (
                         <img
                           key={image.id}
-                          src={`http://localhost:8000${image.image_url}`}
+                          src={`https://skylytapi.scaleitpro.com${image.image_url}`}
                           alt={`${hotel.name} - Image ${index + 1}`}
                           className={`w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all ${
                             selectedImageIndex === index 

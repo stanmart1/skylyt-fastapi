@@ -104,7 +104,7 @@ const PaymentDetailsModal = ({ payment, isOpen, onClose, onUpdate }: PaymentDeta
 
   const viewProofOfPayment = () => {
     if (payment.proof_of_payment_url) {
-      window.open(`http://localhost:8000/api/v1/payments/proof/${payment.id}`, '_blank');
+      window.open(`https://skylytapi.scaleitpro.com/api/v1/payments/proof/${payment.id}`, '_blank');
     }
   };
 

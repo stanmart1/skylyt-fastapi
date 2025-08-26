@@ -246,7 +246,7 @@ const HotelImageManagement = () => {
                       <GripVertical className="h-4 w-4 text-white bg-black/50 rounded" />
                     </div>
                     <img
-                      src={`http://localhost:8000${image.image_url}`}
+                      src={`https://skylytapi.scaleitpro.com${image.image_url}`}
                       alt="Hotel"
                       className="w-full h-32 object-cover rounded-lg"
                     />

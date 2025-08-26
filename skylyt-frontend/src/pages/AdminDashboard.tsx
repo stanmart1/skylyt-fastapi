@@ -974,7 +974,7 @@ const CarManagementTab = () => {
       formData.append('upload_type', 'cars');
       
       const response = await apiService.uploadFile(formData);
-      setCarForm({ ...carForm, image_url: `http://localhost:8000${response.url}` });
+      setCarForm({ ...carForm, image_url: `https://skylytapi.scaleitpro.com${response.url}` });
     } catch (error) {
       console.error('Failed to upload image:', error);
     } finally {
@@ -1213,7 +1213,7 @@ const HotelManagementTab = () => {
       formData.append('upload_type', 'hotels');
       
       const response = await apiService.uploadFile(formData);
-      setHotelForm({ ...hotelForm, image_url: `http://localhost:8000${response.url}` });
+      setHotelForm({ ...hotelForm, image_url: `https://skylytapi.scaleitpro.com${response.url}` });
     } catch (error) {
       console.error('Failed to upload image:', error);
     } finally {

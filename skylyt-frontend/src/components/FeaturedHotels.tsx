@@ -27,7 +27,7 @@ const FeaturedHotels = () => {
   useEffect(() => {
     const fetchFeaturedHotels = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/hotels/featured');
+        const response = await fetch('https://skylytapi.scaleitpro.com/api/v1/hotels/featured');
         const data = await response.json();
         setHotels(data.hotels || []);
       } catch (error) {

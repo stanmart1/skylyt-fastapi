@@ -11,7 +11,7 @@ export const ServerStatus = () => {
   const checkServerStatus = async () => {
     setIsChecking(true);
     try {
-      await fetch('http://localhost:8000/api/v1/health');
+      await fetch('https://skylytapi.scaleitpro.com/api/v1/health');
       setIsOnline(true);
     } catch (error) {
       setIsOnline(false);
