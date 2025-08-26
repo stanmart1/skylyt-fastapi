@@ -54,14 +54,15 @@ app.add_middleware(
         "http://localhost:8080", 
         "http://127.0.0.1:8080", 
         "https://skylyt.scaleitpro.com",
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000"   # Alternative dev port
+        "http://localhost:5173",
+        "http://localhost:4173",  # Vite dev server
+        "http://localhost:3000",   # Alternative dev port
+        "*"  # Allow all origins for now
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
-setup_cors(app)
 
 # Middleware (order matters - last added is executed first)
 # Redis client initialization moved to where it's actually used
@@ -720,6 +721,11 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
         raise HTTPException(status_code=500, detail="Failed to save file")
     
     return {"url": f"/uploads/{upload_type}/{secure_filename}", "filename": secure_filename}
+
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """Handle CORS preflight requests"""
+    return {"message": "OK"}
 
 @app.get("/")
 async def root():
