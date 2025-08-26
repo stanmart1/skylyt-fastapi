@@ -20,6 +20,7 @@ from app.middleware.security_hardening import (
     HTTPSRedirectMiddleware, 
     SecurityHeadersMiddleware
 )
+from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
@@ -84,6 +85,7 @@ app.add_middleware(PerformanceMiddleware)
 
 # Database connection handling
 app.add_middleware(DatabaseMiddleware)
+app.add_middleware(DatabaseMonitoringMiddleware)
 
 # Monitoring and security
 app.add_middleware(SecurityMiddleware)
