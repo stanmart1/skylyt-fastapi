@@ -1,0 +1,14 @@
+[phases.setup]
+packages = ["nodejs", "npm"]
+
+[phases.build]
+# Install dependencies and build Vite app
+command = "npm install && npm run build"
+
+[phases.start]
+# Serve the built static files
+command = "npx serve -s dist -l $PORT"
+
+[env]
+# Coolify injects the port
+PORT = "3000"
