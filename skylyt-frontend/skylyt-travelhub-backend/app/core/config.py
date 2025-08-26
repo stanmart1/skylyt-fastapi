@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     FROM_EMAIL: str = "onboarding@resend.dev"
     
     # Frontend URL
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "https://skylyt.scaleitpro.com"
     
     # External APIs
     STRIPE_SECRET_KEY: Optional[str] = None
@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()
