@@ -7,14 +7,14 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Database engine with proper connection handling
+# Database engine with maximum connection handling for production
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=3600,  # 1 hour
-    pool_timeout=30,  # 30 seconds
-    pool_size=10,
-    max_overflow=20,
+    pool_recycle=1800,  # 30 minutes
+    pool_timeout=60,  # 60 seconds
+    pool_size=40,  # Increased from 10
+    max_overflow=50,  # Increased from 20
     echo=settings.DEBUG,
     connect_args={
         "connect_timeout": 10,
