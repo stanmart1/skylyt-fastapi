@@ -209,12 +209,22 @@ const AdminDashboard = () => {
               )}
               {hasPermission('dashboard.view_bookings') && (
                 <Button
-                  variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                  variant={activeTab === 'hotel-bookings' ? 'default' : 'ghost'}
                   className="w-full justify-start"
-                  onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
+                  onClick={() => { setActiveTab('hotel-bookings'); setSidebarOpen(false); }}
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Bookings
+                  <Hotel className="h-4 w-4 mr-2" />
+                  Hotel Bookings
+                </Button>
+              )}
+              {hasPermission('dashboard.view_bookings') && (
+                <Button
+                  variant={activeTab === 'car-bookings' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => { setActiveTab('car-bookings'); setSidebarOpen(false); }}
+                >
+                  <Car className="h-4 w-4 mr-2" />
+                  Car Bookings
                 </Button>
               )}
               {hasPermission('dashboard.view_payments') && (
@@ -338,12 +348,22 @@ const AdminDashboard = () => {
           )}
           {hasPermission('dashboard.view_bookings') && (
             <Button
-              variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+              variant={activeTab === 'hotel-bookings' ? 'default' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setActiveTab('bookings')}
+              onClick={() => setActiveTab('hotel-bookings')}
             >
-              <Calendar className="h-4 w-4 mr-2" />
-              Bookings
+              <Hotel className="h-4 w-4 mr-2" />
+              Hotel Bookings
+            </Button>
+          )}
+          {hasPermission('dashboard.view_bookings') && (
+            <Button
+              variant={activeTab === 'car-bookings' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveTab('car-bookings')}
+            >
+              <Car className="h-4 w-4 mr-2" />
+              Car Bookings
             </Button>
           )}
           {hasPermission('dashboard.view_payments') && (
@@ -672,20 +692,27 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'bookings' && hasPermission('dashboard.view_bookings') && (
+          {activeTab === 'hotel-bookings' && hasPermission('dashboard.view_bookings') && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Booking Management</h1>
-                <p className="text-gray-600">Manage hotel and car bookings separately</p>
+                <h1 className="text-3xl font-bold mb-2">Hotel Bookings</h1>
+                <p className="text-gray-600">Manage all hotel booking reservations</p>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ErrorBoundary>
-                  <HotelBookingManagement />
-                </ErrorBoundary>
-                <ErrorBoundary>
-                  <CarBookingManagement />
-                </ErrorBoundary>
+              <ErrorBoundary>
+                <HotelBookingManagement />
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'car-bookings' && hasPermission('dashboard.view_bookings') && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Car Bookings</h1>
+                <p className="text-gray-600">Manage all car rental reservations</p>
               </div>
+              <ErrorBoundary>
+                <CarBookingManagement />
+              </ErrorBoundary>
             </div>
           )}
 

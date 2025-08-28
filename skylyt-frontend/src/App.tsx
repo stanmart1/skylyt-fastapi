@@ -18,6 +18,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import HotelBookingsPage from "./pages/HotelBookingsPage";
+import CarBookingsPage from "./pages/CarBookingsPage";
 import Cars from "./pages/Cars";
 import Hotels from "./pages/Hotels";
 import HotelDetail from "./pages/HotelDetail";
@@ -104,6 +106,16 @@ const PageTransitionWrapper = () => {
                 <Route path="/admin/cars" element={
                   <ProtectedRoute requireAdmin>
                     <CarManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/hotel-bookings" element={
+                  <ProtectedRoute requireAdmin>
+                    <HotelBookingsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/car-bookings" element={
+                  <ProtectedRoute requireAdmin>
+                    <CarBookingsPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/destinations/:stateSlug" element={<StateDestinationPage />} />
