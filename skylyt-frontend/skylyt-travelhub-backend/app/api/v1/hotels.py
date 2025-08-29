@@ -50,6 +50,7 @@ def search_hotels(
     min_price: Optional[Decimal] = Query(None, description="Minimum price"),
     max_price: Optional[Decimal] = Query(None, description="Maximum price"),
     star_rating: Optional[int] = Query(None, description="Minimum star rating"),
+    currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
     limit: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
@@ -78,15 +79,25 @@ def search_hotels(
         # Apply pagination
         hotels = query.offset((page - 1) * limit).limit(limit).all()
         
-        # Format response
+        # Format response with currency conversion
+        from app.services.currency_service import CurrencyService
+        
         hotel_list = []
         for hotel in hotels:
+            base_price = float(hotel.price_per_night)
+            converted_price = float(CurrencyService.convert_amount(
+                db, base_price, "NGN", currency.upper()
+            ))
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
-                "price": float(hotel.price_per_night),
+                "price": converted_price,
+                "original_price": base_price,
+                "currency": currency.upper(),
+                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",

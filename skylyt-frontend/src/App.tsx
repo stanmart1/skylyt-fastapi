@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { PaymentProvider } from "./contexts/PaymentContext";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { MaintenanceMode } from "./components/MaintenanceMode";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -45,13 +46,15 @@ const App = () => {
           <SettingsProvider>
             <NotificationProvider>
               <PaymentProvider>
-                <TooltipProvider>
+                <CurrencyProvider>
+                  <TooltipProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
                 <PageTransitionWrapper />
               </BrowserRouter>
-                </TooltipProvider>
+                  </TooltipProvider>
+                </CurrencyProvider>
               </PaymentProvider>
             </NotificationProvider>
           </SettingsProvider>

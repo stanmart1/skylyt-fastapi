@@ -115,7 +115,7 @@ class ApiService {
   }
 
   // Hotels
-  async searchHotels(params: SearchParams): Promise<{ hotels: Hotel[]; total: number }> {
+  async searchHotels(params: SearchParams & { currency?: string }): Promise<{ hotels: Hotel[]; total: number }> {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
         if (value !== undefined && value !== null) {
@@ -491,6 +491,19 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify(imageOrders)
     });
+  }
+
+  // Localization
+  async detectLocation(): Promise<any> {
+    return this.request('/localization/detect');
+  }
+
+  async getSupportedCountries(): Promise<any> {
+    return this.request('/localization/countries');
+  }
+
+  async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<any> {
+    return this.request(`/localization/convert/${amount}/${fromCurrency}/${toCurrency}`);
   }
 
   // Helper method to get full image URL

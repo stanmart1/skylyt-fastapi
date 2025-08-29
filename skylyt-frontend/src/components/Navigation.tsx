@@ -8,6 +8,7 @@ import { Car, Hotel, User, Menu, X, LogOut, Settings, Bell, ChevronDown } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import CurrencySelector from './CurrencySelector';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -48,6 +49,7 @@ const Navigation = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
+            <CurrencySelector />
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 {/* Notifications */}
