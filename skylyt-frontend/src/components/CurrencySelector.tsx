@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -10,7 +10,13 @@ import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 const CurrencySelector: React.FC = () => {
-  const { currency, supportedCurrencies, currencySymbols, setCurrency, location } = useCurrency();
+  const { currency, supportedCurrencies, currencySymbols, setCurrency, location, isLoading } = useCurrency();
+
+  useEffect(() => {
+    if (!isLoading && currency) {
+      window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency } }));
+    }
+  }, [currency, isLoading]);
 
   const countryFlags: Record<string, string> = {
     NGN: '🇳🇬',

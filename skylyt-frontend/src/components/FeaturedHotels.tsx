@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Star, MapPin, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { Hotel } from '@/types/api';
+import { useCurrencySearch } from '@/hooks/useCurrencySearch';
+import PriceDisplay from './PriceDisplay';
 
 const FeaturedHotels = () => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(1);
+  const { getFeaturedHotels, refreshTrigger } = useCurrencySearch();
 
   useEffect(() => {
     const updateCardsPerView = () => {
@@ -27,8 +30,7 @@ const FeaturedHotels = () => {
   useEffect(() => {
     const fetchFeaturedHotels = async () => {
       try {
-        const response = await fetch('https://skylytapi.scaleitpro.com/api/v1/hotels/featured');
-        const data = await response.json();
+        const data = await getFeaturedHotels();
         setHotels(data.hotels || []);
       } catch (error) {
         console.error('Failed to fetch featured hotels:', error);
@@ -39,7 +41,7 @@ const FeaturedHotels = () => {
     };
 
     fetchFeaturedHotels();
-  }, []);
+  }, [refreshTrigger]);
   
   const maxIndex = Math.max(0, hotels.length - cardsPerView);
   
@@ -185,7 +187,11 @@ const FeaturedHotels = () => {
 
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="text-2xl md:text-3xl font-bold text-teal-600">${hotel.price}</span>
+                            <PriceDisplay 
+                              amount={hotel.price} 
+                              currency={hotel.currency}
+                              className="text-2xl md:text-3xl font-bold text-teal-600"
+                            />
                             <span className="text-gray-600 text-sm">/night</span>
                           </div>
                           <Button 

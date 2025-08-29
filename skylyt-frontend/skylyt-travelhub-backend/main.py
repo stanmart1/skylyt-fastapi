@@ -35,6 +35,18 @@ async def lifespan(app: FastAPI):
     # Startup
     Base.metadata.create_all(bind=engine)
     await cache_warmer.warm_static_data()
+    
+    # Initialize currency rates
+    from app.services.currency_service import CurrencyService
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        await CurrencyService.update_exchange_rates(db)
+    except Exception as e:
+        print(f"Failed to initialize currency rates: {e}")
+    finally:
+        db.close()
+    
     yield
     # Shutdown
     pass

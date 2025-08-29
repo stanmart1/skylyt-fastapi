@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     # Resend Email API
     RESEND_API_KEY: Optional[str] = None
     
+    # Exchange Rate API
+    EXCHANGE_RATE_API_KEY: Optional[str] = None
+    
     class Config:
         env_file = ".env"
         extra = "ignore"

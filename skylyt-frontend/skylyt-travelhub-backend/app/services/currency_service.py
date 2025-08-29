@@ -44,29 +44,35 @@ class CurrencyService:
         """Update rates from external API"""
         try:
             async with httpx.AsyncClient() as client:
-                # Using exchangerate-api.com (free tier)
-                response = await client.get(f"https://api.exchangerate-api.com/v4/latest/NGN")
-                data = response.json()
+                # Get rates for all currencies using API key
+                api_key = settings.EXCHANGE_RATE_API_KEY
+                if api_key:
+                    base_url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest"
+                else:
+                    base_url = "https://api.exchangerate-api.com/v4/latest"
                 
-                for currency in CurrencyService.SUPPORTED_CURRENCIES:
-                    if currency != 'NGN':
-                        rate = data['rates'].get(currency, 1.0)
-                        
-                        # Update or create rate
-                        existing = db.query(CurrencyRate).filter(
-                            CurrencyRate.from_currency == 'NGN',
-                            CurrencyRate.to_currency == currency
-                        ).first()
-                        
-                        if existing:
-                            existing.rate = Decimal(str(rate))
-                        else:
-                            new_rate = CurrencyRate(
-                                from_currency='NGN',
-                                to_currency=currency,
-                                rate=Decimal(str(rate))
-                            )
-                            db.add(new_rate)
+                for base_currency in CurrencyService.SUPPORTED_CURRENCIES:
+                    response = await client.get(f"{base_url}/{base_currency}")
+                    data = response.json()
+                    
+                    for target_currency in CurrencyService.SUPPORTED_CURRENCIES:
+                        if base_currency != target_currency:
+                            rate = data['rates'].get(target_currency, 1.0)
+                            
+                            existing = db.query(CurrencyRate).filter(
+                                CurrencyRate.from_currency == base_currency,
+                                CurrencyRate.to_currency == target_currency
+                            ).first()
+                            
+                            if existing:
+                                existing.rate = Decimal(str(rate))
+                            else:
+                                new_rate = CurrencyRate(
+                                    from_currency=base_currency,
+                                    to_currency=target_currency,
+                                    rate=Decimal(str(rate))
+                                )
+                                db.add(new_rate)
                 
                 db.commit()
         except Exception as e:

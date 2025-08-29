@@ -84,20 +84,27 @@ def search_hotels(
         
         hotel_list = []
         for hotel in hotels:
-            base_price = float(hotel.price_per_night)
-            converted_price = float(CurrencyService.convert_amount(
-                db, base_price, "NGN", currency.upper()
-            ))
+            base_price = Decimal(str(hotel.price_per_night))
+            base_currency = getattr(hotel, 'base_currency', 'NGN')
+            
+            if currency.upper() != base_currency:
+                converted_price = CurrencyService.convert_amount(
+                    db, base_price, base_currency, currency.upper()
+                )
+            else:
+                converted_price = base_price
             
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
-                "price": converted_price,
-                "original_price": base_price,
+                "price": float(converted_price),
+                "original_price": float(base_price),
+                "base_currency": base_currency,
                 "currency": currency.upper(),
                 "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+                "exchange_rate": float(CurrencyService.get_exchange_rate(db, base_currency, currency.upper())),
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -111,21 +118,35 @@ def search_hotels(
 
 
 @router.get("/featured")
-def get_featured_hotels(db: Session = Depends(get_db)):
+def get_featured_hotels(
+    currency: str = Query("NGN", description="Currency code"),
+    db: Session = Depends(get_db)
+):
     """Get featured hotels for landing page"""
     try:
         from app.models.hotel import Hotel
         
         hotels = db.query(Hotel).filter(Hotel.is_featured == True).limit(6).all()
         
+        from app.services.currency_service import CurrencyService
+        
         hotel_list = []
         for hotel in hotels:
+            base_price = Decimal(str(hotel.price_per_night))
+            base_currency = getattr(hotel, 'base_currency', 'NGN')
+            
+            converted_price = CurrencyService.convert_amount(
+                db, base_price, base_currency, currency.upper()
+            )
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
-                "price": float(hotel.price_per_night),
+                "price": float(converted_price),
+                "currency": currency.upper(),
+                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",

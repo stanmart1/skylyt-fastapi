@@ -10,6 +10,7 @@ from .car import Car
 from .hotel import Hotel
 from .notification import Notification
 from .booking import Booking
+from .currency import CurrencyRate, Country
 
 __all__ = [
     "Base",
@@ -24,5 +25,7 @@ __all__ = [
     "PaymentProof",
     "Car",
     "Hotel",
-    "Notification"
+    "Notification",
+    "CurrencyRate",
+    "Country"
 ]

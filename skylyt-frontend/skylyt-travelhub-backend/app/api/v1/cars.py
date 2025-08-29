@@ -22,6 +22,7 @@ def search_cars(
     transmission: Optional[str] = Query(None, description="Transmission type"),
     min_price: Optional[Decimal] = Query(None, description="Minimum price per day"),
     max_price: Optional[Decimal] = Query(None, description="Maximum price per day"),
+    currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
     limit: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
@@ -47,16 +48,29 @@ def search_cars(
     offset = (page - 1) * limit
     cars = query.offset(offset).limit(limit).all()
     
-    cars_data = [{
-        "id": car.id,
-        "name": car.name or f"{car.make} {car.model}",
-        "category": car.category,
-        "price": float(car.price_per_day),
-        "image_url": car.images[0] if car.images else None,
-        "passengers": car.seats,
-        "transmission": car.transmission,
-        "features": car.features or []
-    } for car in cars]
+    from app.services.currency_service import CurrencyService
+    
+    cars_data = []
+    for car in cars:
+        base_price = Decimal(str(car.price_per_day))
+        base_currency = getattr(car, 'base_currency', 'NGN')
+        
+        converted_price = CurrencyService.convert_amount(
+            db, base_price, base_currency, currency.upper()
+        )
+        
+        cars_data.append({
+            "id": car.id,
+            "name": car.name or f"{car.make} {car.model}",
+            "category": car.category,
+            "price": float(converted_price),
+            "currency": currency.upper(),
+            "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+            "image_url": car.images[0] if car.images else None,
+            "passengers": car.seats,
+            "transmission": car.transmission,
+            "features": car.features or []
+        })
     
     return {"cars": cars_data, "total": total}
 
@@ -79,20 +93,34 @@ def get_all_cars(db: Session = Depends(get_db)):
 
 
 @router.get("/featured")
-def get_featured_cars(db: Session = Depends(get_db)):
+def get_featured_cars(
+    currency: str = Query("NGN", description="Currency code"),
+    db: Session = Depends(get_db)
+):
     """Get featured cars for landing page"""
     try:
         from app.models.car import Car
         
         cars = db.query(Car).filter(Car.is_featured == True).limit(6).all()
         
+        from app.services.currency_service import CurrencyService
+        
         car_list = []
         for car in cars:
+            base_price = Decimal(str(car.price_per_day))
+            base_currency = getattr(car, 'base_currency', 'NGN')
+            
+            converted_price = CurrencyService.convert_amount(
+                db, base_price, base_currency, currency.upper()
+            )
+            
             car_list.append({
                 "id": car.id,
                 "name": car.name,
                 "category": car.category,
-                "price": float(car.price_per_day),
+                "price": float(converted_price),
+                "currency": currency.upper(),
+                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
                 "image_url": car.images[0] if car.images and len(car.images) > 0 else None,
                 "passengers": car.seats,
                 "transmission": car.transmission,
