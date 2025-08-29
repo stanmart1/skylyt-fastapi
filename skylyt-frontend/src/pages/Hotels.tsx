@@ -12,21 +12,24 @@ import { SearchParams } from '@/types/api';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SearchResultsSkeleton } from '@/components/LoadingStates';
 import { ServerStatus } from '@/components/ServerStatus';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const Hotels = () => {
   const { hotels, totalHotels, isLoading, searchHotels } = useSearch();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currency } = useCurrency();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    // Load all hotels by default
-    searchHotels({ page: 1, per_page: 50 });
-  }, [searchHotels]);
+    // Load all hotels by default with currency
+    searchHotels({ page: 1, per_page: 50, currency });
+  }, [searchHotels, currency]);
 
   const handleSearch = (params: SearchParams) => {
     setCurrentPage(1);
-    searchHotels({ ...params, page: 1 });
+    searchHotels({ ...params, page: 1, currency });
   };
 
   const handleFavoriteToggle = async (hotel: any) => {
@@ -169,7 +172,11 @@ const Hotels = () => {
                       )}
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-2xl font-bold text-blue-600">${hotel.price}</span>
+                          <PriceDisplay 
+                            amount={hotel.price} 
+                            currency={hotel.currency || currency}
+                            className="text-2xl font-bold text-blue-600"
+                          />
                           <span className="text-gray-500 text-sm">/night</span>
                         </div>
                         <Button 

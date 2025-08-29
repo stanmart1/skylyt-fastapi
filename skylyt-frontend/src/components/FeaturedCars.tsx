@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Star, Users, Car, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { Car as CarType } from '@/types/api';
+import { useCurrencySearch } from '@/hooks/useCurrencySearch';
+import PriceDisplay from './PriceDisplay';
 
 const FeaturedCars = () => {
   const [cars, setCars] = useState<CarType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(1);
+  const { getFeaturedCars, refreshTrigger } = useCurrencySearch();
 
   useEffect(() => {
     const updateCardsPerView = () => {
@@ -29,8 +32,7 @@ const FeaturedCars = () => {
   useEffect(() => {
     const fetchFeaturedCars = async () => {
       try {
-        const response = await fetch('https://skylytapi.scaleitpro.com/api/v1/cars/featured');
-        const data = await response.json();
+        const data = await getFeaturedCars();
         setCars(data.cars || []);
       } catch (error) {
         console.error('Failed to fetch featured cars:', error);
@@ -41,7 +43,7 @@ const FeaturedCars = () => {
     };
 
     fetchFeaturedCars();
-  }, []);
+  }, [refreshTrigger]);
   
   const maxIndex = Math.max(0, cars.length - cardsPerView);
   
@@ -187,7 +189,11 @@ const FeaturedCars = () => {
 
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="text-2xl md:text-3xl font-bold text-blue-600">${car.price}</span>
+                            <PriceDisplay 
+                              amount={car.price} 
+                              currency={car.currency}
+                              className="text-2xl md:text-3xl font-bold text-blue-600"
+                            />
                             <span className="text-gray-600 text-sm">/day</span>
                           </div>
                           <Button 

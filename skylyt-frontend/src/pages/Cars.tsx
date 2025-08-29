@@ -9,20 +9,23 @@ import { AdvancedSearch } from '@/components/search/AdvancedSearch';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchParams } from '@/types/api';
 import { ServerStatus } from '@/components/ServerStatus';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const Cars = () => {
   const { cars, totalCars, isLoading, searchCars } = useSearch();
+  const { currency } = useCurrency();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    // Initial search with default parameters
-    searchCars({ page: 1, per_page: 20 });
-  }, [searchCars]);
+    // Initial search with default parameters and currency
+    searchCars({ page: 1, per_page: 20, currency });
+  }, [searchCars, currency]);
 
   const handleSearch = (params: SearchParams) => {
     setCurrentPage(1);
-    searchCars({ ...params, page: 1 });
+    searchCars({ ...params, page: 1, currency });
   };
 
   return (
@@ -163,7 +166,11 @@ const Cars = () => {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-2xl font-bold text-blue-600">${car.price}</span>
+                        <PriceDisplay 
+                          amount={car.price} 
+                          currency={car.currency || currency}
+                          className="text-2xl font-bold text-blue-600"
+                        />
                         <span className="text-gray-600 text-sm">/day</span>
                       </div>
                       <Button 
