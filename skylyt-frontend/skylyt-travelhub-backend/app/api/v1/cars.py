@@ -75,21 +75,40 @@ def search_cars(
     return {"cars": cars_data, "total": total}
 
 @router.get("/")
-def get_all_cars(db: Session = Depends(get_db)):
+def get_all_cars(
+    currency: str = Query("NGN", description="Currency code"),
+    db: Session = Depends(get_db)
+):
     """Get all cars for cars page"""
     from app.models.car import Car
     
+    from app.services.currency_service import CurrencyService
+    
     cars = db.query(Car).filter(Car.is_available == True).all()
-    return [{
-        "id": car.id,
-        "name": car.name or f"{car.make} {car.model}",
-        "category": car.category,
-        "price": float(car.price_per_day),
-        "image_url": car.images[0] if car.images else None,
-        "passengers": car.seats,
-        "transmission": car.transmission,
-        "features": car.features or []
-    } for car in cars]
+    
+    cars_data = []
+    for car in cars:
+        base_price = Decimal(str(car.price_per_day))
+        base_currency = getattr(car, 'base_currency', 'NGN')
+        
+        converted_price = CurrencyService.convert_amount(
+            db, base_price, base_currency, currency.upper()
+        )
+        
+        cars_data.append({
+            "id": car.id,
+            "name": car.name or f"{car.make} {car.model}",
+            "category": car.category,
+            "price": float(converted_price),
+            "currency": currency.upper(),
+            "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+            "image_url": car.images[0] if car.images else None,
+            "passengers": car.seats,
+            "transmission": car.transmission,
+            "features": car.features or []
+        })
+    
+    return cars_data
 
 
 @router.get("/featured")

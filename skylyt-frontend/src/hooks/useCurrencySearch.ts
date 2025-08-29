@@ -23,6 +23,14 @@ export const useCurrencySearch = () => {
     return apiService.searchCars({ ...params, currency });
   };
 
+  const getAllCars = async () => {
+    return apiService.request(`/cars?currency=${currency}`);
+  };
+
+  const getAllHotels = async () => {
+    return apiService.request(`/hotels?currency=${currency}`);
+  };
+
   const getFeaturedHotels = async () => {
     return apiService.request(`/hotels/featured?currency=${currency}`);
   };
@@ -36,6 +44,8 @@ export const useCurrencySearch = () => {
     searchCars,
     getFeaturedHotels,
     getFeaturedCars,
+    getAllCars,
+    getAllHotels,
     refreshTrigger,
     currency
   };
