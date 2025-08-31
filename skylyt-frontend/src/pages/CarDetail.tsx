@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import { apiService } from '@/services/api';
 
 interface CarDetails {
-  id: string;
+  id: number;
   name: string;
   category: string;
   price: number;

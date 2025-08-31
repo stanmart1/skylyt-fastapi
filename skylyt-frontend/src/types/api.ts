@@ -45,21 +45,23 @@ export interface TokenResponse {
 }
 
 export interface Hotel {
-  id: string;
+  id: number;
   name: string;
   location: string;
   rating: number;
   price: number;
+  currency?: string;
   image_url: string;
   amenities: string[];
   description: string;
 }
 
 export interface Car {
-  id: string;
+  id: number;
   name: string;
   category: string;
   price: number;
+  currency?: string;
   image_url: string;
   passengers: number;
   transmission: string;
