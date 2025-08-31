@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app.core.database import engine
 from sqlalchemy import text
 import json
-import uuid
+
 
 def seed_cars():
     """Seed the database with realistic car data"""
@@ -149,24 +149,21 @@ def seed_cars():
         # Clear existing cars
         conn.execute(text("DELETE FROM cars"))
         
-        # Insert new cars
+        # Insert new cars (let database auto-increment the ID)
         for car_data in cars_data:
-            car_id = str(uuid.uuid4())
-            
             insert_query = text("""
                 INSERT INTO cars (
-                    id, name, make, model, category, price_per_day, seats, 
+                    name, make, model, category, price_per_day, seats, 
                     transmission, features, images, is_available, is_featured,
                     created_at, updated_at
                 ) VALUES (
-                    :id, :name, :make, :model, :category, :price_per_day, :seats,
+                    :name, :make, :model, :category, :price_per_day, :seats,
                     :transmission, :features, :images, :is_available, :is_featured,
                     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 )
             """)
             
             conn.execute(insert_query, {
-                'id': car_id,
                 'name': car_data['name'],
                 'make': car_data['make'],
                 'model': car_data['model'],
