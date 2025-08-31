@@ -187,11 +187,14 @@ def get_car_details(car_id: str, db: Session = Depends(get_db)):
     from app.models.car import Car
     from fastapi import HTTPException
     
+    # Try to convert to integer (database uses integer IDs)
     try:
         car_id_int = int(car_id)
-        car = db.query(Car).filter(Car.id == car_id_int).first()
     except (ValueError, TypeError):
-        raise HTTPException(status_code=400, detail="Invalid car ID")
+        # If it's not a valid integer, return 404 instead of 400
+        raise HTTPException(status_code=404, detail="Car not found")
+    
+    car = db.query(Car).filter(Car.id == car_id_int).first()
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
     

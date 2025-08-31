@@ -47,12 +47,13 @@ const CarDetail = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching car details for ID:', carId);
       const response = await apiService.request(`/cars/${carId}`);
       setCar(response);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load car details';
       setError(errorMessage);
-      console.error('Error fetching car details:', error);
+      console.error('Error fetching car details for ID:', carId, 'Error:', error);
     } finally {
       setLoading(false);
     }
