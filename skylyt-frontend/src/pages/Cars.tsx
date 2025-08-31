@@ -103,7 +103,7 @@ const Cars = () => {
             {cars.map((car) => (
               <Card 
                 key={car.id} 
-                className="relative overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group cursor-pointer lg:cursor-default"
+                className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer lg:cursor-default"
                 onClick={() => {
                   console.log('Car clicked:', car);
                   if (window.innerWidth < 1024 && car.id) {
@@ -115,7 +115,7 @@ const Cars = () => {
                   <img
                     src={car.image_url || '/placeholder.svg'}
                     alt={car.name}
-                    className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   {/* Desktop Eye Icon - Centered */}
                   <div

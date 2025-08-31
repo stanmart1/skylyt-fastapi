@@ -5,6 +5,8 @@ from datetime import datetime, date
 from pydantic import BaseModel
 from app.core.database import get_db
 from app.services.payment_service import PaymentService
+from app.services.payment.gateway_factory import PaymentGatewayFactory
+from app.services.payment_processor import PaymentProcessor
 import os
 import uuid
 
@@ -19,21 +21,36 @@ class PaymentInitRequest(BaseModel):
 
 
 @router.post("/initialize")
-def initialize_payment(
+async def initialize_payment(
     request: PaymentInitRequest,
     db: Session = Depends(get_db)
 ):
     """Initialize payment with selected method"""
     try:
-        result = payment_service.initialize_payment(
-            db, request.booking_id, request.payment_method, 
-            payment_reference=request.payment_reference
+        # Get booking details
+        from app.models.booking import Booking
+        booking = db.query(Booking).filter(Booking.id == request.booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        # Use payment processor
+        result = await PaymentProcessor.create_payment(
+            db=db,
+            booking_id=request.booking_id,
+            payment_method=request.payment_method
         )
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=400, detail=result.get('error', 'Payment creation failed'))
+        
         return result
+        
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Payment initialization failed")
+        raise HTTPException(status_code=500, detail=f"Payment initialization failed: {str(e)}")
 
 
 @router.post("/upload-proof")

@@ -24,7 +24,7 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, notifications, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, notifications, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config
 from app.api.v1 import payments, bank_accounts
 
 # Setup logging
@@ -125,6 +125,8 @@ app.include_router(emails.router, prefix="/api/v1", tags=["Emails"])
 app.include_router(destinations.router, prefix="/api/v1", tags=["Destinations"])
 app.include_router(hotel_images.router, prefix="/api/v1", tags=["Hotel Images"])
 app.include_router(localization.router, prefix="/api/v1", tags=["Localization"])
+app.include_router(payment_webhooks.router, prefix="/api/v1", tags=["Payment Webhooks"])
+app.include_router(payment_config.router, prefix="/api/v1", tags=["Payment Config"])
 
 
 

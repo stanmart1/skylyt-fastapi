@@ -139,7 +139,7 @@ const FeaturedHotels = () => {
               {hotels.map((hotel) => (
                 <div key={hotel.id} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2">
                   <Card 
-                    className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 cursor-pointer lg:cursor-default"
+                    className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer lg:cursor-default"
                     onClick={() => {
                       if (window.innerWidth < 1024 && hotel.id) {
                         window.location.href = `/hotel/${hotel.id}`;
@@ -151,7 +151,7 @@ const FeaturedHotels = () => {
                         <img
                           src={hotel.image_url || '/placeholder.svg'}
                           alt={hotel.name}
-                          className="w-full h-48 md:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-48 md:h-56 object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                         {/* Desktop Eye Icon - Centered */}
                         <div

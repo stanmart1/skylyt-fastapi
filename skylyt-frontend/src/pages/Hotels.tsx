@@ -106,14 +106,14 @@ const Hotels = () => {
                 {hotels.map((hotel) => (
                   <Card 
                     key={hotel.id} 
-                    className="relative overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group cursor-pointer lg:cursor-default"
+                    className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer lg:cursor-default"
                     onClick={() => window.innerWidth < 1024 && (window.location.href = `/hotel/${hotel.id}`)}
                   >
                     <div className="relative">
                       <img 
                         src={hotel.image_url || '/placeholder.svg'} 
                         alt={hotel.name} 
-                        className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
                       />
                       {/* Desktop Eye Icon - Centered */}
                       <div
