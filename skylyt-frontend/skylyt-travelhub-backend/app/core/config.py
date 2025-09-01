@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     HERTZ_API_KEY: Optional[str] = None
     
     # Environment
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    ENVIRONMENT: str = "production"
+    DEBUG: bool = False
     
     # Resend Email API
     RESEND_API_KEY: Optional[str] = None

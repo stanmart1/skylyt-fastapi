@@ -46,4 +46,4 @@ class User(BaseModel):
     
     def is_admin(self) -> bool:
         """Check if user is admin or superadmin"""
-        return self.has_role("admin") or self.has_role("superadmin")
+        return any(role.name in ["admin", "superadmin"] and role.is_active for role in self.roles)

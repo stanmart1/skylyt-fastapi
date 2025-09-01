@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, validator
+from typing import List, Optional
 import logging
+from datetime import datetime
 
 from app.core.config import settings as config_settings
 from app.core.database import engine
@@ -30,6 +31,96 @@ from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, ad
 # Setup logging
 setup_logging()
 
+# Constants
+VALID_BOOKING_STATUSES = ["pending", "confirmed", "cancelled"]
+ALLOWED_UPLOAD_FOLDERS = ["general", "hotels", "payment_proofs", "documents"]
+ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
+ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".pdf"]
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+DEFAULT_COMMISSION_RATE = 10.0
+VALID_CURRENCIES = ["USD", "EUR", "GBP", "NGN", "CAD", "AUD"]
+
+# Helper Functions
+def serialize_booking(booking) -> dict:
+    """Serialize booking object to dictionary"""
+    return {
+        "id": booking.id,
+        "booking_reference": booking.booking_reference,
+        "booking_type": booking.booking_type,
+        "status": booking.status,
+        "customer_name": booking.customer_name,
+        "customer_email": booking.customer_email,
+        "customer_phone": getattr(booking, 'customer_phone', None),
+        "user_id": booking.user_id,
+        "hotel_name": booking.hotel_name,
+        "car_name": booking.car_name,
+        "car_id": getattr(booking, 'car_id', None),
+        "check_in_date": booking.check_in_date,
+        "check_out_date": booking.check_out_date,
+        "start_date": booking.start_date,
+        "end_date": booking.end_date,
+        "number_of_guests": booking.number_of_guests,
+        "special_requests": booking.special_requests,
+        "total_amount": float(booking.total_amount) if booking.total_amount else 0,
+        "currency": booking.currency,
+        "payment_status": booking.payment_status,
+        "external_booking_id": booking.external_booking_id,
+        "confirmation_number": booking.confirmation_number,
+        "booking_data": booking.booking_data,
+        "created_at": booking.created_at.isoformat() if booking.created_at else None,
+        "updated_at": booking.updated_at.isoformat() if booking.updated_at else None
+    }
+
+def parse_date_string(date_str: str) -> datetime.date:
+    """Parse ISO date string to date object"""
+    try:
+        return datetime.fromisoformat(date_str).date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {date_str}")
+
+def serialize_payment(payment) -> dict:
+    """Serialize payment object to dictionary"""
+    return {
+        "id": payment.id,
+        "booking_id": payment.booking_id,
+        "amount": float(payment.amount),
+        "currency": payment.currency,
+        "status": payment.status.value,
+        "payment_method": payment.payment_method.value,
+        "created_at": payment.created_at.isoformat(),
+        "transaction_id": payment.transaction_id,
+        "transfer_reference": payment.transfer_reference
+    }
+
+def update_booking_status_helper(booking_id: int, status: str, db: Session) -> dict:
+    """Helper function to update booking status"""
+    from app.models.booking import Booking
+    
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if status not in VALID_BOOKING_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
+    
+    booking.status = status
+    db.commit()
+    db.refresh(booking)
+    
+    return {
+        "success": True,
+        "message": "Booking status updated successfully", 
+        "booking_id": booking_id, 
+        "status": booking.status
+    }
+
+def validate_financial_data(amount: float, currency: str) -> None:
+    """Validate financial data"""
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+    if currency not in VALID_CURRENCIES:
+        raise HTTPException(status_code=400, detail=f"Invalid currency. Must be one of: {', '.join(VALID_CURRENCIES)}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -39,14 +130,17 @@ async def lifespan(app: FastAPI):
     # Initialize default currencies
     from app.services.currency_service import CurrencyService
     from app.core.database import SessionLocal
+    db = None
     try:
         db = SessionLocal()
         CurrencyService.seed_default_currencies(db)
-        db.close()
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to initialize currencies: {e}")
+    finally:
+        if db:
+            db.close()
     
     yield
     # Shutdown
@@ -147,8 +241,7 @@ async def serve_image(folder: str, filename: str):
     logger = logging.getLogger(__name__)
     
     # Validate folder and filename to prevent path traversal
-    allowed_folders = ["general", "hotels", "payment_proofs", "documents"]
-    if folder not in allowed_folders:
+    if folder not in ALLOWED_UPLOAD_FOLDERS:
         raise HTTPException(status_code=400, detail="Invalid folder")
     
     # Sanitize filename
@@ -338,34 +431,10 @@ async def get_admin_booking(booking_id: int, current_user = Depends(get_current_
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        return {
-            "id": booking.id,
-            "booking_reference": booking.booking_reference,
-            "booking_type": booking.booking_type,
-            "status": booking.status,
-            "customer_name": booking.customer_name,
-            "customer_email": booking.customer_email,
-            "customer_phone": getattr(booking, 'customer_phone', None),
-            "user_id": booking.user_id,
-            "hotel_name": booking.hotel_name,
-            "car_name": booking.car_name,
-            "car_id": getattr(booking, 'car_id', None),
-            "check_in_date": booking.check_in_date,
-            "check_out_date": booking.check_out_date,
-            "start_date": booking.start_date,
-            "end_date": booking.end_date,
-            "number_of_guests": booking.number_of_guests,
-            "special_requests": booking.special_requests,
-            "total_amount": float(booking.total_amount) if booking.total_amount else 0,
-            "currency": booking.currency,
-            "payment_status": booking.payment_status,
-            "external_booking_id": booking.external_booking_id,
-            "confirmation_number": booking.confirmation_number,
-            "booking_data": booking.booking_data,
-            "created_at": booking.created_at.isoformat() if booking.created_at else None,
-            "updated_at": booking.updated_at.isoformat() if booking.updated_at else None
-        }
+        return serialize_booking(booking)
     except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to fetch booking details: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch booking details")
 
 @app.get("/api/v1/admin/bookings/{booking_id}/details")
@@ -380,38 +449,93 @@ async def get_booking_details(booking_id: int, current_user = Depends(get_curren
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        return {
-            "id": booking.id,
-            "booking_reference": booking.booking_reference,
-            "booking_type": booking.booking_type,
-            "status": booking.status,
-            "customer_name": booking.customer_name,
-            "customer_email": booking.customer_email,
-            "customer_phone": getattr(booking, 'customer_phone', None),
-            "user_id": booking.user_id,
-            "hotel_name": booking.hotel_name,
-            "car_name": booking.car_name,
-            "car_id": getattr(booking, 'car_id', None),
-            "check_in_date": booking.check_in_date,
-            "check_out_date": booking.check_out_date,
-            "start_date": booking.start_date,
-            "end_date": booking.end_date,
-            "number_of_guests": booking.number_of_guests,
-            "special_requests": booking.special_requests,
-            "total_amount": float(booking.total_amount) if booking.total_amount else 0,
-            "currency": booking.currency,
-            "payment_status": booking.payment_status,
-            "external_booking_id": booking.external_booking_id,
-            "confirmation_number": booking.confirmation_number,
-            "booking_data": booking.booking_data,
-            "created_at": booking.created_at.isoformat() if booking.created_at else None,
-            "updated_at": booking.updated_at.isoformat() if booking.updated_at else None
-        }
+        return serialize_booking(booking)
     except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to fetch booking details: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch booking details")
 
 class BookingStatusUpdate(BaseModel):
     status: str
+    
+    @validator('status')
+    def validate_status(cls, v):
+        if v not in VALID_BOOKING_STATUSES:
+            raise ValueError(f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
+        return v
+
+class BookingCreateRequest(BaseModel):
+    user_id: int
+    booking_type: str
+    status: Optional[str] = "pending"
+    hotel_name: Optional[str] = None
+    car_name: Optional[str] = None
+    total_amount: float
+    currency: Optional[str] = "USD"
+    booking_data: Optional[dict] = None
+    
+    @validator('total_amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+    
+    @validator('currency')
+    def validate_currency(cls, v):
+        if v not in VALID_CURRENCIES:
+            raise ValueError(f"Invalid currency. Must be one of: {', '.join(VALID_CURRENCIES)}")
+        return v
+
+class BookingUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+    special_requests: Optional[str] = None
+    booking_type: Optional[str] = None
+    hotel_name: Optional[str] = None
+    car_name: Optional[str] = None
+    total_amount: Optional[float] = None
+    currency: Optional[str] = None
+    
+    @validator('total_amount')
+    def validate_amount(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+    
+    @validator('currency')
+    def validate_currency(cls, v):
+        if v is not None and v not in VALID_CURRENCIES:
+            raise ValueError(f"Invalid currency. Must be one of: {', '.join(VALID_CURRENCIES)}")
+        return v
+
+class CancelBookingRequest(BaseModel):
+    reason: Optional[str] = "Cancelled by admin"
+
+class CarCreateRequest(BaseModel):
+    name: str
+    category: str
+    price_per_day: float
+    currency: Optional[str] = "USD"
+    image_url: Optional[str] = ""
+    passengers: Optional[int] = 4
+    transmission: Optional[str] = "automatic"
+    fuel_type: Optional[str] = "petrol"
+    features: Optional[List[str]] = []
+    
+    @validator('price_per_day')
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError("Price must be positive")
+        return v
+
+class PaymentUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    transaction_id: Optional[str] = None
+
+class RefundRequest(BaseModel):
+    amount: Optional[float] = None
+    reason: Optional[str] = None
 
 @app.put("/api/v1/bookings/{booking_id}/status")
 async def update_booking_status_api(booking_id: int, status_update: BookingStatusUpdate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -420,66 +544,39 @@ async def update_booking_status_api(booking_id: int, status_update: BookingStatu
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        from app.models.booking import Booking
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        
-        valid_statuses = ["pending", "confirmed", "cancelled"]
-        if status_update.status not in valid_statuses:
-            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
-        
-        booking.status = status_update.status
-        db.commit()
-        db.refresh(booking)
-        
-        return {
-            "success": True,
-            "message": "Booking status updated successfully", 
-            "booking_id": booking_id, 
-            "status": booking.status
-        }
+        return update_booking_status_helper(booking_id, status_update.status, db)
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to update booking status: {e}")
         raise HTTPException(status_code=500, detail="Failed to update booking status")
 
 @app.put("/api/v1/admin/bookings/{booking_id}/status")
 async def update_booking_status(booking_id: int, status_update: BookingStatusUpdate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Update booking status"""
+    """Update booking status - Admin endpoint"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    from app.models.booking import Booking
-    
     try:
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        
-        valid_statuses = ["pending", "confirmed", "cancelled"]
-        if status_update.status not in valid_statuses:
-            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
-        
-        booking.status = status_update.status
-        db.commit()
-        db.refresh(booking)
-        
-        return {
-            "success": True,
-            "message": "Booking status updated successfully", 
-            "booking_id": booking_id, 
-            "status": booking.status
-        }
+        return update_booking_status_helper(booking_id, status_update.status, db)
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to update booking status: {e}")
         raise HTTPException(status_code=500, detail="Failed to update booking status")
 
 class BulkDeleteRequest(BaseModel):
     ids: List[int]
+    
+    @validator('ids')
+    def validate_ids(cls, v):
+        if not v:
+            raise ValueError("No IDs provided")
+        return v
 
 @app.delete("/api/v1/admin/bookings/bulk")
 async def bulk_delete_bookings(request: BulkDeleteRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -489,16 +586,15 @@ async def bulk_delete_bookings(request: BulkDeleteRequest, current_user = Depend
     
     from app.models.booking import Booking
     
-    if not request.ids:
-        raise HTTPException(status_code=400, detail="No booking IDs provided")
-    
     try:
-        deleted_count = db.query(Booking).filter(Booking.id.in_(request.ids)).delete(synchronize_session='evaluate')
+        deleted_count = db.query(Booking).filter(Booking.id.in_(request.ids)).delete(synchronize_session=False)
         db.commit()
         
         return {"message": f"{deleted_count} bookings deleted successfully", "deleted_count": deleted_count}
     except Exception as e:
         db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Bulk delete failed: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete bookings")
 
 @app.delete("/api/v1/admin/bookings/{booking_id}")
@@ -507,82 +603,82 @@ async def delete_booking(booking_id: int, current_user = Depends(get_current_use
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    from app.models.booking import Booking
-    booking = db.query(Booking).filter(Booking.id == booking_id).first()
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    
-    db.delete(booking)
-    db.commit()
-    
-    return {"message": "Booking deleted successfully"}
-
-@app.post("/api/v1/admin/bookings")
-async def create_booking(booking_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Create new booking (admin)"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    from app.models.booking import Booking
-    import uuid
-    
-    # Generate booking reference
-    booking_reference = f"BK{uuid.uuid4().hex[:8].upper()}"
-    
-    new_booking = Booking(
-        user_id=booking_data["user_id"],
-        booking_reference=booking_reference,
-        booking_type=booking_data["booking_type"],
-        status=booking_data.get("status", "pending"),
-        hotel_name=booking_data.get("hotel_name"),
-        car_name=booking_data.get("car_name"),
-        total_amount=booking_data["total_amount"],
-        currency=booking_data.get("currency", "USD"),
-        booking_data=booking_data.get("booking_data")
-    )
-    
-    db.add(new_booking)
-    db.commit()
-    db.refresh(new_booking)
-    
-    return {
-        "id": new_booking.id,
-        "booking_reference": new_booking.booking_reference,
-        "message": "Booking created successfully"
-    }
-
-@app.put("/api/v1/admin/bookings/{booking_id}")
-async def update_booking(booking_id: int, booking_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Update booking details (admin)"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    from app.models.booking import Booking
-    
     try:
-        # Get booking once to avoid redundant queries
+        from app.models.booking import Booking
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        # Handle status updates
-        if "status" in booking_data:
-            valid_statuses = ["pending", "confirmed", "cancelled"]
-            if booking_data["status"] not in valid_statuses:
-                raise HTTPException(status_code=400, detail="Invalid status")
-            booking.status = booking_data["status"]
+        db.delete(booking)
+        db.commit()
         
-        # Update other fields with validation
-        allowed_fields = ["customer_name", "customer_email", "special_requests", "booking_type", "hotel_name", "car_name"]
-        for field in allowed_fields:
-            if field in booking_data:
-                setattr(booking, field, booking_data[field])
+        return {"message": "Booking deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to delete booking {booking_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete booking")
+
+@app.post("/api/v1/admin/bookings")
+async def create_booking(booking_data: BookingCreateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Create new booking (admin)"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.booking import Booking
+        import uuid
         
-        # Handle amount updates
-        if "total_amount" in booking_data:
-            booking.total_amount = booking_data["total_amount"]
-        if "currency" in booking_data:
-            booking.currency = booking_data["currency"]
+        # Generate booking reference
+        booking_reference = f"BK{uuid.uuid4().hex[:8].upper()}"
+        
+        new_booking = Booking(
+            user_id=booking_data.user_id,
+            booking_reference=booking_reference,
+            booking_type=booking_data.booking_type,
+            status=booking_data.status,
+            hotel_name=booking_data.hotel_name,
+            car_name=booking_data.car_name,
+            total_amount=booking_data.total_amount,
+            currency=booking_data.currency,
+            booking_data=booking_data.booking_data
+        )
+        
+        db.add(new_booking)
+        db.commit()
+        db.refresh(new_booking)
+        
+        return {
+            "id": new_booking.id,
+            "booking_reference": new_booking.booking_reference,
+            "message": "Booking created successfully"
+        }
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create booking: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create booking")
+
+@app.put("/api/v1/admin/bookings/{booking_id}")
+async def update_booking(booking_id: int, booking_data: BookingUpdateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Update booking details (admin)"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.booking import Booking
+        
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        # Update fields from validated Pydantic model
+        update_data = booking_data.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            if hasattr(booking, field):
+                setattr(booking, field, value)
         
         db.commit()
         db.refresh(booking)
@@ -596,6 +692,8 @@ async def update_booking(booking_id: int, booking_data: dict, current_user = Dep
         raise
     except Exception as e:
         db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to update booking {booking_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update booking")
 
 @app.post("/api/v1/admin/bookings/{booking_id}/resend-confirmation")
@@ -629,7 +727,7 @@ async def get_booking_invoice(booking_id: int, current_user = Depends(get_curren
     return invoice_data
 
 @app.post("/api/v1/admin/bookings/{booking_id}/cancel")
-async def cancel_booking_admin(booking_id: int, cancel_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+async def cancel_booking_admin(booking_id: int, cancel_data: CancelBookingRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Cancel booking with reason"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -637,8 +735,7 @@ async def cancel_booking_admin(booking_id: int, cancel_data: dict, current_user 
     from app.services.booking_service import BookingService
     booking_service = BookingService(db)
     
-    reason = cancel_data.get("reason", "Cancelled by admin")
-    success = booking_service.cancel_booking(booking_id, reason, current_user.id)
+    success = booking_service.cancel_booking(booking_id, cancel_data.reason, current_user.id)
     
     if not success:
         raise HTTPException(status_code=404, detail="Booking not found")
@@ -665,23 +762,12 @@ async def get_hotel_bookings(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     from app.services.booking_service import BookingService
-    from datetime import datetime
     
     booking_service = BookingService(db)
     
     # Parse date strings
-    parsed_start_date = None
-    parsed_end_date = None
-    if start_date:
-        try:
-            parsed_start_date = datetime.fromisoformat(start_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid start_date format")
-    if end_date:
-        try:
-            parsed_end_date = datetime.fromisoformat(end_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid end_date format")
+    parsed_start_date = parse_date_string(start_date) if start_date else None
+    parsed_end_date = parse_date_string(end_date) if end_date else None
     
     return booking_service.get_bookings_with_filters(
         search=search,
@@ -716,23 +802,12 @@ async def get_car_bookings(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     from app.services.booking_service import BookingService
-    from datetime import datetime
     
     booking_service = BookingService(db)
     
     # Parse date strings
-    parsed_start_date = None
-    parsed_end_date = None
-    if start_date:
-        try:
-            parsed_start_date = datetime.fromisoformat(start_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid start_date format")
-    if end_date:
-        try:
-            parsed_end_date = datetime.fromisoformat(end_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid end_date format")
+    parsed_start_date = parse_date_string(start_date) if start_date else None
+    parsed_end_date = parse_date_string(end_date) if end_date else None
     
     return booking_service.get_bookings_with_filters(
         search=search,
@@ -765,17 +840,7 @@ async def get_admin_payments(
         total = db.query(Payment).count()
         
         return {
-            "payments": [{
-                "id": payment.id,
-                "booking_id": payment.booking_id,
-                "amount": float(payment.amount),
-                "currency": payment.currency,
-                "status": payment.status.value,
-                "payment_method": payment.payment_method.value,
-                "created_at": payment.created_at.isoformat(),
-                "transaction_id": payment.transaction_id,
-                "transfer_reference": payment.transfer_reference
-            } for payment in payments],
+            "payments": [serialize_payment(payment) for payment in payments],
             "total": total,
             "page": page,
             "per_page": per_page
@@ -811,7 +876,7 @@ async def get_admin_payment(payment_id: int, current_user = Depends(get_current_
         raise HTTPException(status_code=404, detail="Payment not found")
 
 @app.put("/api/v1/admin/payments/{payment_id}")
-async def update_payment(payment_id: int, payment_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+async def update_payment(payment_id: int, payment_data: PaymentUpdateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Update payment details (admin)"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -822,19 +887,19 @@ async def update_payment(payment_id: int, payment_data: dict, current_user = Dep
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        if "status" in payment_data:
+        if payment_data.status:
             try:
                 # Validate status value before assignment
                 valid_statuses = [status.value for status in PaymentStatus]
-                if payment_data["status"] in valid_statuses:
-                    payment.status = PaymentStatus(payment_data["status"])
+                if payment_data.status in valid_statuses:
+                    payment.status = PaymentStatus(payment_data.status)
                 else:
                     raise HTTPException(status_code=400, detail="Invalid payment status")
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid payment status")
         
-        if "transaction_id" in payment_data:
-            payment.transaction_id = payment_data["transaction_id"]
+        if payment_data.transaction_id:
+            payment.transaction_id = payment_data.transaction_id
         
         db.commit()
         db.refresh(payment)
@@ -909,16 +974,24 @@ async def get_notifications(current_user = Depends(get_current_user), db: Sessio
 @app.post("/api/v1/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Mark notification as read"""
-    from app.models.notification import Notification
-    notification = db.query(Notification).filter(
-        Notification.id == notification_id,
-        Notification.user_id == current_user.id
-    ).first()
-    if not notification:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    notification.is_read = True
-    db.commit()
-    return {"message": "Notification marked as read"}
+    try:
+        from app.models.notification import Notification
+        notification = db.query(Notification).filter(
+            Notification.id == notification_id,
+            Notification.user_id == current_user.id
+        ).first()
+        if not notification:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        notification.is_read = True
+        db.commit()
+        return {"message": "Notification marked as read"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to mark notification as read: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update notification")
 
 @app.post("/api/v1/upload")
 async def upload_file(file: UploadFile = File(...), upload_type: str = "general", current_user = Depends(get_current_user)):
@@ -928,23 +1001,20 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     from pathlib import Path
     
     # Validate upload type
-    allowed_upload_types = ["general", "hotels", "payment_proofs", "documents"]
-    if upload_type not in allowed_upload_types:
+    if upload_type not in ALLOWED_UPLOAD_FOLDERS:
         raise HTTPException(status_code=400, detail="Invalid upload type")
     
     # Validate file type and size
-    allowed_types = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
-    if file.content_type not in allowed_types:
+    if file.content_type not in ALLOWED_FILE_TYPES:
         raise HTTPException(status_code=400, detail="File type not allowed")
     
     # Validate file extension
     file_extension = Path(file.filename).suffix.lower()
-    allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".pdf"]
-    if file_extension not in allowed_extensions:
+    if file_extension not in ALLOWED_FILE_EXTENSIONS:
         raise HTTPException(status_code=400, detail="File extension not allowed")
     
     # Check file size before reading content
-    if file.size and file.size > 10 * 1024 * 1024:  # 10MB limit
+    if file.size and file.size > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large")
     
     # Generate secure filename
@@ -1212,7 +1282,7 @@ async def get_admin_cars(
         return {"cars": [], "total": 0, "page": page, "per_page": per_page}
 
 @app.post("/api/v1/admin/cars")
-async def create_car(car_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+async def create_car(car_data: CarCreateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Create new car"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -1220,15 +1290,15 @@ async def create_car(car_data: dict, current_user = Depends(get_current_user), d
     try:
         from app.models.car import Car
         new_car = Car(
-            name=car_data["name"],
-            category=car_data["category"],
-            price_per_day=car_data["price_per_day"],
-            currency=car_data.get("currency", "USD"),
-            image_url=car_data.get("image_url", ""),
-            passengers=car_data.get("passengers", 4),
-            transmission=car_data.get("transmission", "automatic"),
-            fuel_type=car_data.get("fuel_type", "petrol"),
-            features=car_data.get("features", [])
+            name=car_data.name,
+            category=car_data.category,
+            price_per_day=car_data.price_per_day,
+            currency=car_data.currency,
+            image_url=car_data.image_url,
+            passengers=car_data.passengers,
+            transmission=car_data.transmission,
+            fuel_type=car_data.fuel_type,
+            features=car_data.features
         )
         db.add(new_car)
         db.commit()
@@ -1239,7 +1309,7 @@ async def create_car(car_data: dict, current_user = Depends(get_current_user), d
         raise HTTPException(status_code=500, detail="Failed to create car")
 
 @app.put("/api/v1/admin/cars/{car_id}")
-async def update_car(car_id: int, car_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+async def update_car(car_id: int, car_data: CarCreateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Update car details"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -1250,7 +1320,8 @@ async def update_car(car_id: int, car_data: dict, current_user = Depends(get_cur
         if not car:
             raise HTTPException(status_code=404, detail="Car not found")
         
-        for key, value in car_data.items():
+        update_data = car_data.dict(exclude_unset=True)
+        for key, value in update_data.items():
             if hasattr(car, key):
                 setattr(car, key, value)
         
@@ -1382,7 +1453,7 @@ async def get_car_fleet_stats(current_user = Depends(get_current_user), db: Sess
         }
 
 @app.post("/api/v1/admin/payments/{payment_id}/refund")
-async def process_refund(payment_id: int, refund_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+async def process_refund(payment_id: int, refund_data: RefundRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Process payment refund"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -1431,8 +1502,8 @@ async def get_payment_commission(payment_id: int, current_user = Depends(get_cur
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        # Calculate commission (example: 10%)
-        commission_rate = 10.0
+        # Calculate commission
+        commission_rate = DEFAULT_COMMISSION_RATE
         commission_amount = float(payment.amount) * (commission_rate / 100)
         
         return {
