@@ -26,7 +26,7 @@ from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies
-from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications
+from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers
 
 # Setup logging
 setup_logging()
@@ -52,6 +52,8 @@ def serialize_booking(booking) -> dict:
         "customer_email": booking.customer_email,
         "customer_phone": getattr(booking, 'customer_phone', None),
         "user_id": booking.user_id,
+        "driver_id": getattr(booking, 'driver_id', None),
+        "driver_name": getattr(booking.driver, 'name', None) if hasattr(booking, 'driver') and booking.driver else None,
         "hotel_name": booking.hotel_name,
         "car_name": booking.car_name,
         "car_id": getattr(booking, 'car_id', None),
@@ -226,6 +228,7 @@ app.include_router(admin_support.router, prefix="/api/v1", tags=["Admin Support"
 app.include_router(admin_notifications.router, prefix="/api/v1", tags=["Admin Notifications"])
 app.include_router(currency_rates.router, prefix="/api/v1", tags=["Currency Rates"])
 app.include_router(currencies.router, prefix="/api/v1", tags=["Currencies"])
+app.include_router(drivers.router, prefix="/api/v1", tags=["Drivers"])
 
 
 
@@ -496,6 +499,7 @@ class BookingUpdateRequest(BaseModel):
     car_name: Optional[str] = None
     total_amount: Optional[float] = None
     currency: Optional[str] = None
+    driver_id: Optional[int] = None
     
     @validator('total_amount')
     def validate_amount(cls, v):
@@ -695,6 +699,48 @@ async def update_booking(booking_id: int, booking_data: BookingUpdateRequest, cu
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to update booking {booking_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update booking")
+
+@app.put("/api/v1/admin/bookings/{booking_id}/assign-driver")
+async def assign_driver_to_booking(
+    booking_id: int, 
+    driver_id: int = None,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Assign or unassign driver to/from booking"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.booking import Booking
+        from app.models.driver import Driver
+        
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        if driver_id:
+            driver = db.query(Driver).filter(Driver.id == driver_id).first()
+            if not driver:
+                raise HTTPException(status_code=404, detail="Driver not found")
+            if not driver.is_active or not driver.is_available:
+                raise HTTPException(status_code=400, detail="Driver is not available")
+        
+        booking.driver_id = driver_id
+        db.commit()
+        
+        return {
+            "message": "Driver assignment updated successfully",
+            "booking_id": booking_id,
+            "driver_id": driver_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to assign driver to booking {booking_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to assign driver")
 
 @app.post("/api/v1/admin/bookings/{booking_id}/resend-confirmation")
 async def resend_booking_confirmation(booking_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):

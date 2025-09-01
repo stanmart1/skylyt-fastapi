@@ -29,6 +29,9 @@ class Booking(BaseModel):
     customer_email = Column(String(255), nullable=False)
     customer_phone = Column(String(20), nullable=True)
     
+    # Driver assignment
+    driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
+    
     # Booking details
     hotel_name = Column(String(255), nullable=True)
     car_name = Column(String(255), nullable=True)
@@ -54,3 +57,4 @@ class Booking(BaseModel):
     # Relationships
     user = relationship("User", back_populates="bookings")
     payments = relationship("Payment", back_populates="booking")
+    driver = relationship("Driver", back_populates="bookings")

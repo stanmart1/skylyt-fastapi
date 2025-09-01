@@ -31,7 +31,7 @@ Quick snapshot of the business health:
 * Loyalty/reward points or membership programs
 * Fraud/risk alerts (e.g., suspicious multiple bookings)
 
-5. Driver/Staff Management (if chauffeur-driven rentals)
+5. Driver/Staff Management
 * Driver profiles (name, license details, contact)
 * Assign driver to booking
 * Availability & shift scheduling

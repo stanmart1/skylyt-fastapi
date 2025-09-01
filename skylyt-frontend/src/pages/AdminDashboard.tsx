@@ -43,6 +43,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+import { DriverManagement } from '@/components/admin/DriverManagement';
 
 interface AdminStats {
   totalBookings: number;
@@ -296,6 +297,14 @@ const AdminDashboard = () => {
                         onClick={() => { setActiveTab('car-management'); setActiveCarTab('reviews'); setSidebarOpen(false); }}
                       >
                         Reviews
+                      </Button>
+                      <Button
+                        variant={activeCarTab === 'drivers' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('drivers'); setSidebarOpen(false); }}
+                      >
+                        Drivers
                       </Button>
                     </div>
                   )}
@@ -552,6 +561,14 @@ const AdminDashboard = () => {
                     onClick={() => { setActiveTab('car-management'); setActiveCarTab('reviews'); }}
                   >
                     Reviews
+                  </Button>
+                  <Button
+                    variant={activeCarTab === 'drivers' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('drivers'); }}
+                  >
+                    Drivers
                   </Button>
                 </div>
               )}
@@ -812,9 +829,7 @@ const AdminDashboard = () => {
                         </div>
                         <Badge className="bg-green-100 text-green-800">Active</Badge>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Access Car Management from the sidebar to manage your fleet, bookings, and analytics.
-                      </div>
+
                     </>
                   ) : (
                     <div className="animate-pulse space-y-4">
@@ -843,9 +858,7 @@ const AdminDashboard = () => {
                         </div>
                         <Badge className="bg-blue-100 text-blue-800">Active</Badge>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Access Hotel Management from the sidebar to manage your properties, bookings, and analytics.
-                      </div>
+
                     </>
                   ) : (
                     <div className="animate-pulse space-y-4">
@@ -1251,6 +1264,7 @@ const AdminDashboard = () => {
                   {activeCarTab === 'payments' && 'Car Payments'}
                   {activeCarTab === 'fleet' && 'Fleet Management'}
                   {activeCarTab === 'reviews' && 'Car Reviews'}
+                  {activeCarTab === 'drivers' && 'Driver Management'}
                   {!activeCarTab && 'Car Management'}
                 </h1>
                 <p className="text-gray-600">
@@ -1259,6 +1273,7 @@ const AdminDashboard = () => {
                   {activeCarTab === 'payments' && 'Track car booking payments'}
                   {activeCarTab === 'fleet' && 'Manage your car fleet inventory'}
                   {activeCarTab === 'reviews' && 'Monitor and respond to car reviews'}
+                  {activeCarTab === 'drivers' && 'Manage drivers and staff assignments'}
                   {!activeCarTab && 'Comprehensive car rental business management'}
                 </p>
               </div>
@@ -1268,6 +1283,7 @@ const AdminDashboard = () => {
                 {activeCarTab === 'payments' && <PaymentManagement />}
                 {activeCarTab === 'fleet' && <CarManagement />}
                 {activeCarTab === 'reviews' && <ReviewManagement />}
+                {activeCarTab === 'drivers' && <DriverManagement />}
                 {!activeCarTab && <CarManagement />}
               </ErrorBoundary>
             </div>

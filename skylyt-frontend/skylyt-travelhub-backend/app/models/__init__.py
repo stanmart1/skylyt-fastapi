@@ -14,6 +14,7 @@ from .currency import Currency
 from .state import State
 from .city import City
 from .hotel_image import HotelImage
+from .driver import Driver
 
 __all__ = [
     "Base",
@@ -32,5 +33,6 @@ __all__ = [
     "Currency",
     "State",
     "City",
-    "HotelImage"
+    "HotelImage",
+    "Driver"
 ]

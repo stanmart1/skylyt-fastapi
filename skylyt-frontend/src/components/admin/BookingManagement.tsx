@@ -17,8 +17,10 @@ const BookingManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [editForm, setEditForm] = useState({
-    status: ''
+    status: '',
+    driver_id: ''
   });
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [selectedBookings, setSelectedBookings] = useState<number[]>([]);
   const { hasPermission } = useAuth();
 
@@ -34,7 +36,17 @@ const BookingManagement = () => {
       }
     };
 
+    const fetchDrivers = async () => {
+      try {
+        const data = await apiService.request('/drivers?is_active=true');
+        setDrivers(data || []);
+      } catch (error) {
+        console.error('Failed to fetch drivers:', error);
+      }
+    };
+
     fetchBookings();
+    fetchDrivers();
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -53,7 +65,8 @@ const BookingManagement = () => {
   const handleEditBooking = (booking: Booking) => {
     setEditingBooking(booking);
     setEditForm({
-      status: booking.status
+      status: booking.status,
+      driver_id: (booking as any).driver_id || ''
     });
     setIsEditModalOpen(true);
   };
@@ -231,6 +244,11 @@ const BookingManagement = () => {
                         <p className="text-sm text-gray-600">
                           Type: {booking.booking_type}
                         </p>
+                        {(booking as any).driver_name && (
+                          <p className="text-sm text-gray-600">
+                            Driver: {(booking as any).driver_name}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-600">
                           Amount: ${booking.total_amount} {booking.currency}
                         </p>
@@ -337,9 +355,29 @@ const BookingManagement = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-600">Total Amount</Label>
-                <p className="text-sm font-bold">${editingBooking?.total_amount} {editingBooking?.currency}</p>
+                <p className="text-sm font-bold">₦{editingBooking?.total_amount} {editingBooking?.currency}</p>
               </div>
             </div>
+
+            {/* Driver Assignment (for car bookings) */}
+            {editingBooking?.booking_type === 'car' && (
+              <div>
+                <Label htmlFor="driver">Assign Driver</Label>
+                <Select value={editForm.driver_id} onValueChange={(value) => setEditForm({...editForm, driver_id: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select driver (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No driver assigned</SelectItem>
+                    {drivers.filter(d => d.is_available).map((driver) => (
+                      <SelectItem key={driver.id} value={driver.id.toString()}>
+                        {driver.name} - {driver.license_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label className="text-sm font-medium text-gray-600">Special Requests</Label>
