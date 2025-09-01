@@ -32,12 +32,13 @@ export const useFavorites = () => {
 
   const addFavorite = async (itemType: string, itemId: string, name: string) => {
     try {
-      const newFavorite = await apiService.addFavorite({
+      const response = await apiService.addFavorite({
         item_type: itemType,
         item_id: itemId,
         name: name,
       });
-      setFavorites(prev => [...prev, newFavorite]);
+      // Refresh favorites list after adding
+      await fetchFavorites();
       toast({
         title: 'Added to Favorites',
         description: `${name} has been added to your favorites.`,
@@ -68,8 +69,19 @@ export const useFavorites = () => {
     }
   };
 
-  const isFavorite = (itemType: string, itemId: string) => {
+  const isFavorite = (itemId: string, itemType: string) => {
     return favorites.some(fav => fav.item_type === itemType && fav.item_id === itemId);
+  };
+  
+  const addToFavorites = async (favoriteData: { item_type: string; item_id: string; name: string }) => {
+    return addFavorite(favoriteData.item_type, favoriteData.item_id, favoriteData.name);
+  };
+  
+  const removeFromFavorites = async (itemId: string, itemType: string) => {
+    const favorite = favorites.find(fav => fav.item_type === itemType && fav.item_id === itemId);
+    if (favorite) {
+      return removeFavorite(favorite.id);
+    }
   };
 
   useEffect(() => {
@@ -86,5 +98,7 @@ export const useFavorites = () => {
     addFavorite,
     removeFavorite,
     isFavorite,
+    addToFavorites,
+    removeFromFavorites,
   };
 };

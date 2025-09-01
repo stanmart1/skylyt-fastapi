@@ -14,7 +14,11 @@ import {
   LogOut,
   Heart,
   Eye,
-  EyeOff
+  EyeOff,
+  TrendingUp,
+  DollarSign,
+  Clock,
+  Star
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,7 +28,7 @@ import { FavoritesManager } from '@/components/favorites/FavoritesManager';
 import { apiService } from '@/services/api';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState('overview');
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState({
     email: true,
@@ -42,6 +46,14 @@ const Dashboard = () => {
     new: false,
     confirm: false
   });
+  const [userStats, setUserStats] = useState({
+    total_bookings: 0,
+    active_bookings: 0,
+    total_spent: 0,
+    upcoming_bookings: 0,
+    total_favorites: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const handleLogout = () => {
     logout();
@@ -93,7 +105,7 @@ const Dashboard = () => {
     }
   };
 
-  // Load user notification preferences on mount
+  // Load user notification preferences and stats on mount
   useEffect(() => {
     const loadNotifications = async () => {
       try {
@@ -104,8 +116,20 @@ const Dashboard = () => {
       }
     };
     
+    const loadUserStats = async () => {
+      try {
+        const response = await apiService.request('/users/me/stats');
+        setUserStats(response);
+      } catch (error) {
+        console.error('Failed to load user stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    
     if (user) {
       loadNotifications();
+      loadUserStats();
     }
   }, [user]);
 
@@ -127,6 +151,14 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
+                  <Button
+                    variant={activeTab === 'overview' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    onClick={() => setActiveTab('overview')}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Overview
+                  </Button>
                   <Button
                     variant={activeTab === 'bookings' ? 'default' : 'ghost'}
                     className="w-full justify-start"
@@ -174,6 +206,109 @@ const Dashboard = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Dashboard Overview</h1>
+                  <p className="text-gray-600">Your travel activity at a glance</p>
+                </div>
+                
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Total Bookings</p>
+                          <p className="text-2xl font-bold">
+                            {statsLoading ? '...' : userStats.total_bookings}
+                          </p>
+                        </div>
+                        <Calendar className="h-8 w-8 text-blue-600" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Active Bookings</p>
+                          <p className="text-2xl font-bold">
+                            {statsLoading ? '...' : userStats.active_bookings}
+                          </p>
+                        </div>
+                        <Clock className="h-8 w-8 text-green-600" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Total Spent</p>
+                          <p className="text-2xl font-bold">
+                            {statsLoading ? '...' : `$${userStats.total_spent.toFixed(2)}`}
+                          </p>
+                        </div>
+                        <DollarSign className="h-8 w-8 text-orange-600" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Favorites</p>
+                          <p className="text-2xl font-bold">
+                            {statsLoading ? '...' : userStats.total_favorites}
+                          </p>
+                        </div>
+                        <Star className="h-8 w-8 text-red-600" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex-col"
+                        onClick={() => setActiveTab('bookings')}
+                      >
+                        <Calendar className="h-6 w-6 mb-2" />
+                        View Bookings
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex-col"
+                        onClick={() => window.location.href = '/cars'}
+                      >
+                        <TrendingUp className="h-6 w-6 mb-2" />
+                        Book a Car
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex-col"
+                        onClick={() => window.location.href = '/hotels'}
+                      >
+                        <Heart className="h-6 w-6 mb-2" />
+                        Book a Hotel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
             {activeTab === 'bookings' && (
               <div className="space-y-6">
                 <div>
