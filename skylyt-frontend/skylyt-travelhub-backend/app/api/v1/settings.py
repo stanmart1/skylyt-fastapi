@@ -7,8 +7,22 @@ from app.schemas.settings import (
     GeneralSettingsUpdate, PaymentGatewaySettingsUpdate, 
     SecuritySettingsUpdate, BankTransferSettingsUpdate, SettingsResponse
 )
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter(prefix="/settings", tags=["settings"])
+
+class NotificationSettingsUpdate(BaseModel):
+    smtp_server: Optional[str] = None
+    smtp_port: Optional[int] = None
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    from_email: Optional[str] = None
+    resend_api_key: Optional[str] = None
+    onesignal_app_id: Optional[str] = None
+    onesignal_api_key: Optional[str] = None
+    email_notifications_enabled: Optional[bool] = None
+    push_notifications_enabled: Optional[bool] = None
 
 
 def get_or_create_settings(db: Session) -> Settings:
@@ -136,3 +150,24 @@ def update_bank_transfer_settings(
     
     db.commit()
     return {"message": "Bank transfer settings updated successfully"}
+
+
+@router.put("/notifications")
+def update_notification_settings(
+    settings_update: NotificationSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Update notification settings"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    settings = get_or_create_settings(db)
+    
+    update_data = settings_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(settings, field):
+            setattr(settings, field, value)
+    
+    db.commit()
+    return {"message": "Notification settings updated successfully"}

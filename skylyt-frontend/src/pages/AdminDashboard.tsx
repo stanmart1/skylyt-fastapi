@@ -308,7 +308,8 @@ const AdminDashboard = () => {
                   Support
                 </Button>
               )}
-              {hasPermission('dashboard.view_notifications') && (
+              {/* Notifications moved to Settings tab */}
+              {/* {hasPermission('dashboard.view_notifications') && (
                 <Button
                   variant={activeTab === 'notifications' ? 'default' : 'ghost'}
                   className="w-full justify-start"
@@ -317,7 +318,7 @@ const AdminDashboard = () => {
                   <Bell className="h-4 w-4 mr-2" />
                   Notifications
                 </Button>
-              )}
+              )} */}
               {hasPermission('dashboard.view_settings') && (
                 <Button
                   variant={activeTab === 'settings' ? 'default' : 'ghost'}
@@ -468,7 +469,8 @@ const AdminDashboard = () => {
               Support
             </Button>
           )}
-          {hasPermission('dashboard.view_notifications') && (
+          {/* Notifications moved to Settings tab */}
+          {/* {hasPermission('dashboard.view_notifications') && (
             <Button
               variant={activeTab === 'notifications' ? 'default' : 'ghost'}
               className="w-full justify-start"
@@ -477,7 +479,7 @@ const AdminDashboard = () => {
               <Bell className="h-4 w-4 mr-2" />
               Notifications
             </Button>
-          )}
+          )} */}
           {hasPermission('dashboard.view_settings') && (
             <Button
               variant={activeTab === 'settings' ? 'default' : 'ghost'}
@@ -820,7 +822,8 @@ const AdminDashboard = () => {
             </ErrorBoundary>
           )}
 
-          {activeTab === 'notifications' && hasPermission('dashboard.view_notifications') && (
+          {/* Notifications moved to Settings tab */}
+          {/* {activeTab === 'notifications' && hasPermission('dashboard.view_notifications') && (
             <div className="space-y-6">
               <ErrorBoundary>
                 <NotificationSender />
@@ -829,7 +832,7 @@ const AdminDashboard = () => {
                 <NotificationCenter />
               </ErrorBoundary>
             </div>
-          )}
+          )} */}
 
           {activeTab === 'roles' && hasPermission('dashboard.view_roles') && (
             <div className="space-y-6">

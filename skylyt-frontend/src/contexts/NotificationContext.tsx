@@ -28,9 +28,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const initializeOneSignal = async () => {
     try {
+      const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+      
+      if (!appId || appId === 'your-onesignal-app-id') {
+        console.warn('OneSignal App ID not configured');
+        return;
+      }
+      
       if (typeof window !== 'undefined' && 'OneSignal' in window) {
         await (window as any).OneSignal.init({
-          appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+          appId: appId,
           allowLocalhostAsSecureOrigin: true,
         });
 

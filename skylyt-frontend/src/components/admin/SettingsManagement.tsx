@@ -10,6 +10,9 @@ import { Settings, CreditCard, Shield, Globe, Save, Bell, Mail } from 'lucide-re
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationSender } from '@/components/admin/NotificationSender';
+import { NotificationCenter } from '@/components/admin/NotificationCenter';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface SettingsData {
   id: number;
@@ -37,6 +40,7 @@ interface SettingsData {
   smtp_username: string;
   smtp_password: string;
   from_email: string;
+  resend_api_key: string;
   onesignal_app_id: string;
   onesignal_api_key: string;
   email_notifications_enabled: boolean;
@@ -91,6 +95,7 @@ export const SettingsManagement = () => {
     smtp_username: '',
     smtp_password: '',
     from_email: '',
+    resend_api_key: '',
     onesignal_app_id: '',
     onesignal_api_key: '',
     email_notifications_enabled: true,
@@ -148,6 +153,7 @@ export const SettingsManagement = () => {
         smtp_username: data.smtp_username || '',
         smtp_password: '',
         from_email: data.from_email || '',
+        resend_api_key: '',
         onesignal_app_id: data.onesignal_app_id || '',
         onesignal_api_key: '',
         email_notifications_enabled: data.email_notifications_enabled ?? true,
@@ -637,6 +643,16 @@ export const SettingsManagement = () => {
                     onChange={(e) => setNotificationForm({...notificationForm, from_email: e.target.value})}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="resend_api_key">Resend API Key</Label>
+                  <Input
+                    id="resend_api_key"
+                    type="password"
+                    value={notificationForm.resend_api_key}
+                    onChange={(e) => setNotificationForm({...notificationForm, resend_api_key: e.target.value})}
+                    placeholder="Enter to update"
+                  />
+                </div>
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="email_notifications_enabled"
@@ -684,6 +700,27 @@ export const SettingsManagement = () => {
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Notification Settings'}
               </Button>
+            </div>
+
+            {/* Notification Management Section */}
+            <div className="space-y-6 border-t pt-6">
+              <h3 className="text-lg font-semibold">Notification Management</h3>
+              
+              {/* Send Push Notification */}
+              <div className="space-y-4">
+                <h4 className="font-medium">Send Push Notification</h4>
+                <ErrorBoundary>
+                  <NotificationSender />
+                </ErrorBoundary>
+              </div>
+              
+              {/* Notification Center */}
+              <div className="space-y-4">
+                <h4 className="font-medium">Notification Center</h4>
+                <ErrorBoundary>
+                  <NotificationCenter />
+                </ErrorBoundary>
+              </div>
             </div>
           </TabsContent>
 
