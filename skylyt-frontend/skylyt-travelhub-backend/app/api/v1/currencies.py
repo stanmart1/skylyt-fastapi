@@ -14,14 +14,14 @@ router = APIRouter()
 
 
 @router.get("/currencies", response_model=List[CurrencyResponse])
-async def get_currencies(db: Session = Depends(get_db)):
+def get_currencies(db: Session = Depends(get_db)):
     """Get all active currencies"""
     currencies = CurrencyService.get_active_currencies(db)
     return currencies
 
 
 @router.post("/currencies/convert", response_model=CurrencyConversionResponse)
-async def convert_currency(
+def convert_currency(
     request: CurrencyConversionRequest,
     db: Session = Depends(get_db)
 ):
@@ -46,7 +46,7 @@ async def convert_currency(
 
 
 @router.post("/admin/currencies", response_model=CurrencyResponse)
-async def create_currency(
+def create_currency(
     currency: CurrencyCreate,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -68,7 +68,7 @@ async def create_currency(
 
 
 @router.put("/admin/currencies/{currency_id}", response_model=CurrencyResponse)
-async def update_currency(
+def update_currency(
     currency_id: int,
     currency_update: CurrencyUpdate,
     current_user=Depends(get_current_user),
@@ -91,7 +91,7 @@ async def update_currency(
 
 
 @router.delete("/admin/currencies/{currency_id}")
-async def delete_currency(
+def delete_currency(
     currency_id: int,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -113,7 +113,7 @@ async def delete_currency(
 
 
 @router.put("/admin/currencies/bulk-update")
-async def bulk_update_rates(
+def bulk_update_rates(
     bulk_update: BulkRateUpdate,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -134,7 +134,7 @@ async def bulk_update_rates(
 
 
 @router.get("/admin/currencies", response_model=List[CurrencyResponse])
-async def get_all_currencies_admin(
+def get_all_currencies_admin(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

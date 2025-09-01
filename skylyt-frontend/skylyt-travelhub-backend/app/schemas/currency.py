@@ -1,6 +1,7 @@
 from pydantic import BaseModel, validator
 from typing import Optional
 from decimal import Decimal
+from datetime import datetime
 
 
 class CurrencyBase(BaseModel):
@@ -40,8 +41,8 @@ class CurrencyUpdate(BaseModel):
 
 class CurrencyResponse(CurrencyBase):
     id: int
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
