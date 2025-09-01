@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Hotel, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft } from 'lucide-react';
 import { HotelManagement } from './HotelManagement';
-import { HotelBookingManagement } from './HotelBookingManagement';
+import HotelBookingManagement from './HotelBookingManagement';
 import { PaymentManagement } from './PaymentManagement';
 import { ReviewManagement } from './ReviewManagement';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';

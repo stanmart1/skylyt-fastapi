@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft } from 'lucide-react';
 import { CarManagement } from './CarManagement';
-import { CarBookingManagement } from './CarBookingManagement';
+import CarBookingManagement from './CarBookingManagement';
 import { PaymentManagement } from './PaymentManagement';
 import { ReviewManagement } from './ReviewManagement';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
