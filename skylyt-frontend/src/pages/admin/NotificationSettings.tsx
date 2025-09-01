@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { NotificationSender } from '@/components/admin/NotificationSender';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Navigation from '@/components/Navigation';
 
 export const NotificationSettings = () => {
   const [loading, setLoading] = useState(true);
@@ -107,14 +106,7 @@ export const NotificationSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Notification Settings</h1>
-          <p className="text-gray-600">Configure email and push notification settings</p>
-        </div>
-        <div className="space-y-6">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -258,8 +250,6 @@ export const NotificationSettings = () => {
           </div>
         </CardContent>
       </Card>
-        </div>
-      </div>
     </div>
   );
 };

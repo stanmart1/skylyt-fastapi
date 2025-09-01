@@ -19,6 +19,12 @@ import { PaymentManagement } from '@/components/admin/PaymentManagement';
 
 import { SystemHealth } from '@/components/admin/SystemHealth';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
+import { GeneralSettings } from '@/pages/admin/GeneralSettings';
+import { PaymentSettings } from '@/pages/admin/PaymentSettings';
+import { BankTransferSettings } from '@/pages/admin/BankTransferSettings';
+import { CurrencySettings } from '@/pages/admin/CurrencySettings';
+import { NotificationSettings } from '@/pages/admin/NotificationSettings';
+import { SecuritySettings } from '@/pages/admin/SecuritySettings';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiService } from '@/services/api';
 import { Input } from '@/components/ui/input';
@@ -67,6 +73,7 @@ const AdminDashboard = () => {
   const [editMode, setEditMode] = useState(false);
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -256,50 +263,50 @@ const AdminDashboard = () => {
                   {settingsDropdownOpen && (
                     <div className="ml-6 space-y-1">
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/general'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); setSidebarOpen(false); }}
                       >
                         General
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/payment'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); setSidebarOpen(false); }}
                       >
                         Payment Gateway
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/bank-transfer'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); setSidebarOpen(false); }}
                       >
                         Bank Transfer
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/currency'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); setSidebarOpen(false); }}
                       >
                         Currency
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/notifications'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); setSidebarOpen(false); }}
                       >
                         Notifications
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
                         size="sm"
                         className="w-full justify-start text-sm"
-                        onClick={() => { navigate('/admin/settings/security'); setSidebarOpen(false); }}
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); setSidebarOpen(false); }}
                       >
                         Security
                       </Button>
@@ -394,50 +401,50 @@ const AdminDashboard = () => {
               {settingsDropdownOpen && (
                 <div className="ml-6 space-y-1">
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/general')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); }}
                   >
                     General
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/payment')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); }}
                   >
                     Payment Gateway
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/bank-transfer')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); }}
                   >
                     Bank Transfer
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/currency')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); }}
                   >
                     Currency
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/notifications')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); }}
                   >
                     Notifications
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
                     size="sm"
                     className="w-full justify-start text-sm"
-                    onClick={() => navigate('/admin/settings/security')}
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); }}
                   >
                     Security
                   </Button>
@@ -968,11 +975,33 @@ const AdminDashboard = () => {
           {activeTab === 'settings' && hasPermission('dashboard.view_settings') && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Admin Settings</h1>
-                <p className="text-gray-600">Configure system settings and preferences</p>
+                <h1 className="text-3xl font-bold mb-2">
+                  {activeSettingsTab === 'general' && 'General Settings'}
+                  {activeSettingsTab === 'payment' && 'Payment Gateway Settings'}
+                  {activeSettingsTab === 'bank-transfer' && 'Bank Transfer Settings'}
+                  {activeSettingsTab === 'currency' && 'Currency Settings'}
+                  {activeSettingsTab === 'notifications' && 'Notification Settings'}
+                  {activeSettingsTab === 'security' && 'Security Settings'}
+                  {!activeSettingsTab && 'Admin Settings'}
+                </h1>
+                <p className="text-gray-600">
+                  {activeSettingsTab === 'general' && 'Configure general system settings and preferences'}
+                  {activeSettingsTab === 'payment' && 'Configure payment gateway integrations'}
+                  {activeSettingsTab === 'bank-transfer' && 'Configure bank transfer payment options'}
+                  {activeSettingsTab === 'currency' && 'Manage currency rates and exchange settings'}
+                  {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
+                  {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
+                  {!activeSettingsTab && 'Configure system settings and preferences'}
+                </p>
               </div>
               <ErrorBoundary>
-                <SettingsManagement />
+                {activeSettingsTab === 'general' && <GeneralSettings />}
+                {activeSettingsTab === 'payment' && <PaymentSettings />}
+                {activeSettingsTab === 'bank-transfer' && <BankTransferSettings />}
+                {activeSettingsTab === 'currency' && <CurrencySettings />}
+                {activeSettingsTab === 'notifications' && <NotificationSettings />}
+                {activeSettingsTab === 'security' && <SecuritySettings />}
+                {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>
           )}

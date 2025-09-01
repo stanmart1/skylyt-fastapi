@@ -8,7 +8,6 @@ import { Switch } from '@/components/ui/switch';
 import { Globe, Save } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
-import Navigation from '@/components/Navigation';
 
 export const GeneralSettings = () => {
   const [loading, setLoading] = useState(true);
@@ -100,14 +99,7 @@ export const GeneralSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">General Settings</h1>
-          <p className="text-gray-600">Configure general system settings and preferences</p>
-        </div>
-        <Card>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Globe className="h-5 w-5" />
@@ -169,8 +161,6 @@ export const GeneralSettings = () => {
           </Button>
         </div>
       </CardContent>
-        </Card>
-      </div>
-    </div>
+    </Card>
   );
 };

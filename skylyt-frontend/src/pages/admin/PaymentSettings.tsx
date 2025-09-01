@@ -7,7 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { CreditCard, Save, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import Navigation from '@/components/Navigation';
 
 export const PaymentSettings = () => {
   const [loading, setLoading] = useState(true);
@@ -123,14 +122,7 @@ export const PaymentSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Payment Gateway Settings</h1>
-          <p className="text-gray-600">Configure payment gateway integrations</p>
-        </div>
-        <Card>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
@@ -241,8 +233,6 @@ export const PaymentSettings = () => {
           </Button>
         </div>
       </CardContent>
-        </Card>
-      </div>
-    </div>
+    </Card>
   );
 };

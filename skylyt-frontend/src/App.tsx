@@ -35,12 +35,7 @@ import CarsManagementPage from "./pages/CarsManagementPage";
 import HotelManagementPage from "./pages/HotelManagementPage";
 import StateDestinationPage from "./pages/StateDestinationPage";
 import CityHotelsPage from "./pages/CityHotelsPage";
-import { GeneralSettings } from "./pages/admin/GeneralSettings";
-import { PaymentSettings } from "./pages/admin/PaymentSettings";
-import { BankTransferSettings } from "./pages/admin/BankTransferSettings";
-import { CurrencySettings } from "./pages/admin/CurrencySettings";
-import { NotificationSettings } from "./pages/admin/NotificationSettings";
-import { SecuritySettings } from "./pages/admin/SecuritySettings";
+
 
 import NotFound from "./pages/NotFound";
 
@@ -141,36 +136,7 @@ const PageTransitionWrapper = () => {
                 } />
                 <Route path="/destinations/:stateSlug" element={<StateDestinationPage />} />
                 <Route path="/destinations/:stateSlug/:citySlug" element={<CityHotelsPage />} />
-                <Route path="/admin/settings/general" element={
-                  <ProtectedRoute requireAdmin>
-                    <GeneralSettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings/payment" element={
-                  <ProtectedRoute requireAdmin>
-                    <PaymentSettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings/bank-transfer" element={
-                  <ProtectedRoute requireAdmin>
-                    <BankTransferSettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings/currency" element={
-                  <ProtectedRoute requireAdmin>
-                    <CurrencySettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings/notifications" element={
-                  <ProtectedRoute requireAdmin>
-                    <NotificationSettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings/security" element={
-                  <ProtectedRoute requireAdmin>
-                    <SecuritySettings />
-                  </ProtectedRoute>
-                } />
+
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
