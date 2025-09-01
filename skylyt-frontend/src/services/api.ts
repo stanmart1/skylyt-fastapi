@@ -338,11 +338,13 @@ class ApiService {
   }
 
   // Payment Proof Upload
-  async uploadPaymentProof(paymentId: number, file: File): Promise<any> {
+  async uploadPaymentProof(bookingId: number, paymentReference: string, file: File): Promise<any> {
     const formData = new FormData();
+    formData.append('booking_id', bookingId.toString());
+    formData.append('payment_reference', paymentReference);
     formData.append('file', file);
     
-    const response = await fetch(`${this.baseURL}/payments/${paymentId}/upload-proof`, {
+    const response = await fetch(`${this.baseURL}/payments/upload-proof`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -351,7 +353,9 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Payment proof upload failed');
+      const errorText = await response.text();
+      console.error('Upload failed:', errorText);
+      throw new Error(`Upload failed: ${response.status}`);
     }
 
     return response.json();
@@ -372,7 +376,7 @@ class ApiService {
 
   // Get Bank Transfer Details
   async getBankTransferDetails(): Promise<any> {
-    return this.request('/payments/bank-transfer-details');
+    return this.request('/bank-accounts');
   }
 
 
@@ -509,7 +513,7 @@ class ApiService {
     segments?: string[];
     url?: string;
   }): Promise<any> {
-    return this.request('/api/v1/notifications/push', {
+    return this.request('/notifications/push', {
       method: 'POST',
       body: JSON.stringify(data),
     });

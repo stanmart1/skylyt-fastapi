@@ -241,9 +241,9 @@ const HotelManagementPage = () => {
                         <Hotel className="h-4 w-4 text-white" />
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-white">{stats.totalHotels}</div>
+                        <div className="text-2xl font-bold text-white">{stats.totalHotels || 0}</div>
                         <p className="text-xs text-blue-100">
-                          {stats.totalRooms} total rooms
+                          {stats.totalRooms || 0} total rooms
                         </p>
                       </CardContent>
                     </Card>
@@ -254,7 +254,7 @@ const HotelManagementPage = () => {
                         <Calendar className="h-4 w-4 text-white" />
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-white">{stats.activeBookings}</div>
+                        <div className="text-2xl font-bold text-white">{stats.activeBookings || 0}</div>
                         <p className="text-xs text-green-100">
                           Current reservations
                         </p>
@@ -268,10 +268,10 @@ const HotelManagementPage = () => {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold text-white">
-                          ₦{stats.totalRevenue}
+                          ₦{stats.totalRevenue?.toLocaleString() || 0}
                         </div>
                         <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}`}>
-                          {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
+                          {(stats.revenueChange || 0) >= 0 ? '+' : ''}{stats.revenueChange || 0}% from last month
                         </p>
                       </CardContent>
                     </Card>
@@ -282,7 +282,7 @@ const HotelManagementPage = () => {
                         <TrendingUp className="h-4 w-4 text-white" />
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-white">{stats.occupancyRate}%</div>
+                        <div className="text-2xl font-bold text-white">{stats.occupancyRate || 0}%</div>
                         <p className="text-xs text-purple-100">
                           Current occupancy
                         </p>
@@ -305,20 +305,52 @@ const HotelManagementPage = () => {
 
           {activeTab === 'bookings' && (
             <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Hotel Bookings</h2>
+                  <p className="text-sm sm:text-base text-gray-600">Manage hotel reservations and check-ins</p>
+                </div>
+              </div>
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (
-                <ErrorBoundary><HotelBookingManagement /></ErrorBoundary>
+                <ErrorBoundary fallback={
+                  <Card>
+                    <CardContent className="p-8 sm:p-12 text-center">
+                      <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No bookings found</h3>
+                      <p className="text-sm sm:text-base text-gray-600">Hotel bookings will appear here when customers make reservations.</p>
+                    </CardContent>
+                  </Card>
+                }>
+                  <HotelBookingManagement />
+                </ErrorBoundary>
               )}
             </div>
           )}
 
           {activeTab === 'payments' && (
             <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Payment Management</h2>
+                  <p className="text-sm sm:text-base text-gray-600">Track and manage hotel booking payments</p>
+                </div>
+              </div>
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (
-                <ErrorBoundary><PaymentManagement /></ErrorBoundary>
+                <ErrorBoundary fallback={
+                  <Card>
+                    <CardContent className="p-8 sm:p-12 text-center">
+                      <CreditCard className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No payments found</h3>
+                      <p className="text-sm sm:text-base text-gray-600">Payment transactions will appear here when bookings are made.</p>
+                    </CardContent>
+                  </Card>
+                }>
+                  <PaymentManagement />
+                </ErrorBoundary>
               )}
             </div>
           )}
@@ -328,17 +360,35 @@ const HotelManagementPage = () => {
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (
-                <ErrorBoundary><HotelManagement /></ErrorBoundary>
+                <ErrorBoundary>
+                  <HotelManagement />
+                </ErrorBoundary>
               )}
             </div>
           )}
 
           {activeTab === 'reviews' && (
             <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Review Management</h2>
+                  <p className="text-sm sm:text-base text-gray-600">Monitor and respond to hotel reviews</p>
+                </div>
+              </div>
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (
-                <ErrorBoundary><ReviewManagement /></ErrorBoundary>
+                <ErrorBoundary fallback={
+                  <Card>
+                    <CardContent className="p-8 sm:p-12 text-center">
+                      <MessageSquare className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No reviews yet</h3>
+                      <p className="text-sm sm:text-base text-gray-600">Customer reviews and ratings will appear here after hotel stays.</p>
+                    </CardContent>
+                  </Card>
+                }>
+                  <ReviewManagement />
+                </ErrorBoundary>
               )}
             </div>
           )}

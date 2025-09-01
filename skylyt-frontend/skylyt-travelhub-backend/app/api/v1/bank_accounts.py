@@ -5,7 +5,7 @@ from app.models.settings import Settings
 
 router = APIRouter(prefix="/bank-accounts", tags=["bank-accounts"])
 
-@router.get("/")
+@router.get("")
 def get_bank_accounts(db: Session = Depends(get_db)):
     """Get bank account details for transfers"""
     settings = db.query(Settings).filter(Settings.is_primary_account == True).first()

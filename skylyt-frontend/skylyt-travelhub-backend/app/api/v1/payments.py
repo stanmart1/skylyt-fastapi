@@ -54,7 +54,7 @@ async def initialize_payment(
 
 
 @router.post("/upload-proof")
-def upload_proof_of_payment(
+async def upload_proof_of_payment(
     booking_id: int = Form(...),
     payment_reference: str = Form(...),
     file: UploadFile = File(...),
@@ -62,6 +62,15 @@ def upload_proof_of_payment(
 ):
     """Upload proof of payment for bank transfer"""
     try:
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and PDF files are allowed.")
+        
+        # Validate file size (max 10MB)
+        if file.size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+        
         # Validate booking exists first
         from app.models.booking import Booking
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
@@ -78,8 +87,8 @@ def upload_proof_of_payment(
         file_path = os.path.join(upload_dir, unique_filename)
         
         # Save file
+        content = await file.read()
         with open(file_path, "wb") as buffer:
-            content = file.file.read()
             buffer.write(content)
         
         # Initialize payment with proof
@@ -90,9 +99,10 @@ def upload_proof_of_payment(
         )
         
         return {
+            "success": True,
             "message": "Proof of payment uploaded successfully",
-            "file_path": file_path,
-            "payment_id": result["payment_id"]
+            "file_path": f"/uploads/payment_proofs/{unique_filename}",
+            "payment_id": result.get("payment_id") if isinstance(result, dict) else None
         }
     except HTTPException:
         raise
