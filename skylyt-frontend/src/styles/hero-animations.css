@@ -124,7 +124,7 @@
 /* Input Focus Animations */
 input:focus {
   animation: glow 2s ease-in-out infinite;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 /* Card Hover Effects */
