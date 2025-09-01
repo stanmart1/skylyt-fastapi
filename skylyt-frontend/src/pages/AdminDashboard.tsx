@@ -29,6 +29,8 @@ import { Plus, Edit, Trash2, Star, Heart, X, Menu, Monitor } from 'lucide-react'
 import Navigation from '@/components/Navigation';
 import { CarManagement } from '@/components/admin/CarManagement';
 import { HotelManagement } from '@/components/admin/HotelManagement';
+import { CarDashboard } from '@/components/admin/CarDashboard';
+import { HotelDashboard } from '@/components/admin/HotelDashboard';
 import { ReviewManagement } from '@/components/admin/ReviewManagement';
 import { SupportTicketManagement } from '@/components/admin/SupportTicketManagement';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
@@ -227,36 +229,6 @@ const AdminDashboard = () => {
                   Roles
                 </Button>
               )}
-              {hasPermission('dashboard.view_bookings') && (
-                <Button
-                  variant={activeTab === 'hotel-bookings' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('hotel-bookings'); setSidebarOpen(false); }}
-                >
-                  <Hotel className="h-4 w-4 mr-2" />
-                  Hotel Bookings
-                </Button>
-              )}
-              {hasPermission('dashboard.view_bookings') && (
-                <Button
-                  variant={activeTab === 'car-bookings' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('car-bookings'); setSidebarOpen(false); }}
-                >
-                  <Car className="h-4 w-4 mr-2" />
-                  Car Bookings
-                </Button>
-              )}
-              {hasPermission('dashboard.view_payments') && (
-                <Button
-                  variant={activeTab === 'payments' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Payments
-                </Button>
-              )}
               {hasPermission('dashboard.view_system') && (
                 <Button
                   variant={activeTab === 'system' ? 'default' : 'ghost'}
@@ -265,47 +237,6 @@ const AdminDashboard = () => {
                 >
                   <Monitor className="h-4 w-4 mr-2" />
                   System
-                </Button>
-              )}
-              {hasPermission('dashboard.view_cars') && (
-                <Button
-                  variant={activeTab === 'cars' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('cars'); setSidebarOpen(false); }}
-                >
-                  <Car className="h-4 w-4 mr-2" />
-                  Car Management
-                </Button>
-              )}
-              {hasPermission('dashboard.view_hotels') && (
-                <Button
-                  variant={activeTab === 'hotels' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('hotels'); setSidebarOpen(false); }}
-                >
-                  <Hotel className="h-4 w-4 mr-2" />
-                  Hotel Management
-                </Button>
-              )}
-
-              {hasPermission('dashboard.view_reviews') && (
-                <Button
-                  variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Reviews
-                </Button>
-              )}
-              {hasPermission('dashboard.view_support') && (
-                <Button
-                  variant={activeTab === 'support' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('support'); setSidebarOpen(false); }}
-                >
-                  <Ticket className="h-4 w-4 mr-2" />
-                  Support
                 </Button>
               )}
               {/* Notifications moved to Settings tab */}
@@ -388,36 +319,6 @@ const AdminDashboard = () => {
               Roles
             </Button>
           )}
-          {hasPermission('dashboard.view_bookings') && (
-            <Button
-              variant={activeTab === 'hotel-bookings' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('hotel-bookings')}
-            >
-              <Hotel className="h-4 w-4 mr-2" />
-              Hotel Bookings
-            </Button>
-          )}
-          {hasPermission('dashboard.view_bookings') && (
-            <Button
-              variant={activeTab === 'car-bookings' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('car-bookings')}
-            >
-              <Car className="h-4 w-4 mr-2" />
-              Car Bookings
-            </Button>
-          )}
-          {hasPermission('dashboard.view_payments') && (
-            <Button
-              variant={activeTab === 'payments' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('payments')}
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Payments
-            </Button>
-          )}
           {hasPermission('dashboard.view_system') && (
             <Button
               variant={activeTab === 'system' ? 'default' : 'ghost'}
@@ -426,47 +327,6 @@ const AdminDashboard = () => {
             >
               <Monitor className="h-4 w-4 mr-2" />
               System
-            </Button>
-          )}
-          {hasPermission('dashboard.view_cars') && (
-            <Button
-              variant={activeTab === 'cars' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('cars')}
-            >
-              <Car className="h-4 w-4 mr-2" />
-              Car Management
-            </Button>
-          )}
-          {hasPermission('dashboard.view_hotels') && (
-            <Button
-              variant={activeTab === 'hotels' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('hotels')}
-            >
-              <Hotel className="h-4 w-4 mr-2" />
-              Hotel Management
-            </Button>
-          )}
-
-          {hasPermission('dashboard.view_reviews') && (
-            <Button
-              variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('reviews')}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Reviews
-            </Button>
-          )}
-          {hasPermission('dashboard.view_support') && (
-            <Button
-              variant={activeTab === 'support' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('support')}
-            >
-              <Ticket className="h-4 w-4 mr-2" />
-              Support
             </Button>
           )}
           {/* Notifications moved to Settings tab */}
@@ -608,7 +468,7 @@ const AdminDashboard = () => {
                       </div>
                       <Button 
                         className="w-full"
-                        onClick={() => setActiveTab('cars')}
+                        onClick={() => setActiveTab('car-dashboard')}
                       >
                         Manage Fleet
                       </Button>
@@ -642,7 +502,7 @@ const AdminDashboard = () => {
                       </div>
                       <Button 
                         className="w-full"
-                        onClick={() => setActiveTab('hotels')}
+                        onClick={() => setActiveTab('hotel-dashboard')}
                       >
                         Manage Hotels
                       </Button>
@@ -796,6 +656,18 @@ const AdminDashboard = () => {
               <SystemHealth />
             </ErrorBoundary>
             </div>
+          )}
+
+          {activeTab === 'car-dashboard' && hasPermission('dashboard.view_cars') && (
+            <ErrorBoundary>
+              <CarDashboard onBack={() => setActiveTab('overview')} />
+            </ErrorBoundary>
+          )}
+
+          {activeTab === 'hotel-dashboard' && hasPermission('dashboard.view_hotels') && (
+            <ErrorBoundary>
+              <HotelDashboard onBack={() => setActiveTab('overview')} />
+            </ErrorBoundary>
           )}
 
           {activeTab === 'cars' && hasPermission('dashboard.view_cars') && (

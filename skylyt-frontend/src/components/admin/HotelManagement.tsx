@@ -1,32 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Star, Hotel } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Edit, Trash2, Star, Hotel, Calendar, Users, DollarSign, Bed, MapPin, Wifi, Car as CarIcon, Coffee, Utensils, Dumbbell, Waves, Shield, CheckCircle } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface HotelData {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  state: string;
+  country: string;
+  star_rating: number;
+  price_per_night: number;
+  currency: string;
+  room_count: number;
+  available_rooms: number;
+  images: string[];
+  amenities: string[];
+  description: string;
+  features: string[];
+  is_available: boolean;
+  is_featured: boolean;
+  contact_email: string;
+  contact_phone: string;
+  check_in_time: string;
+  check_out_time: string;
+  cancellation_policy: string;
+  created_at: string;
+  occupancy_rate: number;
+  average_rating: number;
+  total_reviews: number;
+}
+
+interface RoomType {
+  id: string;
+  hotel_id: string;
+  name: string;
+  type: string;
+  capacity: number;
+  price: number;
+  available_count: number;
+  total_count: number;
+  amenities: string[];
+  size_sqm: number;
+  bed_type: string;
+}
 
 export const HotelManagement: React.FC = () => {
   const { currency } = useCurrency();
   const { toast } = useToast();
-  const [hotels, setHotels] = useState<any[]>([]);
+  const { hasPermission } = useAuth();
+  const [hotels, setHotels] = useState<HotelData[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('properties');
+  const [stats, setStats] = useState({
+    total_hotels: 0,
+    total_rooms: 0,
+    occupied_rooms: 0,
+    average_occupancy: 0,
+    revenue_today: 0,
+    average_rating: 0
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingHotel, setEditingHotel] = useState<any>(null);
+  const [editingHotel, setEditingHotel] = useState<HotelData | null>(null);
   const [hotelForm, setHotelForm] = useState({
     name: '',
     location: '',
-    rating: 4,
-    price: 0,
-    image_url: '',
+    city: '',
+    state: '',
+    country: '',
+    star_rating: 5,
+    price_per_night: 0,
+    room_count: 1,
+    description: '',
     amenities: '',
-    description: ''
+    features: '',
+    contact_email: '',
+    contact_phone: '',
+    check_in_time: '15:00',
+    check_out_time: '11:00',
+    cancellation_policy: '',
+    is_available: true
   });
+  const [roomForm, setRoomForm] = useState({
+    hotel_id: '',
+    name: '',
+    type: '',
+    capacity: 2,
+    price: 0,
+    total_count: 1,
+    amenities: '',
+    size_sqm: 25,
+    bed_type: 'double'
+  });
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
   const [hotelImageFiles, setHotelImageFiles] = useState<File[]>([]);
   const [uploadingHotelImages, setUploadingHotelImages] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; hotelId: string; hotelName: string }>({
@@ -37,12 +120,14 @@ export const HotelManagement: React.FC = () => {
 
   useEffect(() => {
     fetchHotels();
+    fetchRoomTypes();
+    fetchStats();
   }, []);
 
   const fetchHotels = async () => {
     try {
       const data = await apiService.request('/admin/hotels');
-      setHotels(data);
+      setHotels(data || []);
     } catch (error) {
       console.error('Failed to fetch hotels:', error);
       toast({
@@ -52,6 +137,24 @@ export const HotelManagement: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRoomTypes = async () => {
+    try {
+      const data = await apiService.request('/admin/hotels/room-types');
+      setRoomTypes(data || []);
+    } catch (error) {
+      console.error('Failed to fetch room types:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const data = await apiService.request('/admin/hotels/stats');
+      setStats(data || stats);
+    } catch (error) {
+      console.error('Failed to fetch hotel stats:', error);
     }
   };
 
