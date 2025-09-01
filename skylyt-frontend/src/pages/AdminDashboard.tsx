@@ -535,6 +535,7 @@ const AdminDashboard = () => {
                 ) : Array.isArray(recentActivity) && recentActivity.length > 0 ? (
                   <div className="space-y-4">
                     {(Array.isArray(recentActivity) ? recentActivity : []).map((activity) => {
+                      if (!activity || typeof activity !== 'object') return null;
                       const getActivityIcon = (type: string) => {
                         switch (type) {
                           case 'booking': return <Calendar className="h-4 w-4" />;
@@ -554,21 +555,21 @@ const AdminDashboard = () => {
                       };
                       
                       return (
-                        <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                        <div key={activity.id || Math.random()} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                           <div className="flex items-center space-x-3">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                              {getActivityIcon(activity.type)}
+                              {getActivityIcon(activity.type || 'default')}
                             </div>
                             <div>
-                              <h4 className="font-medium text-sm">{activity.title}</h4>
-                              <p className="text-xs text-gray-600">{activity.description}</p>
+                              <h4 className="font-medium text-sm">{activity.title || 'No title'}</h4>
+                              <p className="text-xs text-gray-600">{activity.description || 'No description'}</p>
                               <p className="text-xs text-gray-500">
                                 {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'No date'}
                               </p>
                             </div>
                           </div>
-                          <Badge className={getStatusColor(activity.status)}>
-                            {activity.status}
+                          <Badge className={getStatusColor(activity.status || 'unknown')}>
+                            {activity.status || 'unknown'}
                           </Badge>
                         </div>
                       );

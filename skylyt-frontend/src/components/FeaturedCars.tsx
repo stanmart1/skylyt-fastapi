@@ -141,9 +141,9 @@ const FeaturedCars = () => {
               {cars && cars.map((car) => (
                 <div key={car.id} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2">
                   <Card 
-                    className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer lg:cursor-default"
+                    className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer"
                     onClick={() => {
-                      if (window.innerWidth < 1024 && car.id) {
+                      if (car.id) {
                         window.location.href = `/car/${car.id}`;
                       }
                     }}
@@ -190,7 +190,7 @@ const FeaturedCars = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <PriceDisplay 
-                              amount={car.price} 
+                              amount={car.price_per_day || car.price} 
                               currency={car.currency}
                               className="text-2xl md:text-3xl font-bold text-blue-600"
                             />
@@ -198,7 +198,10 @@ const FeaturedCars = () => {
                           </div>
                           <Button 
                             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm"
-                            onClick={() => window.location.href = `/booking?type=car&id=${car.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/booking?type=car&id=${car.id}`;
+                            }}
                           >
                             Book Now
                           </Button>

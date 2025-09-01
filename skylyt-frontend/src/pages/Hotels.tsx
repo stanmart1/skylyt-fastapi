@@ -106,8 +106,8 @@ const Hotels = () => {
                 {hotels.map((hotel) => (
                   <Card 
                     key={hotel.id} 
-                    className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer lg:cursor-default"
-                    onClick={() => window.innerWidth < 1024 && (window.location.href = `/hotel/${hotel.id}`)}
+                    className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer"
+                    onClick={() => window.location.href = `/hotel/${hotel.id}`}
                   >
                     <div className="relative">
                       <img 
@@ -180,7 +180,10 @@ const Hotels = () => {
                           <span className="text-gray-500 text-sm">/night</span>
                         </div>
                         <Button 
-                          onClick={() => window.location.href = `/booking?type=hotel&id=${hotel.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `/booking?type=hotel&id=${hotel.id}`;
+                          }}
                           className="bg-blue-600 hover:bg-blue-700"
                         >
                           Book Now

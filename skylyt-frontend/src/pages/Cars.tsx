@@ -103,10 +103,10 @@ const Cars = () => {
             {cars.map((car) => (
               <Card 
                 key={car.id} 
-                className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer lg:cursor-default"
+                className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer"
                 onClick={() => {
                   console.log('Car clicked:', car);
-                  if (window.innerWidth < 1024 && car.id) {
+                  if (car.id) {
                     window.location.href = `/car/${car.id}`;
                   }
                 }}
@@ -167,7 +167,7 @@ const Cars = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <PriceDisplay 
-                          amount={car.price} 
+                          amount={car.price_per_day || car.price} 
                           currency={car.currency || currency}
                           className="text-2xl font-bold text-blue-600"
                         />
@@ -175,7 +175,10 @@ const Cars = () => {
                       </div>
                       <Button 
                         className="bg-orange-500 hover:bg-orange-600 text-white"
-                        onClick={() => window.location.href = `/booking?type=car&id=${car.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `/booking?type=car&id=${car.id}`;
+                        }}
                       >
                         Book Now
                       </Button>

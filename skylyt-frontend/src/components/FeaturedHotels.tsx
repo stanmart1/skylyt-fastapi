@@ -139,9 +139,9 @@ const FeaturedHotels = () => {
               {hotels.map((hotel) => (
                 <div key={hotel.id} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2">
                   <Card 
-                    className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer lg:cursor-default"
+                    className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer"
                     onClick={() => {
-                      if (window.innerWidth < 1024 && hotel.id) {
+                      if (hotel.id) {
                         window.location.href = `/hotel/${hotel.id}`;
                       }
                     }}
@@ -196,7 +196,10 @@ const FeaturedHotels = () => {
                           </div>
                           <Button 
                             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm"
-                            onClick={() => window.location.href = `/booking?type=hotel&id=${hotel.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/booking?type=hotel&id=${hotel.id}`;
+                            }}
                           >
                             Book Now
                           </Button>
