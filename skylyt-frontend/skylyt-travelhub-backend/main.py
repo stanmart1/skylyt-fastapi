@@ -1000,7 +1000,7 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
         
         # Get hotel statistics
         total_hotels = db.query(Hotel).count()
-        total_rooms = db.query(func.sum(Hotel.total_rooms)).scalar() or 0
+        total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
         
         # Get active hotel bookings
         active_bookings = db.query(Booking).filter(

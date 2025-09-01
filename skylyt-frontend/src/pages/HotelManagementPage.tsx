@@ -29,7 +29,7 @@ const HotelManagementPage = () => {
   const { user, hasRole } = useAuth();
   const { currency } = useCurrency();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<HotelStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -84,12 +84,12 @@ const HotelManagementPage = () => {
             </div>
             <nav className="flex-1 p-4 space-y-2">
               <Button
-                variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+                variant={activeTab === 'overview' ? 'default' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
+                onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
+                Overview
               </Button>
               <Button
                 variant={activeTab === 'bookings' ? 'default' : 'ghost'}
@@ -142,12 +142,12 @@ const HotelManagementPage = () => {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <Button
-            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+            variant={activeTab === 'overview' ? 'default' : 'ghost'}
             className="w-full justify-start"
-            onClick={() => setActiveTab('analytics')}
+            onClick={() => setActiveTab('overview')}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
+            Overview
           </Button>
           <Button
             variant={activeTab === 'bookings' ? 'default' : 'ghost'}
@@ -186,7 +186,7 @@ const HotelManagementPage = () => {
 
       <div className="flex-1 flex flex-col lg:ml-64">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b mt-16">
+        <header className="bg-white shadow-sm border-b mt-12">
           <div className="px-4 sm:px-6 py-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -216,88 +216,85 @@ const HotelManagementPage = () => {
         </header>
 
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            {loading ? (
-              [...Array(4)].map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <div className="animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-8 bg-gray-200 rounded mb-1" />
-                      <div className="h-3 bg-gray-200 rounded w-2/3" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : stats ? (
-              <>
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Total Properties</CardTitle>
-                    <Hotel className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">{stats.totalHotels}</div>
-                    <p className="text-xs text-blue-100">
-                      {stats.totalRooms} total rooms
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
-                    <Calendar className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">{stats.activeBookings}</div>
-                    <p className="text-xs text-green-100">
-                      Current reservations
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">
-                      <PriceDisplay amount={stats.totalRevenue} currency={currency} />
-                    </div>
-                    <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}`}>
-                      {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Occupancy Rate</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">{stats.occupancyRate}%</div>
-                    <p className="text-xs text-purple-100">
-                      Current occupancy
-                    </p>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <div className="col-span-4 text-center py-8">
-                <p className="text-gray-600">Failed to load statistics</p>
-              </div>
-            )}
-          </div>
-
-
-
           {/* Tab Content */}
-          {activeTab === 'analytics' && (
+          {activeTab === 'overview' && (
             <div className="space-y-4">
+              {/* Stats Overview */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                {loading ? (
+                  [...Array(4)].map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded mb-2" />
+                          <div className="h-8 bg-gray-200 rounded mb-1" />
+                          <div className="h-3 bg-gray-200 rounded w-2/3" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : stats ? (
+                  <>
+                    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Total Hotels</CardTitle>
+                        <Hotel className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">{stats.totalHotels}</div>
+                        <p className="text-xs text-blue-100">
+                          {stats.totalRooms} total rooms
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
+                        <Calendar className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">{stats.activeBookings}</div>
+                        <p className="text-xs text-green-100">
+                          Current reservations
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">
+                          ₦{stats.totalRevenue}
+                        </div>
+                        <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                          {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Occupancy Rate</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">{stats.occupancyRate}%</div>
+                        <p className="text-xs text-purple-100">
+                          Current occupancy
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <div className="col-span-4 text-center py-8">
+                    <p className="text-gray-600">Failed to load statistics</p>
+                  </div>
+                )}
+              </div>
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (

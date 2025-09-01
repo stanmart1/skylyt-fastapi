@@ -160,7 +160,25 @@ export const HotelManagement: React.FC = () => {
 
   const handleAddHotel = () => {
     setEditingHotel(null);
-    setHotelForm({ name: '', location: '', rating: 4, price: 0, image_url: '', amenities: '', description: '' });
+    setHotelForm({
+      name: '',
+      location: '',
+      city: '',
+      state: '',
+      country: '',
+      star_rating: 5,
+      price_per_night: 0,
+      room_count: 1,
+      description: '',
+      amenities: '',
+      features: '',
+      contact_email: '',
+      contact_phone: '',
+      check_in_time: '15:00',
+      check_out_time: '11:00',
+      cancellation_policy: '',
+      is_available: true
+    });
     setHotelImageFiles([]);
     setIsModalOpen(true);
   };
@@ -168,13 +186,23 @@ export const HotelManagement: React.FC = () => {
   const handleEditHotel = (hotel: any) => {
     setEditingHotel(hotel);
     setHotelForm({
-      name: hotel.name,
-      location: hotel.location,
-      rating: hotel.rating,
-      price: hotel.price,
-      image_url: hotel.image_url || '',
-      amenities: hotel.amenities.join(', '),
-      description: hotel.description
+      name: hotel.name || '',
+      location: hotel.location || '',
+      city: hotel.city || '',
+      state: hotel.state || '',
+      country: hotel.country || '',
+      star_rating: hotel.star_rating || hotel.rating || 5,
+      price_per_night: hotel.price_per_night || hotel.price || 0,
+      room_count: hotel.room_count || 1,
+      description: hotel.description || '',
+      amenities: Array.isArray(hotel.amenities) ? hotel.amenities.join(', ') : '',
+      features: Array.isArray(hotel.features) ? hotel.features.join(', ') : '',
+      contact_email: hotel.contact_email || '',
+      contact_phone: hotel.contact_phone || '',
+      check_in_time: hotel.check_in_time || '15:00',
+      check_out_time: hotel.check_out_time || '11:00',
+      cancellation_policy: hotel.cancellation_policy || '',
+      is_available: hotel.is_available !== undefined ? hotel.is_available : true
     });
     setHotelImageFiles([]);
     setIsModalOpen(true);
@@ -208,7 +236,11 @@ export const HotelManagement: React.FC = () => {
 
   const handleSaveHotel = async () => {
     try {
-      let finalHotelData = { ...hotelForm, amenities: hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a) };
+      let finalHotelData = { 
+        ...hotelForm, 
+        amenities: hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a),
+        features: hotelForm.features.split(',').map(f => f.trim()).filter(f => f)
+      };
       
       // Upload images if selected
       if (hotelImageFiles.length > 0) {
@@ -235,6 +267,7 @@ export const HotelManagement: React.FC = () => {
         });
       }
       await fetchHotels();
+      await fetchStats(); // Refresh stats after hotel changes
       setIsModalOpen(false);
       setHotelImageFiles([]);
     } catch (error) {
@@ -325,12 +358,12 @@ export const HotelManagement: React.FC = () => {
                 <p className="text-gray-600 mb-2">{hotel.location}</p>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < hotel.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                    <Star key={i} className={`h-4 w-4 ${i < (hotel.star_rating || hotel.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
                   ))}
-                  <span className="text-sm text-gray-600 ml-1">({hotel.rating})</span>
+                  <span className="text-sm text-gray-600 ml-1">({hotel.star_rating || hotel.rating})</span>
                 </div>
                 <p className="text-lg font-bold text-blue-600">
-                  <PriceDisplay amount={hotel.price} currency={hotel.currency || currency} />/night
+                  <PriceDisplay amount={hotel.price_per_night || hotel.price} currency={hotel.currency || currency} />/night
                 </p>
                 <p className="text-sm text-gray-600 mt-2 line-clamp-2">{hotel.description}</p>
                 <div className="flex gap-2 mt-4">
@@ -377,13 +410,31 @@ export const HotelManagement: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="rating">Rating (1-5)</Label>
-                <Input id="rating" type="number" min="1" max="5" value={hotelForm.rating} onChange={(e) => setHotelForm({...hotelForm, rating: Number(e.target.value)})} />
+                <Label htmlFor="star_rating">Rating (1-5)</Label>
+                <Input id="star_rating" type="number" min="1" max="5" value={hotelForm.star_rating} onChange={(e) => setHotelForm({...hotelForm, star_rating: Number(e.target.value)})} />
               </div>
               <div>
-                <Label htmlFor="price">Price per night</Label>
-                <Input id="price" type="number" value={hotelForm.price} onChange={(e) => setHotelForm({...hotelForm, price: Number(e.target.value)})} />
+                <Label htmlFor="price_per_night">Price per night</Label>
+                <Input id="price_per_night" type="number" value={hotelForm.price_per_night} onChange={(e) => setHotelForm({...hotelForm, price_per_night: Number(e.target.value)})} />
               </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input id="city" value={hotelForm.city} onChange={(e) => setHotelForm({...hotelForm, city: e.target.value})} />
+              </div>
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input id="state" value={hotelForm.state} onChange={(e) => setHotelForm({...hotelForm, state: e.target.value})} />
+              </div>
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <Input id="country" value={hotelForm.country} onChange={(e) => setHotelForm({...hotelForm, country: e.target.value})} />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="room_count">Total Rooms</Label>
+              <Input id="room_count" type="number" min="1" value={hotelForm.room_count} onChange={(e) => setHotelForm({...hotelForm, room_count: Number(e.target.value)})} />
             </div>
             <div>
               <Label htmlFor="hotel_images">Hotel Images</Label>
@@ -416,8 +467,22 @@ export const HotelManagement: React.FC = () => {
               <Input id="amenities" value={hotelForm.amenities} onChange={(e) => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="WiFi, Pool, Gym, Spa" />
             </div>
             <div>
+              <Label htmlFor="features">Features (comma separated)</Label>
+              <Input id="features" value={hotelForm.features} onChange={(e) => setHotelForm({...hotelForm, features: e.target.value})} placeholder="Ocean View, Balcony, Kitchen" />
+            </div>
+            <div>
               <Label htmlFor="description">Description</Label>
-              <Input id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." />
+              <Textarea id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contact_email">Contact Email</Label>
+                <Input id="contact_email" type="email" value={hotelForm.contact_email} onChange={(e) => setHotelForm({...hotelForm, contact_email: e.target.value})} />
+              </div>
+              <div>
+                <Label htmlFor="contact_phone">Contact Phone</Label>
+                <Input id="contact_phone" value={hotelForm.contact_phone} onChange={(e) => setHotelForm({...hotelForm, contact_phone: e.target.value})} />
+              </div>
             </div>
             <div className="flex gap-2 pt-4">
               <Button onClick={handleSaveHotel}>{editingHotel ? 'Update Hotel' : 'Add Hotel'}</Button>

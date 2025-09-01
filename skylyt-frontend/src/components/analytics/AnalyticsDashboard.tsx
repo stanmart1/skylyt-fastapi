@@ -61,48 +61,7 @@ export const AnalyticsDashboard = () => {
         </select>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-2 border-red-500 bg-red-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Total Bookings</CardTitle>
-            <Calendar className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-700">{data.metrics.totalBookings}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-2 border-blue-500 bg-blue-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-700">${data.metrics.totalRevenue.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-2 border-yellow-500 bg-yellow-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-800">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-700">{data.metrics.totalUsers}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-2 border-green-500 bg-green-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">Avg Booking Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-700">${data.metrics.avgBookingValue}</div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
