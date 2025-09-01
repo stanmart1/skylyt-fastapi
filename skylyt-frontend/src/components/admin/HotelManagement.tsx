@@ -319,32 +319,124 @@ export const HotelManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Hotel Management</h2>
-        <Button onClick={handleAddHotel}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Hotel
-        </Button>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold">Hotel Management</h2>
+          <p className="text-sm sm:text-base text-gray-600">Manage your hotel properties and accommodations</p>
+        </div>
+        {hasPermission('content.manage_hotels') && (
+          <Button onClick={handleAddHotel} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Hotel
+          </Button>
+        )}
+      </div>
+
+      {/* Hotel Statistics */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Hotels</p>
+                <p className="text-xl sm:text-2xl font-bold">{loading ? '...' : stats.total_hotels}</p>
+              </div>
+              <Hotel className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Rooms</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{loading ? '...' : stats.total_rooms}</p>
+              </div>
+              <Bed className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Occupied</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{loading ? '...' : stats.occupied_rooms}</p>
+              </div>
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Occupancy</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{loading ? '...' : stats.average_occupancy}%</p>
+              </div>
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">
+                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today} currency={currency} />}
+                </p>
+              </div>
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Avg Rating</p>
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">{loading ? '...' : stats.average_rating}</p>
+              </div>
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 self-end sm:self-auto" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="h-32 bg-gray-200 rounded mb-4" />
                 <div className="h-4 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
               </CardContent>
             </Card>
           ))}
         </div>
+      ) : hotels.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 sm:p-12 text-center">
+            <Hotel className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No hotels found</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-6">Get started by adding your first hotel property to the system.</p>
+            {hasPermission('content.manage_hotels') && (
+              <Button onClick={handleAddHotel}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Hotel
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {hotels.map((hotel) => (
-            <Card key={hotel.id}>
-              <CardContent className="p-6">
+            <Card key={hotel.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4 sm:p-6">
                 {hotel.image_url ? (
                   <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
                     <img src={hotel.image_url} alt={hotel.name} className="w-full h-full object-cover" />
@@ -354,39 +446,54 @@ export const HotelManagement: React.FC = () => {
                     <Hotel className="h-8 w-8 text-gray-400" />
                   </div>
                 )}
-                <h3 className="font-semibold text-lg">{hotel.name}</h3>
-                <p className="text-gray-600 mb-2">{hotel.location}</p>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-base sm:text-lg truncate pr-2">{hotel.name}</h3>
+                  {hotel.is_featured && (
+                    <Badge className="bg-yellow-100 text-yellow-800 flex-shrink-0 text-xs">
+                      <Star className="h-3 w-3 mr-1 fill-current" />
+                      Featured
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-gray-600 mb-2 text-sm truncate">{hotel.location}</p>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < (hotel.star_rating || hotel.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                    <Star key={i} className={`h-3 w-3 sm:h-4 sm:w-4 ${i < (hotel.star_rating || hotel.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
                   ))}
-                  <span className="text-sm text-gray-600 ml-1">({hotel.star_rating || hotel.rating})</span>
+                  <span className="text-xs sm:text-sm text-gray-600 ml-1">({hotel.star_rating || hotel.rating})</span>
                 </div>
-                <p className="text-lg font-bold text-blue-600">
+                <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
                   <PriceDisplay amount={hotel.price_per_night || hotel.price} currency={hotel.currency || currency} />/night
                 </p>
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{hotel.description}</p>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => handleEditHotel(hotel)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
+                <p className="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2">{hotel.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {hasPermission('content.manage_hotels') && (
+                    <Button variant="outline" size="sm" onClick={() => handleEditHotel(hotel)} className="flex-1 sm:flex-none">
+                      <Edit className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleFeatureHotel(hotel.id)}
-                    className={hotel.is_featured ? 'bg-yellow-100 text-yellow-800' : ''}
+                    className={`${hotel.is_featured ? 'bg-yellow-100 text-yellow-800' : 'text-gray-600 hover:text-gray-700'} flex-1 sm:flex-none`}
                     title={hotel.is_featured ? 'Remove from featured' : 'Add to featured'}
                   >
-                    <Star className={`h-3 w-3 ${hotel.is_featured ? 'fill-current' : ''}`} />
+                    <Star className={`h-3 w-3 ${hotel.is_featured ? 'fill-current' : ''} sm:mr-1`} />
+                    <span className="hidden sm:inline">{hotel.is_featured ? 'Featured' : 'Feature'}</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setDeleteConfirm({ open: true, hotelId: hotel.id, hotelName: hotel.name })}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  {hasPermission('content.manage_hotels') && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setDeleteConfirm({ open: true, hotelId: hotel.id, hotelName: hotel.name })}
+                      className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
+                    >
+                      <Trash2 className="h-3 w-3 sm:mr-1" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -395,50 +502,53 @@ export const HotelManagement: React.FC = () => {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4" aria-describedby="hotel-dialog-description">
           <DialogHeader>
-            <DialogTitle>{editingHotel ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{editingHotel ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
+            <DialogDescription id="hotel-dialog-description" className="text-sm sm:text-base">
+              {editingHotel ? 'Update the hotel details below.' : 'Add a new hotel property to your portfolio.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Hotel Name</Label>
-              <Input id="name" value={hotelForm.name} onChange={(e) => setHotelForm({...hotelForm, name: e.target.value})} />
+              <Label htmlFor="name" className="text-sm font-medium">Hotel Name</Label>
+              <Input id="name" value={hotelForm.name} onChange={(e) => setHotelForm({...hotelForm, name: e.target.value})} className="mt-1" />
             </div>
             <div>
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" value={hotelForm.location} onChange={(e) => setHotelForm({...hotelForm, location: e.target.value})} />
+              <Label htmlFor="location" className="text-sm font-medium">Location</Label>
+              <Input id="location" value={hotelForm.location} onChange={(e) => setHotelForm({...hotelForm, location: e.target.value})} className="mt-1" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="star_rating">Rating (1-5)</Label>
-                <Input id="star_rating" type="number" min="1" max="5" value={hotelForm.star_rating} onChange={(e) => setHotelForm({...hotelForm, star_rating: Number(e.target.value)})} />
+                <Label htmlFor="star_rating" className="text-sm font-medium">Rating (1-5)</Label>
+                <Input id="star_rating" type="number" min="1" max="5" value={hotelForm.star_rating} onChange={(e) => setHotelForm({...hotelForm, star_rating: Number(e.target.value)})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="price_per_night">Price per night</Label>
-                <Input id="price_per_night" type="number" value={hotelForm.price_per_night} onChange={(e) => setHotelForm({...hotelForm, price_per_night: Number(e.target.value)})} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input id="city" value={hotelForm.city} onChange={(e) => setHotelForm({...hotelForm, city: e.target.value})} />
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Input id="state" value={hotelForm.state} onChange={(e) => setHotelForm({...hotelForm, state: e.target.value})} />
-              </div>
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" value={hotelForm.country} onChange={(e) => setHotelForm({...hotelForm, country: e.target.value})} />
+                <Label htmlFor="price_per_night" className="text-sm font-medium">Price per night</Label>
+                <Input id="price_per_night" type="number" value={hotelForm.price_per_night} onChange={(e) => setHotelForm({...hotelForm, price_per_night: Number(e.target.value)})} className="mt-1" />
               </div>
             </div>
-            <div>
-              <Label htmlFor="room_count">Total Rooms</Label>
-              <Input id="room_count" type="number" min="1" value={hotelForm.room_count} onChange={(e) => setHotelForm({...hotelForm, room_count: Number(e.target.value)})} />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city" className="text-sm font-medium">City</Label>
+                <Input id="city" value={hotelForm.city} onChange={(e) => setHotelForm({...hotelForm, city: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="state" className="text-sm font-medium">State</Label>
+                <Input id="state" value={hotelForm.state} onChange={(e) => setHotelForm({...hotelForm, state: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                <Input id="country" value={hotelForm.country} onChange={(e) => setHotelForm({...hotelForm, country: e.target.value})} className="mt-1" />
+              </div>
             </div>
             <div>
-              <Label htmlFor="hotel_images">Hotel Images</Label>
-              <div className="space-y-2">
+              <Label htmlFor="room_count" className="text-sm font-medium">Total Rooms</Label>
+              <Input id="room_count" type="number" min="1" value={hotelForm.room_count} onChange={(e) => setHotelForm({...hotelForm, room_count: Number(e.target.value)})} className="mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="hotel_images" className="text-sm font-medium">Hotel Images</Label>
+              <div className="space-y-2 mt-1">
                 <input
                   id="hotel_images"
                   type="file"
@@ -452,41 +562,45 @@ export const HotelManagement: React.FC = () => {
                   variant="outline"
                   onClick={() => document.getElementById('hotel_images')?.click()}
                   disabled={uploadingHotelImages}
+                  className="w-full sm:w-auto"
                 >
                   {uploadingHotelImages ? 'Uploading...' : 'Choose Images'}
                 </Button>
                 {hotelImageFiles.length > 0 && (
-                  <div className="text-sm text-gray-600">
-                    {hotelImageFiles.length} image(s) selected: {hotelImageFiles.map(f => f.name).join(', ')}
+                  <div className="text-xs sm:text-sm text-gray-600 p-2 bg-gray-50 rounded">
+                    {hotelImageFiles.length} image(s) selected: {hotelImageFiles.map(f => f.name).slice(0, 3).join(', ')}
+                    {hotelImageFiles.length > 3 && ` and ${hotelImageFiles.length - 3} more...`}
                   </div>
                 )}
               </div>
             </div>
             <div>
-              <Label htmlFor="amenities">Amenities (comma separated)</Label>
-              <Input id="amenities" value={hotelForm.amenities} onChange={(e) => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="WiFi, Pool, Gym, Spa" />
+              <Label htmlFor="amenities" className="text-sm font-medium">Amenities (comma separated)</Label>
+              <Input id="amenities" value={hotelForm.amenities} onChange={(e) => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="WiFi, Pool, Gym, Spa" className="mt-1" />
             </div>
             <div>
-              <Label htmlFor="features">Features (comma separated)</Label>
-              <Input id="features" value={hotelForm.features} onChange={(e) => setHotelForm({...hotelForm, features: e.target.value})} placeholder="Ocean View, Balcony, Kitchen" />
+              <Label htmlFor="features" className="text-sm font-medium">Features (comma separated)</Label>
+              <Input id="features" value={hotelForm.features} onChange={(e) => setHotelForm({...hotelForm, features: e.target.value})} placeholder="Ocean View, Balcony, Kitchen" className="mt-1" />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." rows={3} />
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+              <Textarea id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." rows={3} className="mt-1" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <Input id="contact_email" type="email" value={hotelForm.contact_email} onChange={(e) => setHotelForm({...hotelForm, contact_email: e.target.value})} />
+                <Label htmlFor="contact_email" className="text-sm font-medium">Contact Email</Label>
+                <Input id="contact_email" type="email" value={hotelForm.contact_email} onChange={(e) => setHotelForm({...hotelForm, contact_email: e.target.value})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="contact_phone">Contact Phone</Label>
-                <Input id="contact_phone" value={hotelForm.contact_phone} onChange={(e) => setHotelForm({...hotelForm, contact_phone: e.target.value})} />
+                <Label htmlFor="contact_phone" className="text-sm font-medium">Contact Phone</Label>
+                <Input id="contact_phone" value={hotelForm.contact_phone} onChange={(e) => setHotelForm({...hotelForm, contact_phone: e.target.value})} className="mt-1" />
               </div>
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveHotel}>{editingHotel ? 'Update Hotel' : 'Add Hotel'}</Button>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button onClick={handleSaveHotel} className="w-full sm:w-auto" disabled={uploadingHotelImages}>
+                {uploadingHotelImages ? 'Uploading...' : (editingHotel ? 'Update Hotel' : 'Add Hotel')}
+              </Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
             </div>
           </div>
         </DialogContent>

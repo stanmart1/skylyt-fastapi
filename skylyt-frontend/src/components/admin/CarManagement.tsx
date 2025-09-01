@@ -361,72 +361,72 @@ export const CarManagement: React.FC = () => {
       </div>
 
       {/* Fleet Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Fleet</p>
-                <p className="text-2xl font-bold">{stats.total_cars}</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Fleet</p>
+                <p className="text-xl sm:text-2xl font-bold">{loading ? '...' : stats.total_cars}</p>
               </div>
-              <Car className="h-8 w-8 text-blue-600" />
+              <Car className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-green-600">{stats.available}</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Available</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{loading ? '...' : stats.available}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Booked</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.booked}</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Booked</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{loading ? '...' : stats.booked}</p>
               </div>
-              <Clock className="h-8 w-8 text-blue-600" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.maintenance}</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{loading ? '...' : stats.maintenance}</p>
               </div>
-              <Wrench className="h-8 w-8 text-yellow-600" />
+              <Wrench className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Today's Revenue</p>
-                <p className="text-2xl font-bold text-green-600">
-                  <PriceDisplay amount={stats.revenue_today} currency={currency} />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">
+                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today} currency={currency} />}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Utilization</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.utilization_rate}%</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Utilization</p>
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">{loading ? '...' : stats.utilization_rate}%</p>
               </div>
-              <Users className="h-8 w-8 text-purple-600" />
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 self-end sm:self-auto" />
             </div>
           </CardContent>
         </Card>
@@ -441,24 +441,38 @@ export const CarManagement: React.FC = () => {
         </TabsList>
 
         <TabsContent value="fleet" className="space-y-4">
-
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <div className="h-32 bg-gray-200 rounded mb-4" />
                     <div className="h-4 bg-gray-200 rounded mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
                   </CardContent>
                 </Card>
               ))}
             </div>
+          ) : cars.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 sm:p-12 text-center">
+                <Car className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No cars in fleet</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6">Get started by adding your first vehicle to the fleet.</p>
+                {hasPermission('content.manage_cars') && (
+                  <Button onClick={handleAddCar}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Car
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {cars.map((car) => (
-                <Card key={car.id}>
-                  <CardContent className="p-6">
+                <Card key={car.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 sm:p-6">
                     {car.image_url ? (
                       <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
                         <img src={car.image_url} alt={car.name} className="w-full h-full object-cover" />
@@ -468,44 +482,53 @@ export const CarManagement: React.FC = () => {
                         <Car className="h-8 w-8 text-gray-400" />
                       </div>
                     )}
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-lg">{car.name}</h3>
-                      <Badge className={getStatusColor(car.status)}>
-                        {getStatusIcon(car.status)}
-                        <span className="ml-1">{car.status}</span>
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-base sm:text-lg truncate pr-2">{car.name}</h3>
+                      <Badge className={`${getStatusColor(car.status)} flex-shrink-0 text-xs`}>
+                        <span className="hidden sm:inline mr-1">{getStatusIcon(car.status)}</span>
+                        <span className="capitalize">{car.status}</span>
                       </Badge>
                     </div>
-                    <p className="text-gray-600 mb-1">{car.category} • {car.year}</p>
-                    <p className="text-sm text-gray-500 mb-2">{car.plate_number}</p>
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-gray-600 mb-1 text-sm">{car.category} • {car.year}</p>
+                    <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number}</p>
+                    <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
                       <PriceDisplay amount={car.price} currency={car.currency || currency} />/day
                     </p>
-                    <div className="mt-4 space-y-1 text-sm text-gray-600">
-                      <p>{car.passengers} passengers • {car.transmission} • {car.fuel_type}</p>
+                    <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-4">
+                      <p className="flex flex-wrap gap-1">
+                        <span>{car.passengers} passengers</span>
+                        <span>•</span>
+                        <span className="capitalize">{car.transmission}</span>
+                        <span>•</span>
+                        <span className="capitalize">{car.fuel_type}</span>
+                      </p>
                       <p>{car.mileage?.toLocaleString()} km</p>
                     </div>
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2">
                       {hasPermission('content.manage_cars') && (
-                        <Button variant="outline" size="sm" onClick={() => handleEditCar(car)}>
-                          <Edit className="h-3 w-3" />
+                        <Button variant="outline" size="sm" onClick={() => handleEditCar(car)} className="flex-1 sm:flex-none">
+                          <Edit className="h-3 w-3 sm:mr-1" />
+                          <span className="hidden sm:inline">Edit</span>
                         </Button>
                       )}
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleFeatureCar(car.id)}
-                        className={car.is_featured ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-600 hover:text-gray-700'}
+                        className={`${car.is_featured ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-600 hover:text-gray-700'} flex-1 sm:flex-none`}
                       >
-                        <Star className={`h-3 w-3 ${car.is_featured ? 'fill-current' : ''}`} />
+                        <Star className={`h-3 w-3 ${car.is_featured ? 'fill-current' : ''} sm:mr-1`} />
+                        <span className="hidden sm:inline">{car.is_featured ? 'Featured' : 'Feature'}</span>
                       </Button>
                       {hasPermission('content.manage_cars') && (
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => setDeleteConfirm({ open: true, carId: car.id, carName: car.name })}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 sm:mr-1" />
+                          <span className="hidden sm:inline">Delete</span>
                         </Button>
                       )}
                     </div>
@@ -517,36 +540,50 @@ export const CarManagement: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="maintenance" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h3 className="text-lg font-semibold">Maintenance Records</h3>
-            <Button onClick={handleAddMaintenance}>
+            <Button onClick={handleAddMaintenance} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Maintenance
             </Button>
           </div>
-          <div className="space-y-4">
-            {maintenance.map((record) => (
-              <Card key={record.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">{record.type}</h4>
-                      <p className="text-sm text-gray-600">{record.description}</p>
-                      <p className="text-sm text-gray-500">Date: {new Date(record.date).toLocaleDateString()}</p>
+          {maintenance.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 sm:p-12 text-center">
+                <Wrench className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No maintenance records</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6">Keep track of your fleet maintenance by adding records.</p>
+                <Button onClick={handleAddMaintenance}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Record
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {maintenance.map((record) => (
+                <Card key={record.id}>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm sm:text-base">{record.type}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1">{record.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">Date: {new Date(record.date).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex sm:flex-col sm:text-right items-center sm:items-end gap-2">
+                        <p className="font-semibold text-sm sm:text-base">
+                          <PriceDisplay amount={record.cost} currency={currency} />
+                        </p>
+                        <Badge className={`${record.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} text-xs`}>
+                          {record.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        <PriceDisplay amount={record.cost} currency={currency} />
-                      </p>
-                      <Badge className={record.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                        {record.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
@@ -594,23 +631,23 @@ export const CarManagement: React.FC = () => {
       </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="car-dialog-description">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4" aria-describedby="car-dialog-description">
           <DialogHeader>
-            <DialogTitle>{editingCar ? 'Edit Car' : 'Add New Car'}</DialogTitle>
-            <DialogDescription id="car-dialog-description">
+            <DialogTitle className="text-lg sm:text-xl">{editingCar ? 'Edit Car' : 'Add New Car'}</DialogTitle>
+            <DialogDescription id="car-dialog-description" className="text-sm sm:text-base">
               {editingCar ? 'Update the car details below.' : 'Add a new car to your fleet.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Car Name</Label>
-                <Input id="name" value={carForm.name} onChange={(e) => setCarForm({...carForm, name: e.target.value})} />
+                <Label htmlFor="name" className="text-sm font-medium">Car Name</Label>
+                <Input id="name" value={carForm.name} onChange={(e) => setCarForm({...carForm, name: e.target.value})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-sm font-medium">Category</Label>
                 <Select value={carForm.category} onValueChange={(value) => setCarForm({...carForm, category: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -624,25 +661,25 @@ export const CarManagement: React.FC = () => {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="price">Price per day</Label>
-                <Input id="price" type="number" value={carForm.price} onChange={(e) => setCarForm({...carForm, price: Number(e.target.value)})} />
+                <Label htmlFor="price" className="text-sm font-medium">Price per day</Label>
+                <Input id="price" type="number" value={carForm.price} onChange={(e) => setCarForm({...carForm, price: Number(e.target.value)})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="passengers">Passengers</Label>
-                <Input id="passengers" type="number" value={carForm.passengers} onChange={(e) => setCarForm({...carForm, passengers: Number(e.target.value)})} />
+                <Label htmlFor="passengers" className="text-sm font-medium">Passengers</Label>
+                <Input id="passengers" type="number" value={carForm.passengers} onChange={(e) => setCarForm({...carForm, passengers: Number(e.target.value)})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="year">Year</Label>
-                <Input id="year" type="number" value={carForm.year} onChange={(e) => setCarForm({...carForm, year: Number(e.target.value)})} />
+                <Label htmlFor="year" className="text-sm font-medium">Year</Label>
+                <Input id="year" type="number" value={carForm.year} onChange={(e) => setCarForm({...carForm, year: Number(e.target.value)})} className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="transmission">Transmission</Label>
+                <Label htmlFor="transmission" className="text-sm font-medium">Transmission</Label>
                 <Select value={carForm.transmission} onValueChange={(value) => setCarForm({...carForm, transmission: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select transmission" />
                   </SelectTrigger>
                   <SelectContent>
@@ -652,9 +689,9 @@ export const CarManagement: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="fuel_type">Fuel Type</Label>
+                <Label htmlFor="fuel_type" className="text-sm font-medium">Fuel Type</Label>
                 <Select value={carForm.fuel_type} onValueChange={(value) => setCarForm({...carForm, fuel_type: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select fuel type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -666,25 +703,25 @@ export const CarManagement: React.FC = () => {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="plate_number">Plate Number</Label>
-                <Input id="plate_number" value={carForm.plate_number} onChange={(e) => setCarForm({...carForm, plate_number: e.target.value})} />
+                <Label htmlFor="plate_number" className="text-sm font-medium">Plate Number</Label>
+                <Input id="plate_number" value={carForm.plate_number} onChange={(e) => setCarForm({...carForm, plate_number: e.target.value})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="mileage">Mileage (km)</Label>
-                <Input id="mileage" type="number" value={carForm.mileage} onChange={(e) => setCarForm({...carForm, mileage: Number(e.target.value.replace(/,/g, ''))})} />
+                <Label htmlFor="mileage" className="text-sm font-medium">Mileage (km)</Label>
+                <Input id="mileage" type="number" value={carForm.mileage} onChange={(e) => setCarForm({...carForm, mileage: Number(e.target.value.replace(/,/g, ''))})} className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="insurance_expiry">Insurance Expiry</Label>
-                <Input id="insurance_expiry" type="date" value={carForm.insurance_expiry} onChange={(e) => setCarForm({...carForm, insurance_expiry: e.target.value})} />
+                <Label htmlFor="insurance_expiry" className="text-sm font-medium">Insurance Expiry</Label>
+                <Input id="insurance_expiry" type="date" value={carForm.insurance_expiry} onChange={(e) => setCarForm({...carForm, insurance_expiry: e.target.value})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status" className="text-sm font-medium">Status</Label>
                 <Select value={carForm.status} onValueChange={(value: any) => setCarForm({...carForm, status: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -697,8 +734,8 @@ export const CarManagement: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="car_image">Car Image</Label>
-              <div className="flex items-center gap-2">
+              <Label htmlFor="car_image" className="text-sm font-medium">Car Image</Label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
                 <input
                   id="car_image"
                   type="file"
@@ -711,19 +748,22 @@ export const CarManagement: React.FC = () => {
                   variant="outline"
                   onClick={() => document.getElementById('car_image')?.click()}
                   disabled={uploadingCarImage}
+                  className="w-full sm:w-auto"
                 >
                   {uploadingCarImage ? 'Uploading...' : 'Choose File'}
                 </Button>
-                {carImageFile && <span className="text-sm text-gray-600">{carImageFile.name}</span>}
+                {carImageFile && <span className="text-sm text-gray-600 truncate">{carImageFile.name}</span>}
               </div>
             </div>
             <div>
-              <Label htmlFor="features">Features (comma separated)</Label>
-              <Input id="features" value={carForm.features} onChange={(e) => setCarForm({...carForm, features: e.target.value})} placeholder="GPS, AC, Bluetooth" />
+              <Label htmlFor="features" className="text-sm font-medium">Features (comma separated)</Label>
+              <Input id="features" value={carForm.features} onChange={(e) => setCarForm({...carForm, features: e.target.value})} placeholder="GPS, AC, Bluetooth" className="mt-1" />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveCar}>{editingCar ? 'Update Car' : 'Add Car'}</Button>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button onClick={handleSaveCar} className="w-full sm:w-auto" disabled={uploadingCarImage}>
+                {uploadingCarImage ? 'Uploading...' : (editingCar ? 'Update Car' : 'Add Car')}
+              </Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
             </div>
           </div>
         </DialogContent>
@@ -731,18 +771,18 @@ export const CarManagement: React.FC = () => {
 
       {/* Maintenance Modal */}
       <Dialog open={isMaintenanceModalOpen} onOpenChange={setIsMaintenanceModalOpen}>
-        <DialogContent className="max-w-md" aria-describedby="maintenance-dialog-description">
+        <DialogContent className="max-w-md mx-4" aria-describedby="maintenance-dialog-description">
           <DialogHeader>
-            <DialogTitle>Add Maintenance Record</DialogTitle>
-            <DialogDescription id="maintenance-dialog-description">
+            <DialogTitle className="text-lg">Add Maintenance Record</DialogTitle>
+            <DialogDescription id="maintenance-dialog-description" className="text-sm">
               Record maintenance activities for your fleet.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="maintenance_car">Car</Label>
+              <Label htmlFor="maintenance_car" className="text-sm font-medium">Car</Label>
               <Select value={maintenanceForm.car_id} onValueChange={(value) => setMaintenanceForm({...maintenanceForm, car_id: value})}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select car" />
                 </SelectTrigger>
                 <SelectContent>
@@ -755,9 +795,9 @@ export const CarManagement: React.FC = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="maintenance_type">Type</Label>
+              <Label htmlFor="maintenance_type" className="text-sm font-medium">Type</Label>
               <Select value={maintenanceForm.type} onValueChange={(value) => setMaintenanceForm({...maintenanceForm, type: value})}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -770,26 +810,26 @@ export const CarManagement: React.FC = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="maintenance_description">Description</Label>
-              <Input id="maintenance_description" value={maintenanceForm.description} onChange={(e) => setMaintenanceForm({...maintenanceForm, description: e.target.value})} />
+              <Label htmlFor="maintenance_description" className="text-sm font-medium">Description</Label>
+              <Input id="maintenance_description" value={maintenanceForm.description} onChange={(e) => setMaintenanceForm({...maintenanceForm, description: e.target.value})} className="mt-1" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="maintenance_cost">Cost</Label>
-                <Input id="maintenance_cost" type="number" value={maintenanceForm.cost} onChange={(e) => setMaintenanceForm({...maintenanceForm, cost: Number(e.target.value)})} />
+                <Label htmlFor="maintenance_cost" className="text-sm font-medium">Cost</Label>
+                <Input id="maintenance_cost" type="number" value={maintenanceForm.cost} onChange={(e) => setMaintenanceForm({...maintenanceForm, cost: Number(e.target.value)})} className="mt-1" />
               </div>
               <div>
-                <Label htmlFor="maintenance_date">Date</Label>
-                <Input id="maintenance_date" type="date" value={maintenanceForm.date} onChange={(e) => setMaintenanceForm({...maintenanceForm, date: e.target.value})} />
+                <Label htmlFor="maintenance_date" className="text-sm font-medium">Date</Label>
+                <Input id="maintenance_date" type="date" value={maintenanceForm.date} onChange={(e) => setMaintenanceForm({...maintenanceForm, date: e.target.value})} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label htmlFor="next_due">Next Due Date</Label>
-              <Input id="next_due" type="date" value={maintenanceForm.next_due} onChange={(e) => setMaintenanceForm({...maintenanceForm, next_due: e.target.value})} />
+              <Label htmlFor="next_due" className="text-sm font-medium">Next Due Date</Label>
+              <Input id="next_due" type="date" value={maintenanceForm.next_due} onChange={(e) => setMaintenanceForm({...maintenanceForm, next_due: e.target.value})} className="mt-1" />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveMaintenance}>Add Record</Button>
-              <Button variant="outline" onClick={() => setIsMaintenanceModalOpen(false)}>Cancel</Button>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button onClick={handleSaveMaintenance} className="w-full sm:w-auto">Add Record</Button>
+              <Button variant="outline" onClick={() => setIsMaintenanceModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
             </div>
           </div>
         </DialogContent>
