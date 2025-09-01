@@ -20,7 +20,7 @@ export const AnalyticsDashboard = () => {
     const fetchRecentActivity = async () => {
       try {
         const response = await apiService.request('/admin/recent-activity');
-        setActivities(response.activities || []);
+        setActivities(Array.isArray(response?.activities) ? response.activities : Array.isArray(response) ? response : []);
       } catch (error) {
         console.error('Failed to fetch recent activity:', error);
         setActivities([]);
@@ -47,7 +47,7 @@ export const AnalyticsDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {activities.length > 0 ? (
+            {Array.isArray(activities) && activities.length > 0 ? (
               activities.map((activity) => (
                 <div key={activity.id} className="flex justify-between items-start p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex-1">
