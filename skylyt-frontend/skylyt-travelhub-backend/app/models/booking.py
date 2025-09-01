@@ -27,6 +27,7 @@ class Booking(BaseModel):
     # Customer details
     customer_name = Column(String(255), nullable=False)
     customer_email = Column(String(255), nullable=False)
+    customer_phone = Column(String(20), nullable=True)
     
     # Booking details
     hotel_name = Column(String(255), nullable=True)
