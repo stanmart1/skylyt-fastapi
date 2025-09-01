@@ -114,7 +114,7 @@ export const CarManagement: React.FC = () => {
     model: '',
     category: '',
     price_per_day: 0,
-    currency: 'USD',
+    currency: 'NGN',
     image_url: '',
     passengers: 4,
     transmission: 'automatic',
@@ -133,7 +133,7 @@ export const CarManagement: React.FC = () => {
     maintenance_type: '',
     description: '',
     cost: 0,
-    currency: 'USD',
+    currency: 'NGN',
     scheduled_date: '',
     next_due_date: '',
     next_due_mileage: 0,
@@ -207,7 +207,7 @@ export const CarManagement: React.FC = () => {
       model: '',
       category: '',
       price_per_day: 0,
-      currency: 'USD',
+      currency: 'NGN',
       image_url: '',
       passengers: 4,
       transmission: 'automatic',
@@ -234,7 +234,7 @@ export const CarManagement: React.FC = () => {
       model: car.model || '',
       category: car.category,
       price_per_day: car.price_per_day || car.price || 0,
-      currency: car.currency || 'USD',
+      currency: 'NGN',
       image_url: car.image_url || '',
       passengers: car.passengers,
       transmission: car.transmission,
@@ -350,7 +350,7 @@ export const CarManagement: React.FC = () => {
       maintenance_type: '',
       description: '',
       cost: 0,
-      currency: 'USD',
+      currency: 'NGN',
       scheduled_date: '',
       next_due_date: '',
       next_due_mileage: 0,
@@ -592,8 +592,8 @@ export const CarManagement: React.FC = () => {
                     <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
                       <PriceDisplay 
                         amount={car.price_per_day || car.price || 0} 
-                        currency={car.currency || 'USD'} 
-                        isNGNStored={false}
+                        currency="NGN" 
+                        isNGNStored={true}
                       />/day
                     </p>
                     <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-4">

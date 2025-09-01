@@ -55,9 +55,9 @@ class CurrencyService:
         """Seed default currencies"""
         default_currencies = [
             {"code": "NGN", "name": "Nigerian Naira", "symbol": "₦", "rate_to_ngn": 1.0},
-            {"code": "USD", "name": "US Dollar", "symbol": "$", "rate_to_ngn": 800.0},
-            {"code": "EUR", "name": "Euro", "symbol": "€", "rate_to_ngn": 900.0},
-            {"code": "GBP", "name": "British Pound", "symbol": "£", "rate_to_ngn": 1000.0},
+            {"code": "USD", "name": "US Dollar", "symbol": "$", "rate_to_ngn": 1600.0},
+            {"code": "EUR", "name": "Euro", "symbol": "€", "rate_to_ngn": 1800.0},
+            {"code": "GBP", "name": "British Pound", "symbol": "£", "rate_to_ngn": 2100.0},
         ]
         
         for curr_data in default_currencies:

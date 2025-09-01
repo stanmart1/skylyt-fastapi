@@ -1257,14 +1257,14 @@ async def get_admin_cars(
         
         cars_data = []
         for car in cars:
-            # Keep original price and currency for admin (no conversion)
+            # Prices are now stored in NGN base currency
             cars_data.append({
                 "id": str(car.id),
                 "name": car.name,
                 "category": car.category,
                 "price_per_day": float(car.price_per_day),
                 "price": float(car.price_per_day),  # Add price field for compatibility
-                "currency": car.currency,
+                "currency": "NGN",
                 "image_url": car.image_url,
                 "passengers": car.passengers,
                 "transmission": car.transmission,

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 
-import { Car, Hotel, Users, DollarSign, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell } from 'lucide-react';
+import { Car, Hotel, Users, DollarSign, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell, ChevronDown, ChevronRight } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EnhancedBookingManagement } from '@/components/admin/EnhancedBookingManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -66,6 +66,7 @@ const AdminDashboard = () => {
   const [rolePermissions, setRolePermissions] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [savingPermissions, setSavingPermissions] = useState(false);
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -240,14 +241,71 @@ const AdminDashboard = () => {
                 </Button>
               )} */}
               {hasPermission('dashboard.view_settings') && (
-                <Button
-                  variant={activeTab === 'settings' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between"
+                    onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+                  >
+                    <div className="flex items-center">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </div>
+                    {settingsDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                  {settingsDropdownOpen && (
+                    <div className="ml-6 space-y-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/general'); setSidebarOpen(false); }}
+                      >
+                        General
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/payment'); setSidebarOpen(false); }}
+                      >
+                        Payment Gateway
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/bank-transfer'); setSidebarOpen(false); }}
+                      >
+                        Bank Transfer
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/currency'); setSidebarOpen(false); }}
+                      >
+                        Currency
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/notifications'); setSidebarOpen(false); }}
+                      >
+                        Notifications
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { navigate('/admin/settings/security'); setSidebarOpen(false); }}
+                      >
+                        Security
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
             </nav>
           </div>
@@ -321,14 +379,71 @@ const AdminDashboard = () => {
             </Button>
           )} */}
           {hasPermission('dashboard.view_settings') && (
-            <Button
-              variant={activeTab === 'settings' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('settings')}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-between"
+                onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+              >
+                <div className="flex items-center">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </div>
+                {settingsDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </Button>
+              {settingsDropdownOpen && (
+                <div className="ml-6 space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/general')}
+                  >
+                    General
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/payment')}
+                  >
+                    Payment Gateway
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/bank-transfer')}
+                  >
+                    Bank Transfer
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/currency')}
+                  >
+                    Currency
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/notifications')}
+                  >
+                    Notifications
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => navigate('/admin/settings/security')}
+                  >
+                    Security
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </nav>
       </div>
