@@ -170,13 +170,6 @@ const PaymentManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Payment Management</h1>
-          <p className="text-gray-600">Manage and verify payments</p>
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

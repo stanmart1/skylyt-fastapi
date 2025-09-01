@@ -445,11 +445,7 @@ export const CarManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Car Fleet Management</h2>
-          <p className="text-gray-600">Manage your vehicle fleet, maintenance, and operations</p>
-        </div>
+      <div className="flex justify-end items-center">
         {hasPermission('content.manage_cars') && (
           <Button onClick={handleAddCar}>
             <Plus className="h-4 w-4 mr-2" />

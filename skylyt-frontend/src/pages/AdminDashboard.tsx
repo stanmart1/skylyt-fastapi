@@ -43,6 +43,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+import { CarFleetStats } from '@/components/admin/CarFleetStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
 
 interface AdminStats {
@@ -1278,7 +1279,7 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <ErrorBoundary>
-                {activeCarTab === 'overview' && <AnalyticsDashboard />}
+                {activeCarTab === 'overview' && <CarFleetStats />}
                 {activeCarTab === 'bookings' && <CarBookingManagement />}
                 {activeCarTab === 'payments' && <PaymentManagement />}
                 {activeCarTab === 'fleet' && <CarManagement />}

@@ -237,10 +237,7 @@ export const DriverManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Driver Management</h2>
-          <p className="text-gray-600">Manage your drivers and staff</p>
-        </div>
+        <div></div>
         {hasPermission('content.manage_drivers') && (
           <Button onClick={handleAddDriver}>
             <Plus className="h-4 w-4 mr-2" />

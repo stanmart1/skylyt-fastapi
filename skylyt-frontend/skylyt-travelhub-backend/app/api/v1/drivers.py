@@ -69,7 +69,7 @@ class DriverResponse(BaseModel):
         from_attributes = True
 
 
-@router.get("/", response_model=List[DriverResponse])
+@router.get("", response_model=List[DriverResponse])
 async def get_drivers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
