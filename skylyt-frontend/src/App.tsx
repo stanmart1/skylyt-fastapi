@@ -31,8 +31,7 @@ import BookingDetails from "./pages/BookingDetails";
 import FleetManagement from "./pages/FleetManagement";
 import HotelManagement from "./pages/HotelManagement";
 import CarManagement from "./pages/CarManagement";
-import CarsManagementPage from "./pages/CarsManagementPage";
-import HotelManagementPage from "./pages/HotelManagementPage";
+
 import StateDestinationPage from "./pages/StateDestinationPage";
 import CityHotelsPage from "./pages/CityHotelsPage";
 
@@ -124,16 +123,7 @@ const PageTransitionWrapper = () => {
                     <CarBookingsPage />
                   </ProtectedRoute>
                 } />
-                <Route path="/cars-management" element={
-                  <ProtectedRoute requireAdmin>
-                    <CarsManagementPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/hotel-management" element={
-                  <ProtectedRoute requireAdmin>
-                    <HotelManagementPage />
-                  </ProtectedRoute>
-                } />
+
                 <Route path="/destinations/:stateSlug" element={<StateDestinationPage />} />
                 <Route path="/destinations/:stateSlug/:citySlug" element={<CityHotelsPage />} />
 

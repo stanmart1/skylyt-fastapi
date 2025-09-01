@@ -74,6 +74,10 @@ const AdminDashboard = () => {
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState<string | null>(null);
+  const [carDropdownOpen, setCarDropdownOpen] = useState(false);
+  const [activeCarTab, setActiveCarTab] = useState<string | null>(null);
+  const [hotelDropdownOpen, setHotelDropdownOpen] = useState(false);
+  const [activeHotelTab, setActiveHotelTab] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -237,24 +241,122 @@ const AdminDashboard = () => {
                 </Button>
               )}
               {hasPermission('dashboard.view_cars') && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => { navigate('/cars-management'); setSidebarOpen(false); }}
-                >
-                  <Car className="h-4 w-4 mr-2" />
-                  Car Management
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between"
+                    onClick={() => setCarDropdownOpen(!carDropdownOpen)}
+                  >
+                    <div className="flex items-center">
+                      <Car className="h-4 w-4 mr-2" />
+                      Car Management
+                    </div>
+                    {carDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                  {carDropdownOpen && (
+                    <div className="ml-6 space-y-1">
+                      <Button
+                        variant={activeCarTab === 'overview' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('overview'); setSidebarOpen(false); }}
+                      >
+                        Overview
+                      </Button>
+                      <Button
+                        variant={activeCarTab === 'bookings' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('bookings'); setSidebarOpen(false); }}
+                      >
+                        Bookings
+                      </Button>
+                      <Button
+                        variant={activeCarTab === 'payments' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('payments'); setSidebarOpen(false); }}
+                      >
+                        Payments
+                      </Button>
+                      <Button
+                        variant={activeCarTab === 'fleet' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('fleet'); setSidebarOpen(false); }}
+                      >
+                        Fleet
+                      </Button>
+                      <Button
+                        variant={activeCarTab === 'reviews' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('car-management'); setActiveCarTab('reviews'); setSidebarOpen(false); }}
+                      >
+                        Reviews
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
               {hasPermission('dashboard.view_hotels') && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => { navigate('/hotel-management'); setSidebarOpen(false); }}
-                >
-                  <Hotel className="h-4 w-4 mr-2" />
-                  Hotel Management
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between"
+                    onClick={() => setHotelDropdownOpen(!hotelDropdownOpen)}
+                  >
+                    <div className="flex items-center">
+                      <Hotel className="h-4 w-4 mr-2" />
+                      Hotel Management
+                    </div>
+                    {hotelDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                  {hotelDropdownOpen && (
+                    <div className="ml-6 space-y-1">
+                      <Button
+                        variant={activeHotelTab === 'overview' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('overview'); setSidebarOpen(false); }}
+                      >
+                        Overview
+                      </Button>
+                      <Button
+                        variant={activeHotelTab === 'bookings' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('bookings'); setSidebarOpen(false); }}
+                      >
+                        Bookings
+                      </Button>
+                      <Button
+                        variant={activeHotelTab === 'payments' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('payments'); setSidebarOpen(false); }}
+                      >
+                        Payments
+                      </Button>
+                      <Button
+                        variant={activeHotelTab === 'hotels' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('hotels'); setSidebarOpen(false); }}
+                      >
+                        Hotels
+                      </Button>
+                      <Button
+                        variant={activeHotelTab === 'reviews' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('reviews'); setSidebarOpen(false); }}
+                      >
+                        Reviews
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
               {/* Notifications moved to Settings tab */}
               {/* {hasPermission('dashboard.view_notifications') && (
@@ -395,24 +497,122 @@ const AdminDashboard = () => {
             </Button>
           )}
           {hasPermission('dashboard.view_cars') && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => navigate('/cars-management')}
-            >
-              <Car className="h-4 w-4 mr-2" />
-              Car Management
-            </Button>
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-between"
+                onClick={() => setCarDropdownOpen(!carDropdownOpen)}
+              >
+                <div className="flex items-center">
+                  <Car className="h-4 w-4 mr-2" />
+                  Car Management
+                </div>
+                {carDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </Button>
+              {carDropdownOpen && (
+                <div className="ml-6 space-y-1">
+                  <Button
+                    variant={activeCarTab === 'overview' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('overview'); }}
+                  >
+                    Overview
+                  </Button>
+                  <Button
+                    variant={activeCarTab === 'bookings' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('bookings'); }}
+                  >
+                    Bookings
+                  </Button>
+                  <Button
+                    variant={activeCarTab === 'payments' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('payments'); }}
+                  >
+                    Payments
+                  </Button>
+                  <Button
+                    variant={activeCarTab === 'fleet' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('fleet'); }}
+                  >
+                    Fleet
+                  </Button>
+                  <Button
+                    variant={activeCarTab === 'reviews' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('car-management'); setActiveCarTab('reviews'); }}
+                  >
+                    Reviews
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
           {hasPermission('dashboard.view_hotels') && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => navigate('/hotel-management')}
-            >
-              <Hotel className="h-4 w-4 mr-2" />
-              Hotel Management
-            </Button>
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-between"
+                onClick={() => setHotelDropdownOpen(!hotelDropdownOpen)}
+              >
+                <div className="flex items-center">
+                  <Hotel className="h-4 w-4 mr-2" />
+                  Hotel Management
+                </div>
+                {hotelDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </Button>
+              {hotelDropdownOpen && (
+                <div className="ml-6 space-y-1">
+                  <Button
+                    variant={activeHotelTab === 'overview' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('overview'); }}
+                  >
+                    Overview
+                  </Button>
+                  <Button
+                    variant={activeHotelTab === 'bookings' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('bookings'); }}
+                  >
+                    Bookings
+                  </Button>
+                  <Button
+                    variant={activeHotelTab === 'payments' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('payments'); }}
+                  >
+                    Payments
+                  </Button>
+                  <Button
+                    variant={activeHotelTab === 'hotels' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('hotels'); }}
+                  >
+                    Hotels
+                  </Button>
+                  <Button
+                    variant={activeHotelTab === 'reviews' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('hotel-management'); setActiveHotelTab('reviews'); }}
+                  >
+                    Reviews
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
           {/* Notifications moved to Settings tab */}
           {/* {hasPermission('dashboard.view_notifications') && (
@@ -1036,6 +1236,68 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'notifications' && <NotificationSettings />}
                 {activeSettingsTab === 'security' && <SecuritySettings />}
                 {!activeSettingsTab && <SettingsManagement />}
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'car-management' && hasPermission('dashboard.view_cars') && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  {activeCarTab === 'overview' && 'Car Fleet Overview'}
+                  {activeCarTab === 'bookings' && 'Car Bookings'}
+                  {activeCarTab === 'payments' && 'Car Payments'}
+                  {activeCarTab === 'fleet' && 'Fleet Management'}
+                  {activeCarTab === 'reviews' && 'Car Reviews'}
+                  {!activeCarTab && 'Car Management'}
+                </h1>
+                <p className="text-gray-600">
+                  {activeCarTab === 'overview' && 'Monitor car fleet performance and analytics'}
+                  {activeCarTab === 'bookings' && 'Manage car rental reservations'}
+                  {activeCarTab === 'payments' && 'Track car booking payments'}
+                  {activeCarTab === 'fleet' && 'Manage your car fleet inventory'}
+                  {activeCarTab === 'reviews' && 'Monitor and respond to car reviews'}
+                  {!activeCarTab && 'Comprehensive car rental business management'}
+                </p>
+              </div>
+              <ErrorBoundary>
+                {activeCarTab === 'overview' && <AnalyticsDashboard />}
+                {activeCarTab === 'bookings' && <CarBookingManagement />}
+                {activeCarTab === 'payments' && <PaymentManagement />}
+                {activeCarTab === 'fleet' && <CarManagement />}
+                {activeCarTab === 'reviews' && <ReviewManagement />}
+                {!activeCarTab && <CarManagement />}
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'hotel-management' && hasPermission('dashboard.view_hotels') && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  {activeHotelTab === 'overview' && 'Hotel Network Overview'}
+                  {activeHotelTab === 'bookings' && 'Hotel Bookings'}
+                  {activeHotelTab === 'payments' && 'Hotel Payments'}
+                  {activeHotelTab === 'hotels' && 'Hotel Management'}
+                  {activeHotelTab === 'reviews' && 'Hotel Reviews'}
+                  {!activeHotelTab && 'Hotel Management'}
+                </h1>
+                <p className="text-gray-600">
+                  {activeHotelTab === 'overview' && 'Monitor hotel network performance and analytics'}
+                  {activeHotelTab === 'bookings' && 'Manage hotel reservations and check-ins'}
+                  {activeHotelTab === 'payments' && 'Track hotel booking payments'}
+                  {activeHotelTab === 'hotels' && 'Manage your hotel properties'}
+                  {activeHotelTab === 'reviews' && 'Monitor and respond to hotel reviews'}
+                  {!activeHotelTab && 'Comprehensive hotel business management'}
+                </p>
+              </div>
+              <ErrorBoundary>
+                {activeHotelTab === 'overview' && <AnalyticsDashboard />}
+                {activeHotelTab === 'bookings' && <HotelBookingManagement />}
+                {activeHotelTab === 'payments' && <PaymentManagement />}
+                {activeHotelTab === 'hotels' && <HotelManagement />}
+                {activeHotelTab === 'reviews' && <ReviewManagement />}
+                {!activeHotelTab && <HotelManagement />}
               </ErrorBoundary>
             </div>
           )}
