@@ -10,7 +10,7 @@ from .car import Car
 from .hotel import Hotel
 from .notification import Notification
 from .booking import Booking
-from .currency import CurrencyRate, Country
+from .currency import Currency
 from .state import State
 from .city import City
 from .hotel_image import HotelImage
@@ -29,8 +29,7 @@ __all__ = [
     "Car",
     "Hotel",
     "Notification",
-    "CurrencyRate",
-    "Country",
+    "Currency",
     "State",
     "City",
     "HotelImage"

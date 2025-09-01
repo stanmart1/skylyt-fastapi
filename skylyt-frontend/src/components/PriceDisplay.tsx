@@ -8,6 +8,7 @@ interface PriceDisplayProps {
   showOriginal?: boolean;
   originalAmount?: number;
   originalCurrency?: string;
+  isNGNStored?: boolean;
 }
 
 const PriceDisplay: React.FC<PriceDisplayProps> = ({
@@ -16,12 +17,14 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   className = '',
   showOriginal = false,
   originalAmount,
-  originalCurrency
+  originalCurrency,
+  isNGNStored = false
 }) => {
-  const { formatPrice, currency: currentCurrency } = useCurrency();
+  const { formatPrice, convertAmount, currency: currentCurrency } = useCurrency();
   
-  const displayCurrency = currency || currentCurrency;
-  const formattedPrice = formatPrice(amount, displayCurrency);
+  const fromCurrency = isNGNStored ? 'NGN' : (currency || 'NGN');
+  const convertedAmount = convertAmount(amount, fromCurrency);
+  const formattedPrice = formatPrice(convertedAmount, currentCurrency);
 
   return (
     <span className={className}>

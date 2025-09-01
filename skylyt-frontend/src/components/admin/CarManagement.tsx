@@ -18,6 +18,8 @@ import { useAuth } from '@/contexts/AuthContext';
 interface CarData {
   id: string;
   name: string;
+  make: string;
+  model: string;
   category: string;
   price: number;
   currency: string;
@@ -27,25 +29,59 @@ interface CarData {
   fuel_type: string;
   plate_number: string;
   year: number;
-  status: 'available' | 'booked' | 'maintenance' | 'out_of_service';
+  status: 'available' | 'booked' | 'out_with_customer' | 'maintenance' | 'out_of_service';
   features: string[];
   is_featured: boolean;
-  mileage: number;
+  current_mileage: number;
   insurance_expiry: string;
-  last_service: string;
-  next_service: string;
+  registration_expiry: string;
+  roadworthiness_expiry: string;
+  insurance_doc_url: string;
+  registration_doc_url: string;
+  roadworthiness_doc_url: string;
   created_at: string;
 }
 
 interface MaintenanceRecord {
   id: string;
   car_id: string;
-  type: string;
+  maintenance_type: string;
   description: string;
   cost: number;
-  date: string;
-  next_due: string;
-  status: 'completed' | 'scheduled' | 'overdue';
+  currency: string;
+  scheduled_date: string;
+  completed_date?: string;
+  next_due_date?: string;
+  next_due_mileage?: number;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  service_provider?: string;
+  notes?: string;
+  car_name?: string;
+}
+
+interface MaintenanceAlerts {
+  overdue_maintenance: number;
+  upcoming_maintenance: number;
+  expiring_documents: number;
+  overdue_records: Array<{
+    id: string;
+    car_name: string;
+    maintenance_type: string;
+    due_date: string;
+  }>;
+  upcoming_records: Array<{
+    id: string;
+    car_name: string;
+    maintenance_type: string;
+    due_date: string;
+  }>;
+  expiring_docs: Array<{
+    car_id: string;
+    car_name: string;
+    insurance_expiry?: string;
+    registration_expiry?: string;
+    roadworthiness_expiry?: string;
+  }>;
 }
 
 export const CarManagement: React.FC = () => {
@@ -54,6 +90,12 @@ export const CarManagement: React.FC = () => {
   const { hasPermission } = useAuth();
   const [cars, setCars] = useState<CarData[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
+  const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlerts | null>(null);
+  const [documentFiles, setDocumentFiles] = useState<{
+    insurance?: File;
+    registration?: File;
+    roadworthiness?: File;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('fleet');
   const [stats, setStats] = useState({
@@ -68,8 +110,11 @@ export const CarManagement: React.FC = () => {
   const [editingCar, setEditingCar] = useState<any>(null);
   const [carForm, setCarForm] = useState({
     name: '',
+    make: '',
+    model: '',
     category: '',
     price: 0,
+    currency: 'USD',
     image_url: '',
     passengers: 4,
     transmission: 'automatic',
@@ -78,18 +123,22 @@ export const CarManagement: React.FC = () => {
     year: new Date().getFullYear(),
     status: 'available' as const,
     features: '',
-    mileage: 0,
+    current_mileage: 0,
     insurance_expiry: '',
-    last_service: '',
-    next_service: ''
+    registration_expiry: '',
+    roadworthiness_expiry: ''
   });
   const [maintenanceForm, setMaintenanceForm] = useState({
     car_id: '',
-    type: '',
+    maintenance_type: '',
     description: '',
     cost: 0,
-    date: '',
-    next_due: ''
+    currency: 'USD',
+    scheduled_date: '',
+    next_due_date: '',
+    next_due_mileage: 0,
+    service_provider: '',
+    notes: ''
   });
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [carImageFile, setCarImageFile] = useState<File | null>(null);
@@ -104,6 +153,7 @@ export const CarManagement: React.FC = () => {
     fetchCars();
     fetchMaintenance();
     fetchStats();
+    fetchMaintenanceAlerts();
   }, []);
 
   const fetchCars = async () => {
@@ -131,6 +181,15 @@ export const CarManagement: React.FC = () => {
     }
   };
 
+  const fetchMaintenanceAlerts = async () => {
+    try {
+      const data = await apiService.request('/admin/cars/maintenance/alerts');
+      setMaintenanceAlerts(data);
+    } catch (error) {
+      console.error('Failed to fetch maintenance alerts:', error);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const data = await apiService.request('/admin/cars/stats');
@@ -144,8 +203,11 @@ export const CarManagement: React.FC = () => {
     setEditingCar(null);
     setCarForm({
       name: '',
+      make: '',
+      model: '',
       category: '',
       price: 0,
+      currency: 'USD',
       image_url: '',
       passengers: 4,
       transmission: 'automatic',
@@ -154,11 +216,12 @@ export const CarManagement: React.FC = () => {
       year: new Date().getFullYear(),
       status: 'available',
       features: '',
-      mileage: 0,
+      current_mileage: 0,
       insurance_expiry: '',
-      last_service: '',
-      next_service: ''
+      registration_expiry: '',
+      roadworthiness_expiry: ''
     });
+    setDocumentFiles({});
     setCarImageFile(null);
     setIsModalOpen(true);
   };
@@ -167,8 +230,11 @@ export const CarManagement: React.FC = () => {
     setEditingCar(car);
     setCarForm({
       name: car.name,
+      make: car.make || '',
+      model: car.model || '',
       category: car.category,
       price: car.price,
+      currency: car.currency || 'USD',
       image_url: car.image_url || '',
       passengers: car.passengers,
       transmission: car.transmission,
@@ -177,11 +243,12 @@ export const CarManagement: React.FC = () => {
       year: car.year || new Date().getFullYear(),
       status: car.status,
       features: car.features?.join(', ') || '',
-      mileage: car.mileage || 0,
-      insurance_expiry: car.insurance_expiry || '',
-      last_service: car.last_service || '',
-      next_service: car.next_service || ''
+      current_mileage: car.current_mileage || 0,
+      insurance_expiry: car.insurance_expiry ? car.insurance_expiry.split('T')[0] : '',
+      registration_expiry: car.registration_expiry ? car.registration_expiry.split('T')[0] : '',
+      roadworthiness_expiry: car.roadworthiness_expiry ? car.roadworthiness_expiry.split('T')[0] : ''
     });
+    setDocumentFiles({});
     setCarImageFile(null);
     setIsModalOpen(true);
   };
@@ -255,11 +322,15 @@ export const CarManagement: React.FC = () => {
   const handleAddMaintenance = () => {
     setMaintenanceForm({
       car_id: '',
-      type: '',
+      maintenance_type: '',
       description: '',
       cost: 0,
-      date: '',
-      next_due: ''
+      currency: 'USD',
+      scheduled_date: '',
+      next_due_date: '',
+      next_due_mileage: 0,
+      service_provider: '',
+      notes: ''
     });
     setIsMaintenanceModalOpen(true);
   };
@@ -292,6 +363,7 @@ export const CarManagement: React.FC = () => {
       case 'available': return 'bg-green-100 text-green-800';
       case 'booked': return 'bg-blue-100 text-blue-800';
       case 'maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 'out_with_customer': return 'bg-orange-100 text-orange-800';
       case 'out_of_service': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -302,6 +374,7 @@ export const CarManagement: React.FC = () => {
       case 'available': return <CheckCircle className="h-4 w-4" />;
       case 'booked': return <Clock className="h-4 w-4" />;
       case 'maintenance': return <Wrench className="h-4 w-4" />;
+      case 'out_with_customer': return <Users className="h-4 w-4" />;
       case 'out_of_service': return <AlertTriangle className="h-4 w-4" />;
       default: return <Car className="h-4 w-4" />;
     }
@@ -490,7 +563,7 @@ export const CarManagement: React.FC = () => {
                       </Badge>
                     </div>
                     <p className="text-gray-600 mb-1 text-sm">{car.category} • {car.year}</p>
-                    <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number}</p>
+                    <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number || 'No plate number'}</p>
                     <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
                       <PriceDisplay amount={car.price} currency={car.currency || currency} />/day
                     </p>
@@ -502,7 +575,7 @@ export const CarManagement: React.FC = () => {
                         <span>•</span>
                         <span className="capitalize">{car.fuel_type}</span>
                       </p>
-                      <p>{car.mileage?.toLocaleString()} km</p>
+                      <p>{car.current_mileage?.toLocaleString()} km</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {hasPermission('content.manage_cars') && (
@@ -566,9 +639,10 @@ export const CarManagement: React.FC = () => {
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-sm sm:text-base">{record.type}</h4>
+                        <h4 className="font-semibold text-sm sm:text-base">{record.maintenance_type}</h4>
                         <p className="text-xs sm:text-sm text-gray-600 mt-1">{record.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">Date: {new Date(record.date).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-500 mt-1">Date: {new Date(record.scheduled_date).toLocaleDateString()}</p>
+                        {record.car_name && <p className="text-xs text-gray-500">Car: {record.car_name}</p>}
                       </div>
                       <div className="flex sm:flex-col sm:text-right items-center sm:items-end gap-2">
                         <p className="font-semibold text-sm sm:text-base">

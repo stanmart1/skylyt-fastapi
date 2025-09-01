@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
 
+interface Currency {
+  id: number;
+  code: string;
+  name: string;
+  symbol: string;
+  rate_to_ngn: number;
+  is_active: boolean;
+}
+
 interface LocationData {
   country_code: string;
   country_name: string;
@@ -19,6 +28,8 @@ interface CurrencyContextType {
   convertAmount: (amount: number, fromCurrency?: string) => number;
   formatPrice: (amount: number, currency?: string) => string;
   isLoading: boolean;
+  currencies: Currency[];
+  exchangeRates: Record<string, number>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -30,12 +41,37 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currencySymbols, setCurrencySymbols] = useState<Record<string, string>>({
     NGN: '₦', USD: '$', GBP: '£', EUR: '€'
   });
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    loadCurrencies();
     detectUserLocation();
   }, []);
+
+  const loadCurrencies = async () => {
+    try {
+      const currencyData = await apiService.request<Currency[]>('/currencies');
+      setCurrencies(currencyData);
+      
+      const symbols: Record<string, string> = {};
+      const rates: Record<string, number> = {};
+      const codes: string[] = [];
+      
+      currencyData.forEach(curr => {
+        symbols[curr.code] = curr.symbol;
+        rates[curr.code] = curr.rate_to_ngn;
+        codes.push(curr.code);
+      });
+      
+      setCurrencySymbols(symbols);
+      setExchangeRates(rates);
+      setSupportedCurrencies(codes);
+    } catch (error) {
+      console.error('Failed to load currencies:', error);
+    }
+  };
 
   const detectUserLocation = async () => {
     try {
@@ -69,16 +105,19 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const convertAmount = (amount: number, fromCurrency: string = 'NGN'): number => {
     if (fromCurrency === currency) return amount;
     
-    // Simple conversion logic - in production, use real-time rates
-    const rates: Record<string, Record<string, number>> = {
-      NGN: { USD: 0.0012, GBP: 0.001, EUR: 0.0011 },
-      USD: { NGN: 830, GBP: 0.83, EUR: 0.92 },
-      GBP: { NGN: 1000, USD: 1.2, EUR: 1.1 },
-      EUR: { NGN: 910, USD: 1.08, GBP: 0.91 }
-    };
+    // Convert through NGN base currency
+    let amountInNGN = amount;
+    if (fromCurrency !== 'NGN') {
+      const fromRate = exchangeRates[fromCurrency] || 1;
+      amountInNGN = amount * fromRate;
+    }
     
-    const rate = rates[fromCurrency]?.[currency] || 1;
-    return amount * rate;
+    if (currency === 'NGN') {
+      return Math.round(amountInNGN * 100) / 100;
+    }
+    
+    const toRate = exchangeRates[currency] || 1;
+    return Math.round((amountInNGN / toRate) * 100) / 100;
   };
 
   const formatPrice = (amount: number, curr: string = currency): string => {
@@ -98,7 +137,9 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrency,
       convertAmount,
       formatPrice,
-      isLoading
+      isLoading,
+      currencies,
+      exchangeRates
     }}>
       {children}
     </CurrencyContext.Provider>

@@ -1,21 +1,16 @@
-from sqlalchemy import Column, String, Numeric, DateTime, Boolean
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, Numeric, Boolean, Index
 from .base import BaseModel
 
 
-class CurrencyRate(BaseModel):
-    __tablename__ = "currency_rates"
+class Currency(BaseModel):
+    __tablename__ = "currencies"
     
-    from_currency = Column(String(3), nullable=False)
-    to_currency = Column(String(3), nullable=False)
-    rate = Column(Numeric(10, 4), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-
-class Country(BaseModel):
-    __tablename__ = "countries"
+    code = Column(String(3), unique=True, nullable=False, index=True)  # USD, EUR, GBP, etc.
+    name = Column(String(100), nullable=False)  # US Dollar, Euro, etc.
+    symbol = Column(String(10), nullable=False)  # $, €, £, etc.
+    rate_to_ngn = Column(Numeric(15, 6), nullable=False)  # Exchange rate to NGN
+    is_active = Column(Boolean, default=True, nullable=False)
     
-    code = Column(String(2), unique=True, nullable=False)
-    name = Column(String(100), nullable=False)
-    currency_code = Column(String(3), nullable=False)
-    is_supported = Column(Boolean, default=False)
+    __table_args__ = (
+        Index('idx_currency_code_active', 'code', 'is_active'),
+    )

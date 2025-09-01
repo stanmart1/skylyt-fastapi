@@ -25,8 +25,9 @@ class Payment(BaseModel):
     
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
     payment_method = Column(String(13), nullable=False)
-    amount = Column(Numeric(10, 2), nullable=False)
-    currency = Column(String(3), default="USD", nullable=False)
+    amount_ngn = Column(Numeric(15, 2), nullable=False)  # Always in NGN
+    display_currency = Column(String(3), default="NGN", nullable=False)
+    display_amount = Column(Numeric(15, 2), nullable=True)  # For reference
     status = Column(String(9), default="pending", nullable=False)
     
     # Provider specific fields (matching actual database schema)

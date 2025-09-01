@@ -36,9 +36,10 @@ class Booking(BaseModel):
     number_of_guests = Column(Integer, nullable=True)
     special_requests = Column(String(1000), nullable=True)
     
-    # Financial
-    total_amount = Column(Numeric(10, 2), nullable=False)
-    currency = Column(String(3), default="USD", nullable=False)
+    # Financial (always stored in NGN)
+    total_amount_ngn = Column(Numeric(15, 2), nullable=False)
+    display_currency = Column(String(3), default="NGN", nullable=False)
+    display_amount = Column(Numeric(15, 2), nullable=True)  # For reference only
     payment_status = Column(String(20), default="pending", nullable=False)
     
     # Date fields for schema compatibility

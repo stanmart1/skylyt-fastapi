@@ -7,16 +7,18 @@ import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
 import { DollarSign, Edit, Save, X } from 'lucide-react';
 
-interface CurrencyRate {
+interface Currency {
   id: number;
-  from_currency: string;
-  to_currency: string;
-  rate: number;
+  code: string;
+  name: string;
+  symbol: string;
+  rate_to_ngn: number;
+  is_active: boolean;
 }
 
 export const CurrencyRateManagement: React.FC = () => {
   const { toast } = useToast();
-  const [rates, setRates] = useState<CurrencyRate[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editRate, setEditRate] = useState<string>('');
@@ -27,48 +29,47 @@ export const CurrencyRateManagement: React.FC = () => {
 
   const fetchRates = async () => {
     try {
-      const data = await apiService.request('/admin/currency-rates');
-      setRates(data);
+      const data = await apiService.request('/admin/currencies');
+      setCurrencies(data);
     } catch (error) {
-      console.error('Failed to fetch currency rates:', error);
+      console.error('Failed to fetch currencies:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch currency rates',
-        variant: 'error'
+        description: 'Failed to fetch currencies',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (rate: CurrencyRate) => {
-    setEditingId(rate.id);
-    setEditRate(rate.rate.toString());
+  const handleEdit = (currency: Currency) => {
+    setEditingId(currency.id);
+    setEditRate(currency.rate_to_ngn.toString());
   };
 
   const handleSave = async (id: number) => {
     try {
-      await apiService.request(`/admin/currency-rates/${id}`, {
+      await apiService.request(`/admin/currencies/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ rate: parseFloat(editRate) })
+        body: JSON.stringify({ rate_to_ngn: parseFloat(editRate) })
       });
       
-      setRates(rates.map(rate => 
-        rate.id === id ? { ...rate, rate: parseFloat(editRate) } : rate
+      setCurrencies(currencies.map(currency => 
+        currency.id === id ? { ...currency, rate_to_ngn: parseFloat(editRate) } : currency
       ));
       
       setEditingId(null);
       toast({
         title: 'Success',
-        description: 'Currency rate updated successfully',
-        variant: 'success'
+        description: 'Exchange rate updated successfully'
       });
     } catch (error) {
       console.error('Failed to update rate:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update currency rate',
-        variant: 'error'
+        description: 'Failed to update exchange rate',
+        variant: 'destructive'
       });
     }
   };
@@ -112,39 +113,39 @@ export const CurrencyRateManagement: React.FC = () => {
       </div>
 
       <div className="grid gap-4">
-        {rates.map((rate) => (
-          <Card key={rate.id} className="border-l-4 border-blue-500">
+        {currencies.map((currency) => (
+          <Card key={currency.id} className="border-l-4 border-blue-500">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-bold text-blue-600">{currency.symbol}</span>
                   </div>
                   <div>
                     <h4 className="font-medium">
-                      1 {getCurrencyName(rate.from_currency)} = {rate.rate} {getCurrencyName(rate.to_currency)}
+                      1 {currency.name} = {currency.rate_to_ngn} NGN
                     </h4>
                     <p className="text-sm text-gray-600">
-                      {rate.from_currency} → {rate.to_currency}
+                      {currency.code} → NGN
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  {editingId === rate.id ? (
+                  {editingId === currency.id ? (
                     <>
                       <div className="flex items-center space-x-2">
-                        <Label htmlFor={`rate-${rate.id}`} className="text-sm">Rate:</Label>
+                        <Label htmlFor={`rate-${currency.id}`} className="text-sm">Rate to NGN:</Label>
                         <Input
-                          id={`rate-${rate.id}`}
+                          id={`rate-${currency.id}`}
                           type="number"
-                          step="0.000001"
+                          step="0.01"
                           value={editRate}
                           onChange={(e) => setEditRate(e.target.value)}
                           className="w-32"
                         />
                       </div>
-                      <Button size="sm" onClick={() => handleSave(rate.id)}>
+                      <Button size="sm" onClick={() => handleSave(currency.id)}>
                         <Save className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleCancel}>
@@ -152,7 +153,12 @@ export const CurrencyRateManagement: React.FC = () => {
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(rate)}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleEdit(currency)}
+                      disabled={currency.code === 'NGN'}
+                    >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>

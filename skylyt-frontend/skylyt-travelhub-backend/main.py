@@ -24,7 +24,7 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications
 
 # Setup logging
@@ -36,16 +36,17 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     await cache_warmer.warm_static_data()
     
-    # Initialize currency rates
+    # Initialize default currencies
     from app.services.currency_service import CurrencyService
     from app.core.database import SessionLocal
-    db = SessionLocal()
     try:
-        await CurrencyService.update_exchange_rates(db)
-    except Exception as e:
-        print(f"Failed to initialize currency rates: {e}")
-    finally:
+        db = SessionLocal()
+        CurrencyService.seed_default_currencies(db)
         db.close()
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to initialize currencies: {e}")
     
     yield
     # Shutdown
@@ -130,6 +131,7 @@ app.include_router(admin_reviews.router, prefix="/api/v1", tags=["Admin Reviews"
 app.include_router(admin_support.router, prefix="/api/v1", tags=["Admin Support"])
 app.include_router(admin_notifications.router, prefix="/api/v1", tags=["Admin Notifications"])
 app.include_router(currency_rates.router, prefix="/api/v1", tags=["Currency Rates"])
+app.include_router(currencies.router, prefix="/api/v1", tags=["Currencies"])
 
 
 
@@ -208,7 +210,7 @@ async def get_admin_stats(current_user = Depends(get_current_user), db: Session 
     from app.utils.cache_manager import cache_manager
     
     # Try cache first (5 minute cache)
-    cache_key = f"admin_stats_{current_user.id}"
+    cache_key = "admin_stats"
     cached_stats = cache_manager.get(cache_key)
     if cached_stats:
         return cached_stats
@@ -491,7 +493,7 @@ async def bulk_delete_bookings(request: BulkDeleteRequest, current_user = Depend
         raise HTTPException(status_code=400, detail="No booking IDs provided")
     
     try:
-        deleted_count = db.query(Booking).filter(Booking.id.in_(request.ids)).delete(synchronize_session=False)
+        deleted_count = db.query(Booking).filter(Booking.id.in_(request.ids)).delete(synchronize_session='evaluate')
         db.commit()
         
         return {"message": f"{deleted_count} bookings deleted successfully", "deleted_count": deleted_count}
@@ -571,10 +573,23 @@ async def update_booking(booking_id: int, booking_data: dict, current_user = Dep
             booking.status = booking_data["status"]
         
         # Update other fields with validation
-        allowed_fields = ["customer_name", "customer_email", "special_requests", "booking_type", "hotel_name", "car_name", "total_amount", "currency"]
+        allowed_fields = ["customer_name", "customer_email", "special_requests", "booking_type", "hotel_name", "car_name"]
         for field in allowed_fields:
             if field in booking_data:
                 setattr(booking, field, booking_data[field])
+        
+        # Handle amount updates - convert to NGN if needed
+        if "total_amount" in booking_data:
+            from app.services.currency_service import CurrencyService
+            display_currency = booking_data.get("display_currency", "NGN")
+            if display_currency != "NGN":
+                booking.total_amount_ngn = CurrencyService.convert_currency(
+                    booking_data["total_amount"], display_currency, "NGN", db
+                )
+            else:
+                booking.total_amount_ngn = booking_data["total_amount"]
+            booking.display_currency = display_currency
+            booking.display_amount = booking_data["total_amount"]
         
         db.commit()
         db.refresh(booking)
@@ -740,27 +755,40 @@ async def get_car_bookings(
     )
 
 @app.get("/api/v1/admin/payments")
-async def get_admin_payments(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get all payments for admin"""
+async def get_admin_payments(
+    page: int = 1,
+    per_page: int = 20,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Get paginated payments for admin"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
         from app.models.payment import Payment
-        payments = db.query(Payment).all()
-        return [{
-            "id": payment.id,
-            "booking_id": payment.booking_id,
-            "amount": float(payment.amount),
-            "currency": payment.currency,
-            "status": payment.status.value,
-            "payment_method": payment.payment_method.value,
-            "created_at": payment.created_at.isoformat(),
-            "transaction_id": payment.transaction_id,
-            "transfer_reference": payment.transfer_reference
-        } for payment in payments]
+        offset = (page - 1) * per_page
+        payments = db.query(Payment).offset(offset).limit(per_page).all()
+        total = db.query(Payment).count()
+        
+        return {
+            "payments": [{
+                "id": payment.id,
+                "booking_id": payment.booking_id,
+                "amount": float(payment.amount),
+                "currency": payment.currency,
+                "status": payment.status.value,
+                "payment_method": payment.payment_method.value,
+                "created_at": payment.created_at.isoformat(),
+                "transaction_id": payment.transaction_id,
+                "transfer_reference": payment.transfer_reference
+            } for payment in payments],
+            "total": total,
+            "page": page,
+            "per_page": per_page
+        }
     except ImportError:
-        return []
+        return {"payments": [], "total": 0, "page": page, "per_page": per_page}
 
 @app.get("/api/v1/admin/payments/{payment_id}")
 async def get_admin_payment(payment_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -922,7 +950,8 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     if file_extension not in allowed_extensions:
         raise HTTPException(status_code=400, detail="File extension not allowed")
     
-    if file.size > 10 * 1024 * 1024:  # 10MB limit
+    # Check file size before reading content
+    if file.size and file.size > 10 * 1024 * 1024:  # 10MB limit
         raise HTTPException(status_code=400, detail="File too large")
     
     # Generate secure filename
@@ -1145,37 +1174,49 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
         }
 
 @app.get("/api/v1/admin/cars")
-async def get_admin_cars(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get all cars for admin management"""
+async def get_admin_cars(
+    page: int = 1,
+    per_page: int = 50,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Get paginated cars for admin management"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
         from app.models.car import Car
-        cars = db.query(Car).all()
-        return [{
-            "id": str(car.id),
-            "name": car.name,
-            "category": car.category,
-            "price": float(car.price_per_day),
-            "currency": car.currency,
-            "image_url": car.image_url,
-            "passengers": car.passengers,
-            "transmission": car.transmission,
-            "fuel_type": car.fuel_type,
-            "plate_number": getattr(car, 'plate_number', ''),
-            "year": getattr(car, 'year', 2024),
-            "status": getattr(car, 'status', 'available'),
-            "features": car.features or [],
-            "is_featured": getattr(car, 'is_featured', False),
-            "mileage": getattr(car, 'mileage', 0),
-            "insurance_expiry": getattr(car, 'insurance_expiry', ''),
-            "last_service": getattr(car, 'last_service', ''),
-            "next_service": getattr(car, 'next_service', ''),
-            "created_at": car.created_at.isoformat() if car.created_at else ''
-        } for car in cars]
+        offset = (page - 1) * per_page
+        cars = db.query(Car).offset(offset).limit(per_page).all()
+        total = db.query(Car).count()
+        return {
+            "cars": [{
+                "id": str(car.id),
+                "name": car.name,
+                "category": car.category,
+                "price": float(car.price_per_day),
+                "currency": car.currency,
+                "image_url": car.image_url,
+                "passengers": car.passengers,
+                "transmission": car.transmission,
+                "fuel_type": car.fuel_type,
+                "plate_number": getattr(car, 'plate_number', ''),
+                "year": getattr(car, 'year', 2024),
+                "status": getattr(car, 'status', 'available'),
+                "features": car.features or [],
+                "is_featured": getattr(car, 'is_featured', False),
+                "mileage": getattr(car, 'mileage', 0),
+                "insurance_expiry": getattr(car, 'insurance_expiry', ''),
+                "last_service": getattr(car, 'last_service', ''),
+                "next_service": getattr(car, 'next_service', ''),
+                "created_at": car.created_at.isoformat() if car.created_at else ''
+            } for car in cars],
+            "total": total,
+            "page": page,
+            "per_page": per_page
+        }
     except Exception as e:
-        return []
+        return {"cars": [], "total": 0, "page": page, "per_page": per_page}
 
 @app.post("/api/v1/admin/cars")
 async def create_car(car_data: dict, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -1315,6 +1356,14 @@ async def get_car_fleet_stats(current_user = Depends(get_current_user), db: Sess
                 func.date(Payment.created_at) == today
             )
         ).scalar() or 0
+        
+        # Get active bookings count
+        active_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
         
         # Calculate utilization rate based on active bookings
         utilization_rate = 0
