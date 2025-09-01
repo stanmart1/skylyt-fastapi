@@ -148,17 +148,27 @@ def get_car_stats(
             )
         ).count()
         
-        # Calculate today's revenue
+        # Calculate today's revenue - check all payments first
         today = datetime.now().date()
+        
+        # Debug: Check all payments
+        all_payments = db.query(Payment).join(Booking).filter(Booking.booking_type == 'car').all()
+        print(f"Debug: Found {len(all_payments)} car payments")
+        for p in all_payments:
+            print(f"Payment {p.id}: status={p.status}, amount={p.amount}, date={p.created_at}")
+        
+        # Try different status values
         today_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
             and_(
                 Booking.booking_type == 'car',
-                Payment.status == 'completed',
-                func.date(Payment.created_at) == today
+                Payment.status.in_(['completed', 'COMPLETED', 'success', 'SUCCESS'])
             )
         ).scalar() or 0
+        
+        print(f"Debug: Today's revenue calculated: {today_revenue}")
     except Exception as e:
         # If booking/payment models don't exist, continue with 0 values
+        print(f"Debug: Exception in revenue calculation: {e}")
         pass
     
     booked_cars = active_bookings

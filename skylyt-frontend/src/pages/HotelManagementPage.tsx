@@ -113,7 +113,7 @@ const HotelManagementPage = () => {
                 onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Properties
+                Hotels
               </Button>
               <Button
                 variant={activeTab === 'reviews' ? 'default' : 'ghost'}
@@ -171,7 +171,7 @@ const HotelManagementPage = () => {
             onClick={() => setActiveTab('management')}
           >
             <Settings className="h-4 w-4 mr-2" />
-            Properties
+            Hotels
           </Button>
           <Button
             variant={activeTab === 'reviews' ? 'default' : 'ghost'}

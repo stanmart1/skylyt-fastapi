@@ -89,7 +89,7 @@ const CarsManagementPage = () => {
                 onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
+                Overview
               </Button>
               <Button
                 variant={activeTab === 'bookings' ? 'default' : 'ghost'}
@@ -147,7 +147,7 @@ const CarsManagementPage = () => {
             onClick={() => setActiveTab('analytics')}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
+            Overview
           </Button>
           <Button
             variant={activeTab === 'bookings' ? 'default' : 'ghost'}

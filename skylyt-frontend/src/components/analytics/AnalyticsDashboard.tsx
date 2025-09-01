@@ -1,166 +1,81 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, Users, DollarSign, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { apiService } from '@/services/api';
 
-interface AnalyticsData {
-  bookings: { month: string; count: number; revenue: number }[];
-  userGrowth: { month: string; users: number }[];
-  paymentMethods: { name: string; value: number }[];
-  topDestinations: { name: string; bookings: number }[];
-  metrics: {
-    totalBookings: number;
-    totalRevenue: number;
-    totalUsers: number;
-    avgBookingValue: number;
-  };
+interface RecentActivity {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  status?: string;
 }
 
 export const AnalyticsDashboard = () => {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('6m');
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchRecentActivity = async () => {
       try {
-        const response = await apiService.request<AnalyticsData>(`/analytics/dashboard?range=${timeRange}`);
-        setData(response);
+        const response = await apiService.request('/admin/recent-activity');
+        setActivities(response.activities || []);
       } catch (error) {
-        console.error('Failed to fetch analytics:', error);
+        console.error('Failed to fetch recent activity:', error);
+        setActivities([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAnalytics();
-  }, [timeRange]);
+    fetchRecentActivity();
+  }, []);
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading analytics...</div>;
-  }
-
-  if (!data) {
-    return <div className="text-center p-8">Failed to load analytics data</div>;
+    return <div className="flex justify-center p-8">Loading recent activity...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
-        <select 
-          value={timeRange} 
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="px-3 py-2 border rounded-md"
-        >
-          <option value="1m">Last Month</option>
-          <option value="3m">Last 3 Months</option>
-          <option value="6m">Last 6 Months</option>
-          <option value="1y">Last Year</option>
-        </select>
-      </div>
-
-
-
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="bookings">Bookings</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {data.bookings.slice(0, 5).map((item, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span>{item.month}</span>
-                      <span>{item.count} bookings</span>
-                    </div>
-                  ))}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Recent Activity</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex justify-between items-start p-3 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.title || activity.description}</p>
+                    <p className="text-sm text-gray-600">{activity.description}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    activity.type === 'user' ? 'bg-blue-100 text-blue-800' :
+                    activity.type === 'booking' ? 'bg-green-100 text-green-800' :
+                    activity.type === 'payment' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {activity.type}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Destinations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {data.topDestinations.slice(0, 5).map((dest, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span>{dest.name}</span>
-                      <span>{dest.bookings} bookings</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No recent activity found</p>
+              </div>
+            )}
           </div>
-        </TabsContent>
-
-        <TabsContent value="bookings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Booking Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.bookings.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 border rounded">
-                    <span className="font-medium">{item.month}</span>
-                    <span className="text-lg">{item.count} bookings</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="revenue">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.bookings.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 border rounded">
-                    <span className="font-medium">{item.month}</span>
-                    <span className="text-lg font-bold">${item.revenue.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Growth</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.userGrowth.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 border rounded">
-                    <span className="font-medium">{item.month}</span>
-                    <span className="text-lg">{item.users} users</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
