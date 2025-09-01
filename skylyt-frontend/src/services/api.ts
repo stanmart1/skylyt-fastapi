@@ -375,12 +375,7 @@ class ApiService {
     return this.request('/payments/bank-transfer-details');
   }
 
-  // Resend Booking Confirmation
-  async resendBookingConfirmation(bookingId: number): Promise<any> {
-    return this.request(`/bookings/${bookingId}/resend-confirmation`, {
-      method: 'POST',
-    });
-  }
+
 
   // Complete Booking
   async completeBooking(bookingId: number): Promise<any> {

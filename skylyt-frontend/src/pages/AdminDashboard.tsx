@@ -33,7 +33,7 @@ import { ReviewManagement } from '@/components/admin/ReviewManagement';
 import { SupportTicketManagement } from '@/components/admin/SupportTicketManagement';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Toaster } from '@/components/ui/Toaster';
+import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
 
 interface AdminStats {
