@@ -16,13 +16,15 @@ async def detect_user_location(request: Request, db: Session = Depends(get_db)):
     
     location_data = await LocationService.detect_location_from_ip(client_ip)
     
+    # Get supported currencies from database
+    currencies = CurrencyService.get_active_currencies(db)
+    supported_currencies = [curr.code for curr in currencies]
+    currency_symbols = {curr.code: curr.symbol for curr in currencies}
+    
     return {
         "location": location_data,
-        "supported_currencies": CurrencyService.SUPPORTED_CURRENCIES,
-        "currency_symbols": {
-            currency: CurrencyService.get_currency_symbol(currency)
-            for currency in CurrencyService.SUPPORTED_CURRENCIES
-        }
+        "supported_currencies": supported_currencies,
+        "currency_symbols": currency_symbols
     }
 
 
@@ -43,16 +45,23 @@ async def convert_currency(
     db: Session = Depends(get_db)
 ):
     """Convert amount between currencies"""
-    converted = CurrencyService.convert_amount(
-        db, amount, from_currency.upper(), to_currency.upper()
-    )
-    
-    return {
-        "original_amount": amount,
-        "from_currency": from_currency.upper(),
-        "to_currency": to_currency.upper(),
-        "converted_amount": float(converted),
-        "exchange_rate": float(CurrencyService.get_exchange_rate(
-            db, from_currency.upper(), to_currency.upper()
-        ))
-    }
+    try:
+        converted = CurrencyService.convert_currency(
+            amount, from_currency.upper(), to_currency.upper(), db
+        )
+        
+        # Calculate exchange rate
+        rate = CurrencyService.convert_currency(
+            1.0, from_currency.upper(), to_currency.upper(), db
+        )
+        
+        return {
+            "original_amount": amount,
+            "from_currency": from_currency.upper(),
+            "to_currency": to_currency.upper(),
+            "converted_amount": converted,
+            "exchange_rate": rate
+        }
+    except ValueError as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=str(e))
