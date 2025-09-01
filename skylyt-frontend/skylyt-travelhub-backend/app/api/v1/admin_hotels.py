@@ -224,12 +224,17 @@ def get_hotel_stats(
 
 @router.get("/overview-stats")
 def get_hotel_overview_stats(
+    days: int = 7,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """Get comprehensive hotel overview statistics with booking trends"""
     from sqlalchemy import func, and_
     from datetime import datetime, timedelta
+    
+    # Validate days parameter
+    if days not in [7, 30]:
+        days = 7
     
     # Hotel status summary
     total_hotels = db.query(Hotel).count()
@@ -269,9 +274,9 @@ def get_hotel_overview_stats(
         # Occupied rooms (active bookings)
         occupied_rooms = confirmed_bookings
         
-        # Booking trends over last 30 days
+        # Booking trends over selected days
         booking_trends = []
-        for i in range(30):
+        for i in range(days):
             date = datetime.now().date() - timedelta(days=i)
             daily_bookings = db.query(func.count(Booking.id)).filter(
                 and_(
@@ -288,7 +293,7 @@ def get_hotel_overview_stats(
     except Exception as e:
         # If booking model doesn't exist, return default data
         booking_trends = []
-        for i in range(30):
+        for i in range(days):
             date = datetime.now().date() - timedelta(days=i)
             booking_trends.insert(0, {
                 "date": date.strftime("%Y-%m-%d"),

@@ -31,35 +31,41 @@ interface HotelOverviewStats {
 export const HotelOverviewStats = () => {
   const [stats, setStats] = useState<HotelOverviewStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedDays, setSelectedDays] = useState(7);
+
+  const fetchHotelStats = async (days: number = 7) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/admin/hotels/overview-stats?days=${days}`);
+      setStats(response);
+    } catch (error) {
+      console.error('Failed to fetch hotel overview stats:', error);
+      setStats({
+        hotel_status: {
+          total_hotels: 0,
+          total_rooms: 0,
+          available_rooms: 0,
+          occupied_rooms: 0
+        },
+        booking_status: {
+          pending: 0,
+          confirmed: 0,
+          cancelled: 0
+        },
+        booking_trends: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHotelStats = async () => {
-      try {
-        const response = await apiService.request('/admin/hotels/overview-stats');
-        setStats(response);
-      } catch (error) {
-        console.error('Failed to fetch hotel overview stats:', error);
-        setStats({
-          hotel_status: {
-            total_hotels: 0,
-            total_rooms: 0,
-            available_rooms: 0,
-            occupied_rooms: 0
-          },
-          booking_status: {
-            pending: 0,
-            confirmed: 0,
-            cancelled: 0
-          },
-          booking_trends: []
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchHotelStats(selectedDays);
+  }, [selectedDays]);
 
-    fetchHotelStats();
-  }, []);
+  const handleDaysChange = (days: number) => {
+    setSelectedDays(days);
+  };
 
   if (loading) {
     return (
@@ -182,10 +188,20 @@ export const HotelOverviewStats = () => {
       {/* Booking Trends Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5" />
-            <span>Booking Trends (Last 30 Days)</span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5" />
+              <span>Booking Trends</span>
+            </CardTitle>
+            <select 
+              value={selectedDays} 
+              onChange={(e) => handleDaysChange(Number(e.target.value))}
+              className="px-3 py-1 border rounded-md text-sm bg-white"
+            >
+              <option value={7}>Last 7 Days</option>
+              <option value={30}>Last 30 Days</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-64 w-full">
