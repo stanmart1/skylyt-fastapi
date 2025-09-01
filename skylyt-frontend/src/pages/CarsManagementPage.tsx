@@ -216,90 +216,88 @@ const CarsManagementPage = () => {
         </header>
 
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
-            {loading ? (
-              [...Array(4)].map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <div className="animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-8 bg-gray-200 rounded mb-1" />
-                      <div className="h-3 bg-gray-200 rounded w-2/3" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : stats ? (
-              <>
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Total Fleet</CardTitle>
-                    <Car className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">{stats.total_cars}</div>
-                    <p className="text-xs text-blue-100">
-                      {stats.available} available
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
-                    <Calendar className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">{stats.booked}</div>
-                    <p className="text-xs text-green-100">
-                      Currently rented
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">
-                      <PriceDisplay amount={stats.revenue_today} currency={currency} />
-                    </div>
-                    <p className="text-xs text-yellow-100">
-                      Today's revenue
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Utilization</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-white" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-white">
-                      {stats.utilization_rate}%
-                    </div>
-                    <p className="text-xs text-purple-100">
-                      Fleet utilization
-                    </p>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <div className="col-span-4 text-center py-8">
-                <p className="text-gray-600">Failed to load statistics</p>
-              </div>
-            )}
-          </div>
-
-
-
           {/* Tab Content */}
           {activeTab === 'analytics' && (
             <div className="space-y-4">
+              {/* Stats Overview - Only show on Overview tab */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                {loading ? (
+                  [...Array(4)].map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded mb-2" />
+                          <div className="h-8 bg-gray-200 rounded mb-1" />
+                          <div className="h-3 bg-gray-200 rounded w-2/3" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : stats ? (
+                  <>
+                    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Total Fleet</CardTitle>
+                        <Car className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">{stats.total_cars}</div>
+                        <p className="text-xs text-blue-100">
+                          {stats.available} available
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
+                        <Calendar className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">{stats.booked}</div>
+                        <p className="text-xs text-green-100">
+                          Currently rented
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">
+                          <PriceDisplay amount={stats.revenue_today} currency={currency} />
+                        </div>
+                        <p className="text-xs text-yellow-100">
+                          Today's revenue
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-white">Utilization</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-white" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-white">
+                          {stats.utilization_rate}%
+                        </div>
+                        <p className="text-xs text-purple-100">
+                          Fleet utilization
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <div className="col-span-4 text-center py-8">
+                    <p className="text-gray-600">Failed to load statistics</p>
+                  </div>
+                )}
+              </div>
+              
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (

@@ -171,13 +171,6 @@ export const ReviewManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Review Management</h2>
-          <p className="text-gray-600">Moderate customer reviews and manage responses</p>
-        </div>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>
