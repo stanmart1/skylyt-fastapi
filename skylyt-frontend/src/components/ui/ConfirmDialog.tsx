@@ -31,7 +31,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="confirm-dialog-description">
         <DialogHeader>
           <div className="flex items-center space-x-2">
             {variant === 'destructive' && (
@@ -41,7 +41,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-gray-600">{description}</p>
+          <p id="confirm-dialog-description" className="text-gray-600">{description}</p>
         </div>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -288,7 +288,7 @@ class ApiService {
   }
 
   async updateBookingStatus(id: number, status: string): Promise<void> {
-    return this.request(`/admin/bookings/${id}`, {
+    return this.request(`/bookings/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status })
     });

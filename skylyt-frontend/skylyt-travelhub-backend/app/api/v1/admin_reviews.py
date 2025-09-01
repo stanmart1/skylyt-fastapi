@@ -7,7 +7,7 @@ from typing import List, Optional
 
 router = APIRouter(prefix="/admin/reviews", tags=["admin-reviews"])
 
-@router.get("/")
+@router.get("")
 def get_reviews(
     status: Optional[str] = Query(None),
     rating: Optional[str] = Query(None),

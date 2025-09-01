@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Hotel, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users } from 'lucide-react';
+import { Hotel, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users, X } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { HotelManagement } from '@/components/admin/HotelManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -32,6 +32,7 @@ const HotelManagementPage = () => {
   const [activeTab, setActiveTab] = useState('analytics');
   const [stats, setStats] = useState<HotelStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -61,31 +62,162 @@ const HotelManagementPage = () => {
       <Navigation />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Hotel className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Hotel Management</h2>
+                  </div>
+                </div>
+                <button onClick={() => setSidebarOpen(false)}>
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            <nav className="flex-1 p-4 space-y-2">
+              <Button
+                variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Analytics
+              </Button>
+              <Button
+                variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Bookings
+              </Button>
+              <Button
+                variant={activeTab === 'payments' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Payments
+              </Button>
+              <Button
+                variant={activeTab === 'management' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Properties
+              </Button>
+              <Button
+                variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Reviews
+              </Button>
+            </nav>
+          </div>
+        </div>
+      )}
+      
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-64 bg-white shadow-sm border-r flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] z-30">
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <Hotel className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Hotel Management</h2>
+            </div>
+          </div>
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          <Button
+            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+          <Button
+            variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('bookings')}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Bookings
+          </Button>
+          <Button
+            variant={activeTab === 'payments' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('payments')}
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Payments
+          </Button>
+          <Button
+            variant={activeTab === 'management' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('management')}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Properties
+          </Button>
+          <Button
+            variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('reviews')}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Reviews
+          </Button>
+        </nav>
+      </div>
+
+      <div className="flex-1 flex flex-col lg:ml-64">
         {/* Header */}
         <header className="bg-white shadow-sm border-b mt-16">
-          <div className="px-6 py-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Admin
-                </Button>
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex items-center space-x-4">
+                  <button 
+                    className="lg:hidden"
+                    onClick={() => setSidebarOpen(true)}
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/admin')} className="w-fit">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Admin
+                  </Button>
+                </div>
                 <div>
-                  <h1 className="text-3xl font-bold flex items-center space-x-2">
-                    <Hotel className="h-8 w-8" />
-                    <span>Hotel Management Dashboard</span>
+                  <h1 className="text-2xl sm:text-3xl font-bold flex items-center space-x-2">
+                    <Hotel className="h-6 w-6 sm:h-8 sm:w-8" />
+                    <span className="hidden sm:inline">Hotel Management Dashboard</span>
+                    <span className="sm:hidden">Hotel Management</span>
                   </h1>
-                  <p className="text-gray-600">Comprehensive hotel business management</p>
+                  <p className="text-sm sm:text-base text-gray-600">Comprehensive hotel business management</p>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-auto">
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
             {loading ? (
               [...Array(4)].map((_, i) => (
                 <Card key={i}>
@@ -161,58 +293,7 @@ const HotelManagementPage = () => {
             )}
           </div>
 
-          {/* Navigation Tabs */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                <Button
-                  variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveTab('analytics')}
-                  className="flex items-center space-x-2"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Analytics</span>
-                </Button>
-                <Button
-                  variant={activeTab === 'bookings' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveTab('bookings')}
-                  className="flex items-center space-x-2"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>Bookings</span>
-                </Button>
-                <Button
-                  variant={activeTab === 'payments' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveTab('payments')}
-                  className="flex items-center space-x-2"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Payments</span>
-                </Button>
-                <Button
-                  variant={activeTab === 'management' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveTab('management')}
-                  className="flex items-center space-x-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Properties</span>
-                </Button>
-                <Button
-                  variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveTab('reviews')}
-                  className="flex items-center space-x-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Reviews</span>
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
+
 
           {/* Tab Content */}
           {activeTab === 'analytics' && (

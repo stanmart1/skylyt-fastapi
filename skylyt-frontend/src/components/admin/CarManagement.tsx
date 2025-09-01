@@ -594,10 +594,10 @@ export const CarManagement: React.FC = () => {
       </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="car-dialog-description">
           <DialogHeader>
             <DialogTitle>{editingCar ? 'Edit Car' : 'Add New Car'}</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="car-dialog-description">
               {editingCar ? 'Update the car details below.' : 'Add a new car to your fleet.'}
             </DialogDescription>
           </DialogHeader>
@@ -673,7 +673,7 @@ export const CarManagement: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="mileage">Mileage (km)</Label>
-                <Input id="mileage" type="number" value={carForm.mileage} onChange={(e) => setCarForm({...carForm, mileage: Number(e.target.value)})} />
+                <Input id="mileage" type="number" value={carForm.mileage} onChange={(e) => setCarForm({...carForm, mileage: Number(e.target.value.replace(/,/g, ''))})} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -731,10 +731,10 @@ export const CarManagement: React.FC = () => {
 
       {/* Maintenance Modal */}
       <Dialog open={isMaintenanceModalOpen} onOpenChange={setIsMaintenanceModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="maintenance-dialog-description">
           <DialogHeader>
             <DialogTitle>Add Maintenance Record</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="maintenance-dialog-description">
               Record maintenance activities for your fleet.
             </DialogDescription>
           </DialogHeader>
