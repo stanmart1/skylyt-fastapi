@@ -41,7 +41,7 @@ const PaymentManagement = () => {
     try {
       setLoading(true);
       const data = await apiService.request('/admin/payments');
-      setPayments(data || []);
+      setPayments(Array.isArray(data) ? data : Array.isArray(data?.payments) ? data.payments : []);
     } catch (error) {
       console.error('Failed to fetch payments:', error);
       setPayments([]);
@@ -198,7 +198,7 @@ const PaymentManagement = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {payments.map((payment) => (
+              {Array.isArray(payments) && payments.map((payment) => (
                 <div key={payment.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -227,7 +227,7 @@ const PaymentManagement = () => {
                           </p>
                         )}
                         <p className="text-xs text-gray-500">
-                          {new Date(payment.created_at).toLocaleString()}
+                          {payment.created_at ? new Date(payment.created_at).toLocaleString() : 'No date'}
                         </p>
                       </div>
                     </div>

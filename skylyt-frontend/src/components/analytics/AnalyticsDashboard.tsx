@@ -54,7 +54,7 @@ export const AnalyticsDashboard = () => {
                     <p className="font-medium text-gray-900">{activity.title || activity.description}</p>
                     <p className="text-sm text-gray-600">{activity.description}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(activity.timestamp).toLocaleString()}
+                      {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'No date'}
                     </p>
                   </div>
                   <span className={`px-2 py-1 text-xs rounded-full ${
