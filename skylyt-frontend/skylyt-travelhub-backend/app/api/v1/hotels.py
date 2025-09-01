@@ -92,19 +92,23 @@ def search_hotels(
                     float(base_price), base_currency, currency.upper(), db
                 )
             else:
-                converted_price = base_price
+                converted_price = float(base_price)
+            
+            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+            symbol = curr_obj.symbol if curr_obj else currency.upper()
+            exchange_rate = CurrencyService.convert_currency(1.0, base_currency, currency.upper(), db)
             
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
-                "price": float(converted_price),
+                "price": converted_price,
                 "original_price": float(base_price),
                 "base_currency": base_currency,
                 "currency": currency.upper(),
-                "currency_symbol": CurrencyService.get_currency_by_code(currency.upper(), db).symbol if CurrencyService.get_currency_by_code(currency.upper(), db) else currency.upper(),
-                "exchange_rate": CurrencyService.convert_currency(1.0, base_currency, currency.upper(), db),
+                "currency_symbol": symbol,
+                "exchange_rate": exchange_rate,
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -139,14 +143,17 @@ def get_featured_hotels(
                 float(base_price), base_currency, currency.upper(), db
             )
             
+            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+            symbol = curr_obj.symbol if curr_obj else currency.upper()
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
-                "price": float(converted_price),
+                "price": converted_price,
                 "currency": currency.upper(),
-                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+                "currency_symbol": symbol,
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
