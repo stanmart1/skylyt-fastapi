@@ -17,11 +17,12 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 
 interface CarStats {
-  totalCars: number;
-  availableCars: number;
-  activeBookings: number;
-  totalRevenue: number;
-  revenueChange: number;
+  total_cars: number;
+  available: number;
+  booked: number;
+  maintenance: number;
+  revenue_today: number;
+  utilization_rate: number;
 }
 
 const CarsManagementPage = () => {
@@ -43,7 +44,7 @@ const CarsManagementPage = () => {
 
   const fetchCarStats = async () => {
     try {
-      const response = await apiService.request('/admin/car-stats');
+      const response = await apiService.request('/admin/cars/stats');
       setStats(response);
     } catch (error) {
       console.error('Failed to fetch car stats:', error);
@@ -231,57 +232,57 @@ const CarsManagementPage = () => {
               ))
             ) : stats ? (
               <>
-                <Card className="border-l-4 border-blue-500">
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Fleet</CardTitle>
-                    <Car className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Total Fleet</CardTitle>
+                    <Car className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalCars}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.availableCars} available
+                    <div className="text-2xl font-bold text-white">{stats.total_cars}</div>
+                    <p className="text-xs text-blue-100">
+                      {stats.available} available
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-green-500">
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
+                    <Calendar className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.activeBookings}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-2xl font-bold text-white">{stats.booked}</div>
+                    <p className="text-xs text-green-100">
                       Currently rented
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-yellow-500">
+                <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      <PriceDisplay amount={stats.totalRevenue} currency={currency} />
+                    <div className="text-2xl font-bold text-white">
+                      <PriceDisplay amount={stats.revenue_today} currency={currency} />
                     </div>
-                    <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
+                    <p className="text-xs text-yellow-100">
+                      Today's revenue
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-purple-500">
+                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Utilization</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Utilization</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {stats.totalCars > 0 ? Math.round((stats.activeBookings / stats.totalCars) * 100) : 0}%
+                    <div className="text-2xl font-bold text-white">
+                      {stats.utilization_rate}%
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-purple-100">
                       Fleet utilization
                     </p>
                   </CardContent>
@@ -298,33 +299,53 @@ const CarsManagementPage = () => {
 
           {/* Tab Content */}
           {activeTab === 'analytics' && (
-            <ErrorBoundary>
-              <AnalyticsDashboard />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><AnalyticsDashboard /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'bookings' && (
-            <ErrorBoundary>
-              <CarBookingManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><CarBookingManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'payments' && (
-            <ErrorBoundary>
-              <PaymentManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><PaymentManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'management' && (
-            <ErrorBoundary>
-              <CarManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><CarManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'reviews' && (
-            <ErrorBoundary>
-              <ReviewManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><ReviewManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
         </div>
       </div>

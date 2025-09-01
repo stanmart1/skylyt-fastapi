@@ -375,7 +375,7 @@ const AdminDashboard = () => {
               {/* Stats Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
-            [...Array(4)].map((_, i) => (
+            [...Array(3)].map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-6">
                   <div className="animate-pulse">
@@ -416,16 +416,7 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-2 border-yellow-500 bg-yellow-50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-yellow-800">Active Users Online</CardTitle>
-                  <Users className="h-4 w-4 text-yellow-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-yellow-700">{activeUsers}</div>
-                  <p className="text-xs text-gray-600">Currently online</p>
-                </CardContent>
-              </Card>
+
 
               <Card className="border-l-2 border-green-500 bg-green-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -439,7 +430,7 @@ const AdminDashboard = () => {
               </Card>
             </>
           ) : (
-            <div className="col-span-4 text-center py-8">
+            <div className="col-span-3 text-center py-8">
               <p className="text-gray-600">Failed to load statistics</p>
             </div>
           )}

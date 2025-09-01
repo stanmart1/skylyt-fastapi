@@ -123,3 +123,102 @@ def toggle_feature_hotel(
     db.commit()
     db.refresh(hotel)
     return {"message": f"Hotel {'featured' if hotel.is_featured else 'unfeatured'} successfully"}
+
+
+@router.get("/room-types")
+def get_room_types(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get hotel room types from database"""
+    hotels = db.query(Hotel).filter(Hotel.room_types.isnot(None)).all()
+    room_types = []
+    for hotel in hotels:
+        if hotel.room_types:
+            for room_type in hotel.room_types:
+                room_types.append({
+                    "id": f"{hotel.id}_{room_type.get('type', 'standard')}",
+                    "hotel_id": hotel.id,
+                    "hotel_name": hotel.name,
+                    "type": room_type.get('type', 'Standard'),
+                    "price": room_type.get('price', hotel.price_per_night),
+                    "capacity": room_type.get('capacity', 2),
+                    "available_rooms": room_type.get('available_rooms', 1),
+                    "amenities": room_type.get('amenities', [])
+                })
+    return room_types
+
+
+@router.get("/stats")
+def get_hotel_stats(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get hotel management statistics"""
+    try:
+        from app.models.booking import Booking
+        from app.models.payment import Payment
+        from sqlalchemy import func, and_
+        from datetime import datetime, timedelta
+        
+        # Get hotel statistics
+        total_hotels = db.query(Hotel).count()
+        total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
+        
+        # Get active hotel bookings
+        active_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        # Calculate occupancy rate
+        occupancy_rate = 0
+        if total_rooms > 0:
+            occupancy_rate = round((active_bookings / total_rooms) * 100, 1)
+        
+        # Calculate revenue (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        sixty_days_ago = datetime.now() - timedelta(days=60)
+        
+        current_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Payment.status == 'completed',
+                Payment.created_at >= thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        previous_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Payment.status == 'completed',
+                Payment.created_at >= sixty_days_ago,
+                Payment.created_at < thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        # Calculate revenue change percentage
+        revenue_change = 0
+        if previous_revenue > 0:
+            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+        
+        return {
+            "totalHotels": total_hotels,
+            "totalRooms": int(total_rooms),
+            "activeBookings": active_bookings,
+            "totalRevenue": float(current_revenue),
+            "revenueChange": round(revenue_change, 1),
+            "occupancyRate": occupancy_rate
+        }
+    except Exception as e:
+        # Return default stats if there's an error
+        return {
+            "totalHotels": 0,
+            "totalRooms": 0,
+            "activeBookings": 0,
+            "totalRevenue": 0.0,
+            "revenueChange": 0.0,
+            "occupancyRate": 0.0
+        }

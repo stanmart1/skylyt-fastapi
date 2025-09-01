@@ -44,7 +44,7 @@ const HotelManagementPage = () => {
 
   const fetchHotelStats = async () => {
     try {
-      const response = await apiService.request('/admin/hotel-stats');
+      const response = await apiService.request('/admin/hotels/stats');
       setStats(response);
     } catch (error) {
       console.error('Failed to fetch hotel stats:', error);
@@ -232,55 +232,55 @@ const HotelManagementPage = () => {
               ))
             ) : stats ? (
               <>
-                <Card className="border-l-4 border-blue-500">
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
-                    <Hotel className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Total Properties</CardTitle>
+                    <Hotel className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalHotels}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-2xl font-bold text-white">{stats.totalHotels}</div>
+                    <p className="text-xs text-blue-100">
                       {stats.totalRooms} total rooms
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-green-500">
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Active Bookings</CardTitle>
+                    <Calendar className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.activeBookings}</div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-2xl font-bold text-white">{stats.activeBookings}</div>
+                    <p className="text-xs text-green-100">
                       Current reservations
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-yellow-500">
+                <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
+                    <div className="text-2xl font-bold text-white">
                       <PriceDisplay amount={stats.totalRevenue} currency={currency} />
                     </div>
-                    <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}`}>
                       {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-purple-500">
+                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium text-white">Occupancy Rate</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-white" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.occupancyRate}%</div>
-                    <p className="text-xs text-muted-foreground">
+                    <div className="text-2xl font-bold text-white">{stats.occupancyRate}%</div>
+                    <p className="text-xs text-purple-100">
                       Current occupancy
                     </p>
                   </CardContent>
@@ -297,33 +297,53 @@ const HotelManagementPage = () => {
 
           {/* Tab Content */}
           {activeTab === 'analytics' && (
-            <ErrorBoundary>
-              <AnalyticsDashboard />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><AnalyticsDashboard /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'bookings' && (
-            <ErrorBoundary>
-              <HotelBookingManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><HotelBookingManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'payments' && (
-            <ErrorBoundary>
-              <PaymentManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><PaymentManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'management' && (
-            <ErrorBoundary>
-              <HotelManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><HotelManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
 
           {activeTab === 'reviews' && (
-            <ErrorBoundary>
-              <ReviewManagement />
-            </ErrorBoundary>
+            <div className="space-y-4">
+              {loading ? (
+                <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
+              ) : (
+                <ErrorBoundary><ReviewManagement /></ErrorBoundary>
+              )}
+            </div>
           )}
         </div>
       </div>

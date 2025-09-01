@@ -15,6 +15,7 @@ class Hotel(BaseModel):
     amenities = Column(JSON, nullable=True)  # Array of amenities
     description = Column(Text, nullable=True)
     features = Column(JSON, nullable=True)  # WiFi, Pool, Spa, etc.
+    room_types = Column(JSON, nullable=True)  # Array of room types with details
     is_available = Column(Boolean, default=True, nullable=False)
     is_featured = Column(Boolean, default=False, nullable=False)
     
