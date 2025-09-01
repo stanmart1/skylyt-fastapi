@@ -12,7 +12,7 @@ import {
 } from '@/types/api';
 
 class ApiService {
-  private baseURL = 'https://skylytapi.scaleitpro.com/api/v1';
+  private baseURL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
   private token: string | null = null;
 
   constructor() {
@@ -322,7 +322,7 @@ class ApiService {
 
   // File Upload
   async uploadFile(formData: FormData): Promise<{ url: string; filename: string }> {
-    const response = await fetch('https://skylytapi.scaleitpro.com/api/v1/upload', {
+    const response = await fetch(`${this.baseURL}/upload`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -510,7 +510,7 @@ class ApiService {
   getImageUrl(imagePath: string): string {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) return imagePath;
-    return `https://skylytapi.scaleitpro.com${imagePath.startsWith('/') ? imagePath : '/' + imagePath}`;
+    return `${import.meta.env.VITE_API_BASE_URL}${imagePath.startsWith('/') ? imagePath : '/' + imagePath}`;
   }
 }
 

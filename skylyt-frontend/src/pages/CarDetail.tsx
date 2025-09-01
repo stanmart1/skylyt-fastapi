@@ -7,12 +7,15 @@ import { ArrowLeft, Users, Car, Fuel, Settings, Star, MapPin } from 'lucide-reac
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { apiService } from '@/services/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 interface CarDetails {
-  id: number;
+  id: string;
   name: string;
   category: string;
   price: number;
+  currency?: string;
   passengers: number;
   transmission: string;
   fuel_type?: string;
@@ -30,6 +33,7 @@ interface CarDetails {
 const CarDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currency } = useCurrency();
   const [car, setCar] = useState<CarDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,14 +45,14 @@ const CarDetail = () => {
       setError('Invalid car ID');
       setLoading(false);
     }
-  }, [id]);
+  }, [id, currency]);
 
   const fetchCarDetails = async (carId: string) => {
     try {
       setLoading(true);
       setError(null);
       console.log('Fetching car details for ID:', carId);
-      const response = await apiService.request(`/cars/${carId}`);
+      const response = await apiService.request(`/cars/${carId}?currency=${currency}`);
       setCar(response);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load car details';
@@ -189,7 +193,9 @@ const CarDetail = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <span className="text-3xl font-bold text-blue-600">${car.price}</span>
+                  <span className="text-3xl font-bold text-blue-600">
+                    <PriceDisplay amount={car.price} currency={car.currency || currency} />
+                  </span>
                   <span className="text-gray-600 ml-2">/day</span>
                 </div>
               </div>
@@ -264,7 +270,9 @@ const CarDetail = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Daily Rate:</span>
-                <span className="font-medium">${car.price}/day</span>
+                <span className="font-medium">
+                  <PriceDisplay amount={car.price} currency={car.currency || currency} />/day
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Availability:</span>

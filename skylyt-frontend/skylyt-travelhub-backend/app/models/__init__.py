@@ -11,6 +11,9 @@ from .hotel import Hotel
 from .notification import Notification
 from .booking import Booking
 from .currency import CurrencyRate, Country
+from .state import State
+from .city import City
+from .hotel_image import HotelImage
 
 __all__ = [
     "Base",
@@ -27,5 +30,8 @@ __all__ = [
     "Hotel",
     "Notification",
     "CurrencyRate",
-    "Country"
+    "Country",
+    "State",
+    "City",
+    "HotelImage"
 ]

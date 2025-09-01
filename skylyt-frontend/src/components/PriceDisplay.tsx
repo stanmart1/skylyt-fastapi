@@ -24,14 +24,14 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   const formattedPrice = formatPrice(amount, displayCurrency);
 
   return (
-    <div className={className}>
+    <span className={className}>
       <span className="font-semibold text-lg">{formattedPrice}</span>
       {showOriginal && originalAmount && originalCurrency && originalCurrency !== displayCurrency && (
         <span className="text-sm text-gray-500 ml-2">
           (was {formatPrice(originalAmount, originalCurrency)})
         </span>
       )}
-    </div>
+    </span>
   );
 };
 

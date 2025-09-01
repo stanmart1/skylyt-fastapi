@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.schemas.user import UserResponse, UserUpdate
 from app.schemas.booking import BookingResponse
 from app.services.user_service import UserService
+from app.models.user import User
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -203,3 +204,35 @@ def update_user_notifications(
         "sms": sms_enabled,
         "message": "Notification preferences updated successfully"
     }
+
+
+@router.get("/admin/users")
+def get_admin_users(
+    role: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get admin users for ticket assignment"""
+    if not current_user.has_role("admin") and not current_user.has_role("superadmin"):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    query = db.query(User).join(User.roles)
+    
+    if role:
+        from app.models.rbac import Role
+        query = query.filter(Role.name == role)
+    else:
+        from app.models.rbac import Role
+        query = query.filter(Role.name.in_(['admin', 'superadmin']))
+    
+    users = query.all()
+    
+    return [
+        {
+            "id": user.id,
+            "full_name": f"{user.first_name} {user.last_name}",
+            "email": user.email,
+            "roles": [role.name for role in user.roles]
+        }
+        for user in users
+    ]

@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, ArrowLeft, Clock, Users, Wifi, Car, Coffee, Dumbbell, Waves, UtensilsCrossed, Building, Sparkles, ParkingCircle, Heart } from 'lucide-react';
 import { apiService } from '@/services/api';
 import Navigation from '@/components/Navigation';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 interface HotelDetail {
   id: string;
@@ -13,6 +15,7 @@ interface HotelDetail {
   location: string;
   star_rating: number;
   price_per_night: number;
+  currency?: string;
   description: string;
   images: string[];
   amenities: string[];
@@ -26,6 +29,7 @@ interface HotelDetail {
 const HotelDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currency } = useCurrency();
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [hotelImages, setHotelImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +61,7 @@ const HotelDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiService.request(`/hotels/${id}`);
+        const data = await apiService.request(`/hotels/${id}?currency=${currency}`);
         
         if (!data || !data.id) {
           throw new Error('Invalid hotel data received');
@@ -85,7 +89,7 @@ const HotelDetail = () => {
     };
 
     fetchHotelDetails();
-  }, [id]);
+  }, [id, currency]);
 
   if (loading) {
     return (
@@ -225,7 +229,7 @@ const HotelDetail = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-blue-600">
-                      ${hotel.price_per_night}
+                      <PriceDisplay amount={hotel.price_per_night} currency={hotel.currency || currency} />
                     </div>
                     <div className="text-sm text-gray-600">per night</div>
                   </div>
@@ -310,7 +314,7 @@ const HotelDetail = () => {
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-semibold">Total per night</span>
                     <span className="text-2xl font-bold text-blue-600">
-                      ${hotel.price_per_night}
+                      <PriceDisplay amount={hotel.price_per_night} currency={hotel.currency || currency} />
                     </span>
                   </div>
                   

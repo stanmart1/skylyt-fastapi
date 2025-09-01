@@ -151,6 +151,29 @@ class RBACService:
             ("support.view_tickets", "support", "view_tickets", "View customer support tickets"),
             ("support.manage_tickets", "support", "manage_tickets", "Respond to support tickets"),
             ("support.view_feedback", "support", "view_feedback", "View customer feedback"),
+            
+            # Reviews & Ratings Management
+            ("dashboard.view_reviews", "dashboard", "view_reviews", "View reviews management in admin dashboard"),
+            ("reviews.read", "reviews", "read", "View customer reviews and ratings"),
+            ("reviews.moderate", "reviews", "moderate", "Moderate and approve/reject reviews"),
+            ("reviews.respond", "reviews", "respond", "Respond to customer reviews"),
+            ("reviews.delete", "reviews", "delete", "Delete inappropriate reviews"),
+            
+            # Support Ticket System
+            ("dashboard.view_support", "dashboard", "view_support", "View support system in admin dashboard"),
+            ("tickets.create", "tickets", "create", "Create support tickets"),
+            ("tickets.read", "tickets", "read", "View support tickets"),
+            ("tickets.update", "tickets", "update", "Update ticket status and responses"),
+            ("tickets.assign", "tickets", "assign", "Assign tickets to staff members"),
+            ("tickets.close", "tickets", "close", "Close resolved tickets"),
+            
+            # Notification Center
+            ("dashboard.view_notifications", "dashboard", "view_notifications", "View notification center in admin dashboard"),
+            ("notifications.create", "notifications", "create", "Create notification templates"),
+            ("notifications.read", "notifications", "read", "View notifications and templates"),
+            ("notifications.update", "notifications", "update", "Edit notification templates"),
+            ("notifications.send", "notifications", "send", "Send notifications to users"),
+            ("notifications.manage_settings", "notifications", "manage_settings", "Configure notification settings"),
         ]
         
         for name, resource, action, description in permissions:
@@ -178,6 +201,7 @@ class RBACService:
                 "dashboard.view_analytics", "dashboard.view_users", "dashboard.view_roles",
                 "dashboard.view_bookings", "dashboard.view_payments", "dashboard.view_system",
                 "dashboard.view_settings", "dashboard.view_cars", "dashboard.view_hotels",
+                "dashboard.view_reviews", "dashboard.view_support", "dashboard.view_notifications",
                 # Full user management
                 "users.create", "users.read", "users.update", "users.delete", "users.manage_roles", "users.view_activity",
                 # Full role management
@@ -194,12 +218,19 @@ class RBACService:
                 # Full analytics
                 "analytics.view_dashboard", "analytics.view_reports", "analytics.export_data", "analytics.view_revenue",
                 # Support access
-                "support.view_tickets", "support.manage_tickets", "support.view_feedback"
+                "support.view_tickets", "support.manage_tickets", "support.view_feedback",
+                # Reviews management
+                "reviews.read", "reviews.moderate", "reviews.respond", "reviews.delete",
+                # Ticket management
+                "tickets.create", "tickets.read", "tickets.update", "tickets.assign", "tickets.close",
+                # Notification management
+                "notifications.create", "notifications.read", "notifications.update", "notifications.send", "notifications.manage_settings"
             ],
             "admin": [
                 # Limited dashboard access
                 "dashboard.view_analytics", "dashboard.view_users", "dashboard.view_bookings",
                 "dashboard.view_payments", "dashboard.view_cars", "dashboard.view_hotels",
+                "dashboard.view_reviews", "dashboard.view_support", "dashboard.view_notifications",
                 # User management (no delete)
                 "users.read", "users.update", "users.view_activity",
                 # Booking management
@@ -211,7 +242,13 @@ class RBACService:
                 # Limited analytics
                 "analytics.view_dashboard", "analytics.view_reports",
                 # Support
-                "support.view_tickets", "support.manage_tickets"
+                "support.view_tickets", "support.manage_tickets",
+                # Reviews management
+                "reviews.read", "reviews.moderate", "reviews.respond",
+                # Ticket management
+                "tickets.read", "tickets.update", "tickets.close",
+                # Notification management
+                "notifications.read", "notifications.send"
             ],
             "accountant": [
                 # Financial dashboard access

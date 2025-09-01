@@ -57,7 +57,7 @@ export interface Hotel {
 }
 
 export interface Car {
-  id: number;
+  id: string;
   name: string;
   category: string;
   price: number;

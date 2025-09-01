@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { CreditCard, CheckCircle, Edit, Trash2, Plus } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 interface Payment {
   id: number;
@@ -29,6 +31,7 @@ const PaymentManagement = () => {
   const [editForm, setEditForm] = useState({ status: '', transaction_id: '' });
   const [updating, setUpdating] = useState(false);
   const { hasPermission } = useAuth();
+  const { currency } = useCurrency();
 
   useEffect(() => {
     fetchPayments();
@@ -86,14 +89,55 @@ const PaymentManagement = () => {
   };
 
   const handleDeletePayment = async (paymentId: number) => {
-    if (!confirm('Are you sure you want to delete this payment?')) return;
-    
     try {
       await apiService.request(`/admin/payments/${paymentId}`, { method: 'DELETE' });
       await fetchPayments();
     } catch (error) {
       console.error('Failed to delete payment:', error);
       alert('Failed to delete payment. Please try again.');
+    }
+  };
+
+  const handleProcessRefund = async (paymentId: number, amount?: number) => {
+    try {
+      setUpdating(true);
+      await apiService.request(`/admin/payments/${paymentId}/refund`, {
+        method: 'POST',
+        body: JSON.stringify({ amount })
+      });
+      await fetchPayments();
+    } catch (error) {
+      console.error('Failed to process refund:', error);
+      alert('Failed to process refund. Please try again.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleExportPayments = async () => {
+    try {
+      const exportData = await apiService.request('/admin/payments/export');
+      // Create and download CSV
+      const csvContent = exportData.csv;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `payments-export-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export payments:', error);
+      alert('Failed to export payments. Please try again.');
+    }
+  };
+
+  const handleTrackCommission = async (paymentId: number) => {
+    try {
+      const commissionData = await apiService.request(`/admin/payments/${paymentId}/commission`);
+      alert(`Commission: ${commissionData.commission_amount} ${commissionData.currency} (${commissionData.commission_rate}%)`);
+    } catch (error) {
+      console.error('Failed to fetch commission data:', error);
     }
   };
 
@@ -167,7 +211,7 @@ const PaymentManagement = () => {
                           Booking: #{payment.booking_id}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Amount: ${payment.amount} {payment.currency}
+                          Amount: <PriceDisplay amount={payment.amount} currency={payment.currency} />
                         </p>
                         <p className="text-sm text-gray-600">
                           Method: {payment.payment_method.replace('_', ' ')}

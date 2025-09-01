@@ -77,8 +77,6 @@ const BookingManagement = () => {
   };
 
   const handleDeleteBooking = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to delete this booking?')) return;
-    
     try {
       await apiService.request(`/admin/bookings/${bookingId}`, {
         method: 'DELETE'
@@ -89,6 +87,30 @@ const BookingManagement = () => {
       setBookings(data);
     } catch (error) {
       console.error('Failed to delete booking:', error);
+    }
+  };
+
+  const handleRefundBooking = async (bookingId: number) => {
+    try {
+      await apiService.request(`/admin/bookings/${bookingId}/refund`, {
+        method: 'POST'
+      });
+      
+      // Refresh bookings
+      const data = await apiService.getAllBookings();
+      setBookings(data);
+    } catch (error) {
+      console.error('Failed to process refund:', error);
+    }
+  };
+
+  const handleTrackSource = async (bookingId: number) => {
+    try {
+      const sourceData = await apiService.request(`/admin/bookings/${bookingId}/source`);
+      // Display source tracking information
+      alert(`Booking Source: ${sourceData.source || 'Direct'} | Referrer: ${sourceData.referrer || 'None'}`);
+    } catch (error) {
+      console.error('Failed to fetch booking source:', error);
     }
   };
 

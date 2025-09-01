@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
-import { Car, Hotel, Users, DollarSign, TrendingUp, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User } from 'lucide-react';
+import { Car, Hotel, Users, DollarSign, TrendingUp, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EnhancedBookingManagement } from '@/components/admin/EnhancedBookingManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -17,7 +19,6 @@ import { PaymentManagement } from '@/components/admin/PaymentManagement';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { SystemHealth } from '@/components/admin/SystemHealth';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
-import HotelImageManagement from '@/components/admin/hotel-images/HotelImageManagement';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiService } from '@/services/api';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, Star, Heart, X, Menu, Monitor } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { CarManagement } from '@/components/admin/CarManagement';
+import { HotelManagement } from '@/components/admin/HotelManagement';
+import { ReviewManagement } from '@/components/admin/ReviewManagement';
+import { SupportTicketManagement } from '@/components/admin/SupportTicketManagement';
+import { NotificationCenter } from '@/components/admin/NotificationCenter';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Toaster } from '@/components/ui/Toaster';
+import { useToast } from '@/hooks/useToast';
 
 interface AdminStats {
   totalBookings: number;
@@ -40,6 +49,8 @@ interface AdminStats {
 
 const AdminDashboard = () => {
   const { user, logout, hasRole, hasPermission } = useAuth();
+  const { currency } = useCurrency();
+  const { toast, dismiss, toasts } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -130,11 +141,19 @@ const AdminDashboard = () => {
         body: JSON.stringify({ permissions: assignedPermissions })
       });
       
-      alert('Permissions updated successfully!');
+      toast({
+        title: 'Success',
+        description: 'Permissions updated successfully!',
+        variant: 'success'
+      });
       setEditMode(false);
     } catch (error) {
       console.error('Failed to save permissions:', error);
-      alert('Failed to save permissions. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to save permissions. Please try again.',
+        variant: 'error'
+      });
     } finally {
       setSavingPermissions(false);
     }
@@ -267,14 +286,35 @@ const AdminDashboard = () => {
                   Hotel Management
                 </Button>
               )}
-              {hasPermission('dashboard.view_hotels') && (
+
+              {hasPermission('dashboard.view_reviews') && (
                 <Button
-                  variant={activeTab === 'hotel-images' ? 'default' : 'ghost'}
+                  variant={activeTab === 'reviews' ? 'default' : 'ghost'}
                   className="w-full justify-start"
-                  onClick={() => { setActiveTab('hotel-images'); setSidebarOpen(false); }}
+                  onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
                 >
-                  <Hotel className="h-4 w-4 mr-2" />
-                  Hotel Images
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Reviews
+                </Button>
+              )}
+              {hasPermission('dashboard.view_support') && (
+                <Button
+                  variant={activeTab === 'support' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => { setActiveTab('support'); setSidebarOpen(false); }}
+                >
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Support
+                </Button>
+              )}
+              {hasPermission('dashboard.view_notifications') && (
+                <Button
+                  variant={activeTab === 'notifications' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => { setActiveTab('notifications'); setSidebarOpen(false); }}
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifications
                 </Button>
               )}
               {hasPermission('dashboard.view_settings') && (
@@ -406,14 +446,35 @@ const AdminDashboard = () => {
               Hotel Management
             </Button>
           )}
-          {hasPermission('dashboard.view_hotels') && (
+
+          {hasPermission('dashboard.view_reviews') && (
             <Button
-              variant={activeTab === 'hotel-images' ? 'default' : 'ghost'}
+              variant={activeTab === 'reviews' ? 'default' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setActiveTab('hotel-images')}
+              onClick={() => setActiveTab('reviews')}
             >
-              <Hotel className="h-4 w-4 mr-2" />
-              Hotel Images
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Reviews
+            </Button>
+          )}
+          {hasPermission('dashboard.view_support') && (
+            <Button
+              variant={activeTab === 'support' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveTab('support')}
+            >
+              <Ticket className="h-4 w-4 mr-2" />
+              Support
+            </Button>
+          )}
+          {hasPermission('dashboard.view_notifications') && (
+            <Button
+              variant={activeTab === 'notifications' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveTab('notifications')}
+            >
+              <Bell className="h-4 w-4 mr-2" />
+              Notifications
             </Button>
           )}
           {hasPermission('dashboard.view_settings') && (
@@ -466,50 +527,52 @@ const AdminDashboard = () => {
             ))
           ) : stats ? (
             <>
-              <Card>
+              <Card className="border-l-2 border-red-500 bg-red-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-red-800">Total Bookings</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalBookings}</div>
+                  <div className="text-2xl font-bold text-red-700">{stats.totalBookings}</div>
                   <p className={`text-xs ${stats.bookingChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {stats.bookingChange >= 0 ? '+' : ''}{stats.bookingChange}% from last month
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-2 border-blue-500 bg-blue-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-blue-800">Revenue</CardTitle>
+                  <DollarSign className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-blue-700">
+                    <PriceDisplay amount={stats.totalRevenue} currency={currency} />
+                  </div>
                   <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-2 border-yellow-500 bg-yellow-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Users Online</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-yellow-800">Active Users Online</CardTitle>
+                  <Users className="h-4 w-4 text-yellow-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{activeUsers}</div>
+                  <div className="text-2xl font-bold text-yellow-700">{activeUsers}</div>
                   <p className="text-xs text-gray-600">Currently online</p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-2 border-green-500 bg-green-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Fleet Size</CardTitle>
-                  <Car className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-green-800">Fleet Size</CardTitle>
+                  <Car className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.fleetSize}</div>
+                  <div className="text-2xl font-bold text-green-700">{stats.fleetSize}</div>
                   <p className="text-xs text-gray-600">{stats.totalCars} Cars, {stats.totalHotels} Hotels</p>
                 </CardContent>
               </Card>
@@ -733,23 +796,33 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'cars' && hasPermission('dashboard.view_cars') && (
-            <CarManagementTab />
+            <ErrorBoundary>
+              <CarManagement />
+            </ErrorBoundary>
           )}
 
           {activeTab === 'hotels' && hasPermission('dashboard.view_hotels') && (
-            <HotelManagementTab />
+            <ErrorBoundary>
+              <HotelManagement />
+            </ErrorBoundary>
           )}
 
-          {activeTab === 'hotel-images' && hasPermission('dashboard.view_hotels') && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Hotel Image Management</h1>
-                <p className="text-gray-600">Manage hotel images and galleries</p>
-              </div>
-              <ErrorBoundary>
-                <HotelImageManagement />
-              </ErrorBoundary>
-            </div>
+          {activeTab === 'reviews' && hasPermission('dashboard.view_reviews') && (
+            <ErrorBoundary>
+              <ReviewManagement />
+            </ErrorBoundary>
+          )}
+
+          {activeTab === 'support' && hasPermission('dashboard.view_support') && (
+            <ErrorBoundary>
+              <SupportTicketManagement />
+            </ErrorBoundary>
+          )}
+
+          {activeTab === 'notifications' && hasPermission('dashboard.view_notifications') && (
+            <ErrorBoundary>
+              <NotificationCenter />
+            </ErrorBoundary>
           )}
 
           {activeTab === 'roles' && hasPermission('dashboard.view_roles') && (
@@ -943,491 +1016,11 @@ const AdminDashboard = () => {
         </div>
       </div>
       </div>
+      <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 };
 
-// Car Management Tab Component
-const CarManagementTab = () => {
-  const [cars, setCars] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCar, setEditingCar] = useState<any>(null);
-  const [carForm, setCarForm] = useState({
-    name: '',
-    category: '',
-    price: 0,
-    image_url: '',
-    passengers: 4,
-    transmission: 'automatic',
-    features: ''
-  });
-  const [carImageFile, setCarImageFile] = useState<File | null>(null);
-  const [uploadingCarImage, setUploadingCarImage] = useState(false);
 
-  useEffect(() => {
-    fetchCars();
-  }, []);
-
-  const fetchCars = async () => {
-    try {
-      const data = await apiService.request('/admin/cars');
-      setCars(data);
-    } catch (error) {
-      console.error('Failed to fetch cars:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddCar = () => {
-    setEditingCar(null);
-    setCarForm({ name: '', category: '', price: 0, image_url: '', passengers: 4, transmission: 'automatic', features: '' });
-    setIsModalOpen(true);
-  };
-
-  const handleEditCar = (car: any) => {
-    setEditingCar(car);
-    setCarForm({
-      name: car.name,
-      category: car.category,
-      price: car.price,
-      image_url: car.image_url || '',
-      passengers: car.passengers,
-      transmission: car.transmission,
-      features: car.features.join(', ')
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleCarImageUpload = async (file: File) => {
-    setUploadingCarImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_type', 'cars');
-      
-      const response = await apiService.uploadFile(formData);
-      setCarForm({ ...carForm, image_url: `https://skylytapi.scaleitpro.com${response.url}` });
-    } catch (error) {
-      console.error('Failed to upload image:', error);
-    } finally {
-      setUploadingCarImage(false);
-    }
-  };
-
-  const handleSaveCar = async () => {
-    try {
-      let finalCarData = { ...carForm, features: carForm.features.split(',').map(f => f.trim()).filter(f => f) };
-      
-      // Upload image if selected
-      if (carImageFile) {
-        await handleCarImageUpload(carImageFile);
-        finalCarData = { ...carForm, features: carForm.features.split(',').map(f => f.trim()).filter(f => f) };
-      }
-      
-      if (editingCar) {
-        await apiService.request(`/admin/cars/${editingCar.id}`, { method: 'PUT', body: JSON.stringify(finalCarData) });
-      } else {
-        await apiService.request('/admin/cars', { method: 'POST', body: JSON.stringify(finalCarData) });
-      }
-      await fetchCars();
-      setIsModalOpen(false);
-      setCarImageFile(null);
-    } catch (error) {
-      console.error('Failed to save car:', error);
-    }
-  };
-
-  const handleDeleteCar = async (carId: string) => {
-    if (!confirm('Are you sure you want to delete this car?')) return;
-    try {
-      await apiService.request(`/admin/cars/${carId}`, { method: 'DELETE' });
-      await fetchCars();
-    } catch (error) {
-      console.error('Failed to delete car:', error);
-    }
-  };
-
-  const handleFeatureCar = async (carId: string) => {
-    try {
-      await apiService.request(`/admin/cars/${carId}/feature`, { method: 'POST' });
-      await fetchCars();
-    } catch (error) {
-      console.error('Failed to feature car:', error);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Car Management</h2>
-        <Button onClick={handleAddCar}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Car
-        </Button>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-32 bg-gray-200 rounded mb-4" />
-                <div className="h-4 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cars.map((car) => (
-            <Card key={car.id}>
-              <CardContent className="p-6">
-                {car.image_url ? (
-                  <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
-                    <img src={car.image_url} alt={car.name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center w-full h-32 mb-4 bg-gray-100 rounded-lg">
-                    <Car className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
-                <h3 className="font-semibold text-lg">{car.name}</h3>
-                <p className="text-gray-600 mb-2">{car.category}</p>
-                <p className="text-lg font-bold text-blue-600">${car.price}/day</p>
-                <div className="mt-4 space-y-1 text-sm text-gray-600">
-                  <p>{car.passengers} passengers • {car.transmission}</p>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => handleEditCar(car)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleFeatureCar(car.id)}
-                    className={car.is_featured ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-600 hover:text-gray-700'}
-                  >
-                    <Star className={`h-3 w-3 ${car.is_featured ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDeleteCar(car.id)} className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingCar ? 'Edit Car' : 'Add New Car'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Car Name</Label>
-              <Input id="name" value={carForm.name} onChange={(e) => setCarForm({...carForm, name: e.target.value})} />
-            </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input id="category" value={carForm.category} onChange={(e) => setCarForm({...carForm, category: e.target.value})} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="price">Price per day</Label>
-                <Input id="price" type="number" value={carForm.price} onChange={(e) => setCarForm({...carForm, price: Number(e.target.value)})} />
-              </div>
-              <div>
-                <Label htmlFor="passengers">Passengers</Label>
-                <Input id="passengers" type="number" value={carForm.passengers} onChange={(e) => setCarForm({...carForm, passengers: Number(e.target.value)})} />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="transmission">Transmission</Label>
-              <Input id="transmission" value={carForm.transmission} onChange={(e) => setCarForm({...carForm, transmission: e.target.value})} />
-            </div>
-            <div>
-              <Label htmlFor="car_image">Car Image</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="car_image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCarImageFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('car_image')?.click()}
-                  disabled={uploadingCarImage}
-                >
-                  {uploadingCarImage ? 'Uploading...' : 'Choose File'}
-                </Button>
-                {carImageFile && <span className="text-sm text-gray-600">{carImageFile.name}</span>}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="features">Features (comma separated)</Label>
-              <Input id="features" value={carForm.features} onChange={(e) => setCarForm({...carForm, features: e.target.value})} placeholder="GPS, AC, Bluetooth" />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveCar}>{editingCar ? 'Update Car' : 'Add Car'}</Button>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-// Hotel Management Tab Component
-const HotelManagementTab = () => {
-  const [hotels, setHotels] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingHotel, setEditingHotel] = useState<any>(null);
-  const [hotelForm, setHotelForm] = useState({
-    name: '',
-    location: '',
-    rating: 4,
-    price: 0,
-    image_url: '',
-    amenities: '',
-    description: ''
-  });
-  const [hotelImageFile, setHotelImageFile] = useState<File | null>(null);
-  const [uploadingHotelImage, setUploadingHotelImage] = useState(false);
-
-  useEffect(() => {
-    fetchHotels();
-  }, []);
-
-  const fetchHotels = async () => {
-    try {
-      const data = await apiService.request('/admin/hotels');
-      setHotels(data);
-    } catch (error) {
-      console.error('Failed to fetch hotels:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddHotel = () => {
-    setEditingHotel(null);
-    setHotelForm({ name: '', location: '', rating: 4, price: 0, image_url: '', amenities: '', description: '' });
-    setIsModalOpen(true);
-  };
-
-  const handleEditHotel = (hotel: any) => {
-    setEditingHotel(hotel);
-    setHotelForm({
-      name: hotel.name,
-      location: hotel.location,
-      rating: hotel.rating,
-      price: hotel.price,
-      image_url: hotel.image_url || '',
-      amenities: hotel.amenities.join(', '),
-      description: hotel.description
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleHotelImageUpload = async (file: File) => {
-    setUploadingHotelImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_type', 'hotels');
-      
-      const response = await apiService.uploadFile(formData);
-      setHotelForm({ ...hotelForm, image_url: `https://skylytapi.scaleitpro.com${response.url}` });
-    } catch (error) {
-      console.error('Failed to upload image:', error);
-    } finally {
-      setUploadingHotelImage(false);
-    }
-  };
-
-  const handleSaveHotel = async () => {
-    try {
-      let finalHotelData = { ...hotelForm, amenities: hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a) };
-      
-      // Upload image if selected
-      if (hotelImageFile) {
-        await handleHotelImageUpload(hotelImageFile);
-        finalHotelData = { ...hotelForm, amenities: hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a) };
-      }
-      
-      if (editingHotel) {
-        await apiService.request(`/admin/hotels/${editingHotel.id}`, { method: 'PUT', body: JSON.stringify(finalHotelData) });
-      } else {
-        await apiService.request('/admin/hotels', { method: 'POST', body: JSON.stringify(finalHotelData) });
-      }
-      await fetchHotels();
-      setIsModalOpen(false);
-      setHotelImageFile(null);
-    } catch (error) {
-      console.error('Failed to save hotel:', error);
-    }
-  };
-
-  const handleFeatureHotel = async (hotelId: string) => {
-    try {
-      await apiService.request(`/admin/hotels/${hotelId}/feature`, { method: 'POST' });
-      await fetchHotels();
-    } catch (error) {
-      console.error('Failed to feature hotel:', error);
-    }
-  };
-
-  const handleDeleteHotel = async (hotelId: string) => {
-    if (!confirm('Are you sure you want to delete this hotel?')) return;
-    try {
-      await apiService.request(`/admin/hotels/${hotelId}`, { method: 'DELETE' });
-      await fetchHotels();
-    } catch (error) {
-      console.error('Failed to delete hotel:', error);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Hotel Management</h2>
-        <Button onClick={handleAddHotel}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Hotel
-        </Button>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-32 bg-gray-200 rounded mb-4" />
-                <div className="h-4 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {hotels.map((hotel) => (
-            <Card key={hotel.id}>
-              <CardContent className="p-6">
-                {hotel.image_url ? (
-                  <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
-                    <img src={hotel.image_url} alt={hotel.name} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center w-full h-32 mb-4 bg-gray-100 rounded-lg">
-                    <Hotel className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
-                <h3 className="font-semibold text-lg">{hotel.name}</h3>
-                <p className="text-gray-600 mb-2">{hotel.location}</p>
-                <div className="flex items-center gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < hotel.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                  <span className="text-sm text-gray-600 ml-1">({hotel.rating})</span>
-                </div>
-                <p className="text-lg font-bold text-blue-600">${hotel.price}/night</p>
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{hotel.description}</p>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => handleEditHotel(hotel)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleFeatureHotel(hotel.id)}
-                    className={hotel.is_featured ? 'bg-yellow-100 text-yellow-800' : ''}
-                    title={hotel.is_featured ? 'Remove from featured' : 'Add to featured'}
-                  >
-                    <Star className={`h-3 w-3 ${hotel.is_featured ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDeleteHotel(hotel.id)} className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingHotel ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Hotel Name</Label>
-              <Input id="name" value={hotelForm.name} onChange={(e) => setHotelForm({...hotelForm, name: e.target.value})} />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" value={hotelForm.location} onChange={(e) => setHotelForm({...hotelForm, location: e.target.value})} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="rating">Rating (1-5)</Label>
-                <Input id="rating" type="number" min="1" max="5" value={hotelForm.rating} onChange={(e) => setHotelForm({...hotelForm, rating: Number(e.target.value)})} />
-              </div>
-              <div>
-                <Label htmlFor="price">Price per night</Label>
-                <Input id="price" type="number" value={hotelForm.price} onChange={(e) => setHotelForm({...hotelForm, price: Number(e.target.value)})} />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="hotel_image">Hotel Image</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="hotel_image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setHotelImageFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('hotel_image')?.click()}
-                  disabled={uploadingHotelImage}
-                >
-                  {uploadingHotelImage ? 'Uploading...' : 'Choose File'}
-                </Button>
-                {hotelImageFile && <span className="text-sm text-gray-600">{hotelImageFile.name}</span>}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="amenities">Amenities (comma separated)</Label>
-              <Input id="amenities" value={hotelForm.amenities} onChange={(e) => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="WiFi, Pool, Gym, Spa" />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveHotel}>{editingHotel ? 'Update Hotel' : 'Add Hotel'}</Button>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
 
 export default AdminDashboard;

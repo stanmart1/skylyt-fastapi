@@ -25,7 +25,7 @@ from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, notifications, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config
-from app.api.v1 import payments, bank_accounts
+from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications
 
 # Setup logging
 setup_logging()
@@ -70,7 +70,6 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:4173",  # Vite dev server
         "http://localhost:3000",   # Alternative dev port
-        "*"  # Allow all origins for now
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
@@ -127,6 +126,9 @@ app.include_router(hotel_images.router, prefix="/api/v1", tags=["Hotel Images"])
 app.include_router(localization.router, prefix="/api/v1", tags=["Localization"])
 app.include_router(payment_webhooks.router, prefix="/api/v1", tags=["Payment Webhooks"])
 app.include_router(payment_config.router, prefix="/api/v1", tags=["Payment Config"])
+app.include_router(admin_reviews.router, prefix="/api/v1", tags=["Admin Reviews"])
+app.include_router(admin_support.router, prefix="/api/v1", tags=["Admin Support"])
+app.include_router(admin_notifications.router, prefix="/api/v1", tags=["Admin Notifications"])
 
 
 

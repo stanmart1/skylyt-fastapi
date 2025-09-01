@@ -4,10 +4,10 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "sqlite:///./skylyt.db"
-    DATABASE_HOST: str = "localhost"
-    DATABASE_PORT: int = 5432
-    DATABASE_NAME: str = "skylyt_db"
+    DATABASE_URL: str
+    DATABASE_HOST: str
+    DATABASE_PORT: int
+    DATABASE_NAME: str
     DATABASE_USER: str = ""
     DATABASE_PASSWORD: str = ""
     

@@ -6,11 +6,14 @@ import { CreditCard, ArrowLeft, CheckCircle, XCircle, Upload, Copy, Building2 } 
 import Navigation from '@/components/Navigation';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const Payment = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currency } = useCurrency();
   
   const bookingId = searchParams.get('bookingId');
   const amount = searchParams.get('amount');
@@ -273,7 +276,9 @@ const Payment = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Amount:</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg text-blue-600">${amount}</span>
+                          <span className="font-bold text-lg text-blue-600">
+                            <PriceDisplay amount={parseFloat(amount || '0')} currency={currency} />
+                          </span>
                           <Button 
                             size="sm" 
                             variant="ghost" 
@@ -351,7 +356,9 @@ const Payment = () => {
             ) : (
               <>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">${amount}</div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    <PriceDisplay amount={parseFloat(amount || '0')} currency={currency} />
+                  </div>
                   <p className="text-gray-600">Total Amount</p>
                 </div>
                 

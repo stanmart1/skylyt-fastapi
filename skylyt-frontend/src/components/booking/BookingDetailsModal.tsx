@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiService } from '@/services/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 
 interface BookingDetailsModalProps {
   booking: any;
@@ -23,6 +25,7 @@ interface BookingDetailsModalProps {
 }
 
 const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalProps) => {
+  const { currency } = useCurrency();
   const [serviceDetails, setServiceDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -90,8 +93,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
               {booking.status.toUpperCase()}
             </Badge>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">${booking.total_amount}</div>
-              <div className="text-sm text-gray-600">{booking.currency}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                <PriceDisplay amount={booking.total_amount} currency={booking.currency || currency} />
+              </div>
             </div>
           </div>
 
@@ -221,7 +225,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
                       )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Price per night:</span>
-                        <span className="font-medium">${serviceDetails.price_per_night}</span>
+                        <span className="font-medium">
+                          <PriceDisplay amount={serviceDetails.price_per_night} currency={serviceDetails.currency || currency} />
+                        </span>
                       </div>
                     </>
                   )}
@@ -246,7 +252,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Price per day:</span>
-                        <span className="font-medium">${serviceDetails.price}</span>
+                        <span className="font-medium">
+                          <PriceDisplay amount={serviceDetails.price} currency={serviceDetails.currency || currency} />
+                        </span>
                       </div>
                       {serviceDetails.fuel_type && (
                         <div className="flex justify-between">

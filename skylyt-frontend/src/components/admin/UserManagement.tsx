@@ -94,8 +94,6 @@ export const UserManagement = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
     try {
       const { apiService } = await import('@/services/api');
       await apiService.deleteUser(userId);
@@ -105,6 +103,32 @@ export const UserManagement = () => {
       setUsers(Array.isArray(userData) ? userData : userData.users || []);
     } catch (error) {
       console.error('Failed to delete user:', error);
+    }
+  };
+
+  const handleViewUserActivity = async (userId: number) => {
+    try {
+      const { apiService } = await import('@/services/api');
+      const activityData = await apiService.request(`/admin/users/${userId}/activity`);
+      // This would open a modal or navigate to user activity page
+      console.log('User activity:', activityData);
+    } catch (error) {
+      console.error('Failed to fetch user activity:', error);
+    }
+  };
+
+  const handleFlagSuspiciousActivity = async (userId: number) => {
+    try {
+      const { apiService } = await import('@/services/api');
+      await apiService.request(`/admin/users/${userId}/flag-suspicious`, {
+        method: 'POST'
+      });
+      
+      // Refresh users list
+      const userData = await getUsers();
+      setUsers(Array.isArray(userData) ? userData : userData.users || []);
+    } catch (error) {
+      console.error('Failed to flag user:', error);
     }
   };
 

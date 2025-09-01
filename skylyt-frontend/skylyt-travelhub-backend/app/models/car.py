@@ -1,8 +1,14 @@
 from sqlalchemy import Column, String, Integer, Float, JSON, Boolean
-from .base import BaseModel
+from app.core.database import Base
+from datetime import datetime
 
 
-class Car(BaseModel):
+class Car(Base):
+    __tablename__ = "cars"
+    
+    id = Column(String, primary_key=True, index=True)
+    created_at = Column(String, default=lambda: datetime.utcnow().isoformat(), nullable=False)
+    updated_at = Column(String, default=lambda: datetime.utcnow().isoformat(), nullable=False)
     __tablename__ = "cars"
     
     name = Column(String, nullable=False)
