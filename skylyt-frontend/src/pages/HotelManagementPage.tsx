@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Hotel, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users, X } from 'lucide-react';
+import { Hotel, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { HotelManagement } from '@/components/admin/HotelManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -33,6 +33,7 @@ const HotelManagementPage = () => {
   const [stats, setStats] = useState<HotelStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [hotelDropdownOpen, setHotelDropdownOpen] = useState(true);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -83,46 +84,68 @@ const HotelManagementPage = () => {
               </div>
             </div>
             <nav className="flex-1 p-4 space-y-2">
-              <Button
-                variant={activeTab === 'overview' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Overview
-              </Button>
-              <Button
-                variant={activeTab === 'bookings' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Bookings
-              </Button>
-              <Button
-                variant={activeTab === 'payments' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Payments
-              </Button>
-              <Button
-                variant={activeTab === 'management' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Hotels
-              </Button>
-              <Button
-                variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Reviews
-              </Button>
+              <div className="space-y-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between"
+                  onClick={() => setHotelDropdownOpen(!hotelDropdownOpen)}
+                >
+                  <div className="flex items-center">
+                    <Hotel className="h-4 w-4 mr-2" />
+                    Hotel Management
+                  </div>
+                  {hotelDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+                {hotelDropdownOpen && (
+                  <div className="ml-6 space-y-1">
+                    <Button
+                      variant={activeTab === 'overview' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Overview
+                    </Button>
+                    <Button
+                      variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Bookings
+                    </Button>
+                    <Button
+                      variant={activeTab === 'payments' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Payments
+                    </Button>
+                    <Button
+                      variant={activeTab === 'management' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Hotels
+                    </Button>
+                    <Button
+                      variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Reviews
+                    </Button>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
         </div>
@@ -141,46 +164,68 @@ const HotelManagementPage = () => {
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <Button
-            variant={activeTab === 'overview' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('overview')}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Overview
-          </Button>
-          <Button
-            variant={activeTab === 'bookings' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('bookings')}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Bookings
-          </Button>
-          <Button
-            variant={activeTab === 'payments' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('payments')}
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            Payments
-          </Button>
-          <Button
-            variant={activeTab === 'management' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('management')}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Hotels
-          </Button>
-          <Button
-            variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('reviews')}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Reviews
-          </Button>
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-between"
+              onClick={() => setHotelDropdownOpen(!hotelDropdownOpen)}
+            >
+              <div className="flex items-center">
+                <Hotel className="h-4 w-4 mr-2" />
+                Hotel Management
+              </div>
+              {hotelDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+            {hotelDropdownOpen && (
+              <div className="ml-6 space-y-1">
+                <Button
+                  variant={activeTab === 'overview' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('overview')}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Overview
+                </Button>
+                <Button
+                  variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('bookings')}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Bookings
+                </Button>
+                <Button
+                  variant={activeTab === 'payments' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('payments')}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Payments
+                </Button>
+                <Button
+                  variant={activeTab === 'management' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('management')}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Hotels
+                </Button>
+                <Button
+                  variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('reviews')}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Reviews
+                </Button>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
 

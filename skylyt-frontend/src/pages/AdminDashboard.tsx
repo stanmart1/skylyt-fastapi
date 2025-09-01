@@ -236,6 +236,26 @@ const AdminDashboard = () => {
                   System
                 </Button>
               )}
+              {hasPermission('dashboard.view_cars') && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { navigate('/cars-management'); setSidebarOpen(false); }}
+                >
+                  <Car className="h-4 w-4 mr-2" />
+                  Car Management
+                </Button>
+              )}
+              {hasPermission('dashboard.view_hotels') && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { navigate('/hotel-management'); setSidebarOpen(false); }}
+                >
+                  <Hotel className="h-4 w-4 mr-2" />
+                  Hotel Management
+                </Button>
+              )}
               {/* Notifications moved to Settings tab */}
               {/* {hasPermission('dashboard.view_notifications') && (
                 <Button
@@ -372,6 +392,26 @@ const AdminDashboard = () => {
             >
               <Monitor className="h-4 w-4 mr-2" />
               System
+            </Button>
+          )}
+          {hasPermission('dashboard.view_cars') && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => navigate('/cars-management')}
+            >
+              <Car className="h-4 w-4 mr-2" />
+              Car Management
+            </Button>
+          )}
+          {hasPermission('dashboard.view_hotels') && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => navigate('/hotel-management')}
+            >
+              <Hotel className="h-4 w-4 mr-2" />
+              Hotel Management
             </Button>
           )}
           {/* Notifications moved to Settings tab */}
@@ -557,7 +597,7 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Car className="h-5 w-5" />
-                    <span>Car Fleet Management</span>
+                    <span>Car Fleet Overview</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -570,17 +610,14 @@ const AdminDashboard = () => {
                         </div>
                         <Badge className="bg-green-100 text-green-800">Active</Badge>
                       </div>
-                      <Button 
-                        className="w-full"
-                        onClick={() => navigate('/cars-management')}
-                      >
-                        Manage Fleet
-                      </Button>
+                      <div className="text-sm text-gray-600">
+                        Access Car Management from the sidebar to manage your fleet, bookings, and analytics.
+                      </div>
                     </>
                   ) : (
                     <div className="animate-pulse space-y-4">
                       <div className="h-16 bg-gray-200 rounded-lg" />
-                      <div className="h-10 bg-gray-200 rounded" />
+                      <div className="h-6 bg-gray-200 rounded" />
                     </div>
                   )}
                 </CardContent>
@@ -591,7 +628,7 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Hotel className="h-5 w-5" />
-                    <span>Hotel Management</span>
+                    <span>Hotel Network Overview</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -604,17 +641,14 @@ const AdminDashboard = () => {
                         </div>
                         <Badge className="bg-blue-100 text-blue-800">Active</Badge>
                       </div>
-                      <Button 
-                        className="w-full"
-                        onClick={() => navigate('/hotel-management')}
-                      >
-                        Manage Hotels
-                      </Button>
+                      <div className="text-sm text-gray-600">
+                        Access Hotel Management from the sidebar to manage your properties, bookings, and analytics.
+                      </div>
                     </>
                   ) : (
                     <div className="animate-pulse space-y-4">
                       <div className="h-16 bg-gray-200 rounded-lg" />
-                      <div className="h-10 bg-gray-200 rounded" />
+                      <div className="h-6 bg-gray-200 rounded" />
                     </div>
                   )}
                 </CardContent>

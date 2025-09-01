@@ -18,7 +18,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   showOriginal = false,
   originalAmount,
   originalCurrency,
-  isNGNStored = false
+  isNGNStored = true
 }) => {
   const { formatPrice, convertAmount, currency: currentCurrency } = useCurrency();
   

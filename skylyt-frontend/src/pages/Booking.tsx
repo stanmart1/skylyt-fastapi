@@ -186,7 +186,7 @@ const Booking = () => {
           start_date: new Date(bookingData.pickupDate).toISOString(),
           end_date: new Date(bookingData.returnDate).toISOString(),
           total_amount: finalTotal,
-          currency: 'USD'
+          currency: 'NGN'
         };
 
         const booking = await apiService.request('/bookings', {
@@ -222,7 +222,7 @@ const Booking = () => {
         start_date: new Date(bookingData.pickupDate).toISOString(),
         end_date: new Date(bookingData.returnDate).toISOString(),
         total_amount: finalTotal,
-        currency: 'USD'
+        currency: 'NGN'
       };
 
       const booking = await apiService.request('/bookings', {
@@ -617,7 +617,7 @@ const Booking = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>{type === 'car' ? 'Daily Rate' : 'Nightly Rate'}</span>
-                    <span>${basePrice.toLocaleString()}</span>
+                    <span>₦{basePrice.toLocaleString()}</span>
                   </div>
                   {hasBothDates && days && (
                     <>
@@ -627,11 +627,11 @@ const Booking = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>${subtotal.toLocaleString()}</span>
+                        <span>₦{subtotal.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Taxes & Fees (12%)</span>
-                        <span>${taxes.toLocaleString()}</span>
+                        <span>₦{taxes.toLocaleString()}</span>
                       </div>
                     </>
                   )}
@@ -646,7 +646,7 @@ const Booking = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>{hasBothDates ? 'Total' : 'Base Price'}</span>
-                  <span className="text-blue-600">${finalTotal.toLocaleString()}</span>
+                  <span className="text-blue-600">₦{finalTotal.toLocaleString()}</span>
                 </div>
 
                 <div className="bg-green-50 p-3 rounded-lg border border-green-200">

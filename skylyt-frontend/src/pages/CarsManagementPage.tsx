@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Car, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users, X } from 'lucide-react';
+import { Car, BarChart3, Calendar, CreditCard, Settings, MessageSquare, ArrowLeft, Menu, TrendingUp, DollarSign, Users, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { CarManagement } from '@/components/admin/CarManagement';
 import CarBookingManagement from '@/components/admin/CarBookingManagement';
@@ -33,6 +33,7 @@ const CarsManagementPage = () => {
   const [stats, setStats] = useState<CarStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [carDropdownOpen, setCarDropdownOpen] = useState(true);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -83,46 +84,68 @@ const CarsManagementPage = () => {
               </div>
             </div>
             <nav className="flex-1 p-4 space-y-2">
-              <Button
-                variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Overview
-              </Button>
-              <Button
-                variant={activeTab === 'bookings' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Bookings
-              </Button>
-              <Button
-                variant={activeTab === 'payments' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Payments
-              </Button>
-              <Button
-                variant={activeTab === 'management' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Fleet
-              </Button>
-              <Button
-                variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Reviews
-              </Button>
+              <div className="space-y-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between"
+                  onClick={() => setCarDropdownOpen(!carDropdownOpen)}
+                >
+                  <div className="flex items-center">
+                    <Car className="h-4 w-4 mr-2" />
+                    Car Management
+                  </div>
+                  {carDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+                {carDropdownOpen && (
+                  <div className="ml-6 space-y-1">
+                    <Button
+                      variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Overview
+                    </Button>
+                    <Button
+                      variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('bookings'); setSidebarOpen(false); }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Bookings
+                    </Button>
+                    <Button
+                      variant={activeTab === 'payments' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Payments
+                    </Button>
+                    <Button
+                      variant={activeTab === 'management' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('management'); setSidebarOpen(false); }}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Fleet
+                    </Button>
+                    <Button
+                      variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Reviews
+                    </Button>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
         </div>
@@ -141,46 +164,68 @@ const CarsManagementPage = () => {
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <Button
-            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('analytics')}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Overview
-          </Button>
-          <Button
-            variant={activeTab === 'bookings' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('bookings')}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Bookings
-          </Button>
-          <Button
-            variant={activeTab === 'payments' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('payments')}
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            Payments
-          </Button>
-          <Button
-            variant={activeTab === 'management' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('management')}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Fleet
-          </Button>
-          <Button
-            variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setActiveTab('reviews')}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Reviews
-          </Button>
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-between"
+              onClick={() => setCarDropdownOpen(!carDropdownOpen)}
+            >
+              <div className="flex items-center">
+                <Car className="h-4 w-4 mr-2" />
+                Car Management
+              </div>
+              {carDropdownOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+            {carDropdownOpen && (
+              <div className="ml-6 space-y-1">
+                <Button
+                  variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('analytics')}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Overview
+                </Button>
+                <Button
+                  variant={activeTab === 'bookings' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('bookings')}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Bookings
+                </Button>
+                <Button
+                  variant={activeTab === 'payments' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('payments')}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Payments
+                </Button>
+                <Button
+                  variant={activeTab === 'management' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('management')}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Fleet
+                </Button>
+                <Button
+                  variant={activeTab === 'reviews' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveTab('reviews')}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Reviews
+                </Button>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
 
