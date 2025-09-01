@@ -221,3 +221,93 @@ def get_hotel_stats(
         "revenueChange": round(revenue_change, 1),
         "occupancyRate": occupancy_rate
     }
+
+@router.get("/overview-stats")
+def get_hotel_overview_stats(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get comprehensive hotel overview statistics with booking trends"""
+    from sqlalchemy import func, and_
+    from datetime import datetime, timedelta
+    
+    # Hotel status summary
+    total_hotels = db.query(Hotel).count()
+    total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
+    
+    # Initialize booking stats
+    pending_bookings = 0
+    confirmed_bookings = 0
+    cancelled_bookings = 0
+    occupied_rooms = 0
+    
+    try:
+        from app.models.booking import Booking
+        
+        # Booking status breakdown
+        pending_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Booking.status == 'pending'
+            )
+        ).count()
+        
+        confirmed_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        cancelled_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Booking.status == 'cancelled'
+            )
+        ).count()
+        
+        # Occupied rooms (active bookings)
+        occupied_rooms = confirmed_bookings
+        
+        # Booking trends over last 30 days
+        booking_trends = []
+        for i in range(30):
+            date = datetime.now().date() - timedelta(days=i)
+            daily_bookings = db.query(func.count(Booking.id)).filter(
+                and_(
+                    Booking.booking_type == 'hotel',
+                    func.date(Booking.created_at) == date
+                )
+            ).scalar() or 0
+            
+            booking_trends.insert(0, {
+                "date": date.strftime("%Y-%m-%d"),
+                "bookings": daily_bookings
+            })
+            
+    except Exception as e:
+        # If booking model doesn't exist, return default data
+        booking_trends = []
+        for i in range(30):
+            date = datetime.now().date() - timedelta(days=i)
+            booking_trends.insert(0, {
+                "date": date.strftime("%Y-%m-%d"),
+                "bookings": 0
+            })
+    
+    available_rooms = max(0, total_rooms - occupied_rooms)
+    
+    return {
+        "hotel_status": {
+            "total_hotels": total_hotels,
+            "total_rooms": int(total_rooms),
+            "available_rooms": available_rooms,
+            "occupied_rooms": occupied_rooms
+        },
+        "booking_status": {
+            "pending": pending_bookings,
+            "confirmed": confirmed_bookings,
+            "cancelled": cancelled_bookings
+        },
+        "booking_trends": booking_trends
+    }

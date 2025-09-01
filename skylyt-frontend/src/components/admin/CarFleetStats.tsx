@@ -89,7 +89,7 @@ export const CarFleetStats = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(2)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 rounded mb-4" />
                   <div className="h-48 bg-gray-200 rounded" />
@@ -166,12 +166,19 @@ export const CarFleetStats = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats?.rental_trends || []}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis 
+                    dataKey="month" 
+                    fontSize={12}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    fontSize={12}
+                    tick={{ fontSize: 12 }}
+                  />
                   <Tooltip />
                   <Line 
                     type="monotone" 
@@ -195,22 +202,26 @@ export const CarFleetStats = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Pie
                     data={stats?.fleet_distribution || []}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius="70%"
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={({ name, value }) => window.innerWidth > 640 ? `${name}: ${value}` : value}
                   >
                     {stats?.fleet_distribution?.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value, name) => [value, name]}
+                    labelStyle={{ fontSize: '14px' }}
+                    contentStyle={{ fontSize: '12px' }}
+                  />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>

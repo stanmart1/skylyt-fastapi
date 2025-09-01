@@ -44,6 +44,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { CarFleetStats } from '@/components/admin/CarFleetStats';
+import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
 
 interface AdminStats {
@@ -1311,7 +1312,7 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <ErrorBoundary>
-                {activeHotelTab === 'overview' && <AnalyticsDashboard />}
+                {activeHotelTab === 'overview' && <HotelOverviewStats />}
                 {activeHotelTab === 'bookings' && <HotelBookingManagement />}
                 {activeHotelTab === 'payments' && <PaymentManagement />}
                 {activeHotelTab === 'hotels' && <HotelManagement />}
