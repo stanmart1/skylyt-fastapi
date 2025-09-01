@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 
-import { Car, Hotel, Users, DollarSign, TrendingUp, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell } from 'lucide-react';
+import { Car, Hotel, Users, DollarSign, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EnhancedBookingManagement } from '@/components/admin/EnhancedBookingManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -16,7 +16,7 @@ import CarBookingManagement from '@/components/admin/CarBookingManagement';
 import { BookingProvider } from '@/contexts/BookingContext';
 import { ToastProvider } from '@/components/ui/toast';
 import { PaymentManagement } from '@/components/admin/PaymentManagement';
-import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+
 import { SystemHealth } from '@/components/admin/SystemHealth';
 import { SettingsManagement } from '@/components/admin/SettingsManagement';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -94,7 +94,7 @@ const AdminDashboard = () => {
       setActivityLoading(true);
       const url = filter ? `/admin/recent-activity?activity_type=${filter}` : '/admin/recent-activity';
       const response = await apiService.request(url);
-      setRecentActivity(response.activities || []);
+      setRecentActivity(Array.isArray(response.activities) ? response.activities : []);
     } catch (error) {
       console.error('Failed to fetch recent activity:', error);
     } finally {
@@ -197,16 +197,7 @@ const AdminDashboard = () => {
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Overview
               </Button>
-              {hasPermission('dashboard.view_analytics') && (
-                <Button
-                  variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Analytics
-                </Button>
-              )}
+
               {hasPermission('dashboard.view_users') && (
                 <Button
                   variant={activeTab === 'users' ? 'default' : 'ghost'}
@@ -287,16 +278,7 @@ const AdminDashboard = () => {
             <BarChart3 className="h-4 w-4 mr-2" />
             Overview
           </Button>
-          {hasPermission('dashboard.view_analytics') && (
-            <Button
-              variant={activeTab === 'analytics' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('analytics')}
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Analytics
-            </Button>
-          )}
+
           {hasPermission('dashboard.view_users') && (
             <Button
               variant={activeTab === 'users' ? 'default' : 'ghost'}
@@ -391,7 +373,7 @@ const AdminDashboard = () => {
               <Card className="border-l-2 border-red-500 bg-red-50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-red-800">Total Bookings</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-red-600" />
+                  <BarChart3 className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-700">{stats.totalBookings}</div>
@@ -550,9 +532,9 @@ const AdminDashboard = () => {
                       </div>
                     ))}
                   </div>
-                ) : recentActivity.length > 0 ? (
+                ) : Array.isArray(recentActivity) && recentActivity.length > 0 ? (
                   <div className="space-y-4">
-                    {recentActivity.map((activity) => {
+                    {(Array.isArray(recentActivity) ? recentActivity : []).map((activity) => {
                       const getActivityIcon = (type: string) => {
                         switch (type) {
                           case 'booking': return <Calendar className="h-4 w-4" />;
@@ -581,7 +563,7 @@ const AdminDashboard = () => {
                               <h4 className="font-medium text-sm">{activity.title}</h4>
                               <p className="text-xs text-gray-600">{activity.description}</p>
                               <p className="text-xs text-gray-500">
-                                {new Date(activity.timestamp).toLocaleString()}
+                                {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'No date'}
                               </p>
                             </div>
                           </div>
@@ -602,13 +584,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'analytics' && hasPermission('dashboard.view_analytics') && (
-            <div className="space-y-6">
-            <ErrorBoundary>
-              <AnalyticsDashboard />
-            </ErrorBoundary>
-            </div>
-          )}
+
 
           {activeTab === 'users' && hasPermission('dashboard.view_users') && (
             <div className="space-y-6">
