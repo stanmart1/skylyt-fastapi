@@ -99,7 +99,7 @@ const Payment = () => {
         formData.append('payment_reference', transactionRef);
         
         console.log('Uploading proof for booking:', bookingId);
-        const response = await fetch('https://skylytapi.scaleitpro.com/api/v1/payments/upload-proof', {
+        const response = await fetch('${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/upload-proof', {
           method: 'POST',
           body: formData
         });

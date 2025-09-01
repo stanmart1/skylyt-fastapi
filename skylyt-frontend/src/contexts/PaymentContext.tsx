@@ -147,7 +147,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         ),
       });
 
-      const response = await fetch(`/api/v1/payments?${params}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments?${params}`);
       if (!response.ok) throw new Error('Failed to fetch payments');
       
       const data = await response.json();
@@ -170,7 +170,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const fetchPaymentStats = async () => {
     try {
-      const response = await fetch('/api/v1/payments/stats');
+      const response = await fetch('${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/stats');
       if (!response.ok) throw new Error('Failed to fetch stats');
       
       const stats = await response.json();
@@ -183,7 +183,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   const fetchPaymentDetails = async (id: number) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`/api/v1/payments/${id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}`);
       if (!response.ok) throw new Error('Failed to fetch payment details');
       
       const payment = await response.json();
@@ -195,7 +195,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const verifyPayment = async (id: number) => {
     try {
-      const response = await fetch(`/api/v1/payments/${id}/verify`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/verify`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to verify payment');
@@ -209,7 +209,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const refundPayment = async (id: number, amount: number, reason: string) => {
     try {
-      const response = await fetch(`/api/v1/payments/${id}/refund`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/refund`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, reason }),
@@ -225,7 +225,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const updatePaymentStatus = async (id: number, status: string, notes?: string) => {
     try {
-      const response = await fetch(`/api/v1/payments/${id}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, notes }),
@@ -247,7 +247,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         )
       );
 
-      const response = await fetch(`/api/v1/payments/export/csv?${params}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/export/csv?${params}`);
       if (!response.ok) throw new Error('Failed to export payments');
       
       const blob = await response.blob();

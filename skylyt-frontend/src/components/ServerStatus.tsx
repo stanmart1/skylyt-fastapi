@@ -11,7 +11,7 @@ export const ServerStatus = () => {
   const checkServerStatus = async () => {
     setIsChecking(true);
     try {
-      await fetch('https://skylytapi.scaleitpro.com/api/v1/health');
+      await fetch('${import.meta.env.VITE_API_BASE_URL}/api/v1/health');
       setIsOnline(true);
     } catch (error) {
       setIsOnline(false);

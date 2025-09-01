@@ -12,7 +12,7 @@ import {
 } from '@/types/api';
 
 class ApiService {
-  private baseURL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
+  private baseURL = import.meta.env.VITE_API_BASE_URL;
   private token: string | null = null;
 
   constructor() {
