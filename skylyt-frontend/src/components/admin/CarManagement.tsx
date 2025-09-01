@@ -233,7 +233,7 @@ export const CarManagement: React.FC = () => {
       make: car.make || '',
       model: car.model || '',
       category: car.category,
-      price_per_day: car.price_per_day || car.price,
+      price_per_day: car.price_per_day || car.price || 0,
       currency: car.currency || 'USD',
       image_url: car.image_url || '',
       passengers: car.passengers,
@@ -590,7 +590,7 @@ export const CarManagement: React.FC = () => {
                     <p className="text-gray-600 mb-1 text-sm">{car.category} • {car.year}</p>
                     <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number || 'No plate number'}</p>
                     <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
-                      <PriceDisplay amount={car.price_per_day} currency={car.currency || currency} />/day
+                      <PriceDisplay amount={car.price_per_day || car.price || 0} currency={car.currency || currency} />/day
                     </p>
                     <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-4">
                       <p className="flex flex-wrap gap-1">
