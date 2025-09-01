@@ -32,6 +32,7 @@ import { HotelManagement } from '@/components/admin/HotelManagement';
 import { ReviewManagement } from '@/components/admin/ReviewManagement';
 import { SupportTicketManagement } from '@/components/admin/SupportTicketManagement';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
+import { NotificationSender } from '@/components/admin/NotificationSender';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
@@ -820,9 +821,14 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'notifications' && hasPermission('dashboard.view_notifications') && (
-            <ErrorBoundary>
-              <NotificationCenter />
-            </ErrorBoundary>
+            <div className="space-y-6">
+              <ErrorBoundary>
+                <NotificationSender />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <NotificationCenter />
+              </ErrorBoundary>
+            </div>
           )}
 
           {activeTab === 'roles' && hasPermission('dashboard.view_roles') && (

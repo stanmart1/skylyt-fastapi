@@ -24,8 +24,8 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, notifications, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config
-from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config
+from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications
 
 # Setup logging
 setup_logging()

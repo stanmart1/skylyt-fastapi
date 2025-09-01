@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, CreditCard, Shield, Globe, Save } from 'lucide-react';
+import { Settings, CreditCard, Shield, Globe, Save, Bell, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,16 @@ interface SettingsData {
   account_name: string;
   account_number: string;
   is_primary_account: boolean;
+  // Notification settings
+  smtp_server: string;
+  smtp_port: number;
+  smtp_username: string;
+  smtp_password: string;
+  from_email: string;
+  onesignal_app_id: string;
+  onesignal_api_key: string;
+  email_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
 }
 
 export const SettingsManagement = () => {
@@ -73,6 +83,18 @@ export const SettingsManagement = () => {
     account_name: '',
     account_number: '',
     is_primary_account: true
+  });
+
+  const [notificationForm, setNotificationForm] = useState({
+    smtp_server: '',
+    smtp_port: 587,
+    smtp_username: '',
+    smtp_password: '',
+    from_email: '',
+    onesignal_app_id: '',
+    onesignal_api_key: '',
+    email_notifications_enabled: true,
+    push_notifications_enabled: true
   });
 
   useEffect(() => {
@@ -118,6 +140,18 @@ export const SettingsManagement = () => {
         account_name: data.account_name || '',
         account_number: data.account_number || '',
         is_primary_account: data.is_primary_account || true
+      });
+
+      setNotificationForm({
+        smtp_server: data.smtp_server || '',
+        smtp_port: data.smtp_port || 587,
+        smtp_username: data.smtp_username || '',
+        smtp_password: '',
+        from_email: data.from_email || '',
+        onesignal_app_id: data.onesignal_app_id || '',
+        onesignal_api_key: '',
+        email_notifications_enabled: data.email_notifications_enabled ?? true,
+        push_notifications_enabled: data.push_notifications_enabled ?? true
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -248,6 +282,33 @@ export const SettingsManagement = () => {
     }
   };
 
+  const saveNotificationSettings = async () => {
+    setSaving(true);
+    try {
+      const { apiService } = await import('@/services/api');
+      await apiService.request('/settings/notifications', {
+        method: 'PUT',
+        body: JSON.stringify(notificationForm)
+      });
+      
+      const updatedSettings = await apiService.request('/settings/');
+      setSettings(updatedSettings);
+      
+      toast({
+        title: "Success",
+        description: "Notification settings updated successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -278,7 +339,7 @@ export const SettingsManagement = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
               General
@@ -290,6 +351,10 @@ export const SettingsManagement = () => {
             <TabsTrigger value="bank-transfer" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Bank Transfer
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -518,6 +583,108 @@ export const SettingsManagement = () => {
                 <p className="text-gray-600">Admin access required for settings management</p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-6">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Email Settings
+                </h3>
+                <div>
+                  <Label htmlFor="smtp_server">SMTP Server</Label>
+                  <Input
+                    id="smtp_server"
+                    value={notificationForm.smtp_server}
+                    onChange={(e) => setNotificationForm({...notificationForm, smtp_server: e.target.value})}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_port">SMTP Port</Label>
+                  <Input
+                    id="smtp_port"
+                    type="number"
+                    value={notificationForm.smtp_port}
+                    onChange={(e) => setNotificationForm({...notificationForm, smtp_port: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_username">SMTP Username</Label>
+                  <Input
+                    id="smtp_username"
+                    value={notificationForm.smtp_username}
+                    onChange={(e) => setNotificationForm({...notificationForm, smtp_username: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_password">SMTP Password</Label>
+                  <Input
+                    id="smtp_password"
+                    type="password"
+                    value={notificationForm.smtp_password}
+                    onChange={(e) => setNotificationForm({...notificationForm, smtp_password: e.target.value})}
+                    placeholder="Enter to update"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="from_email">From Email</Label>
+                  <Input
+                    id="from_email"
+                    type="email"
+                    value={notificationForm.from_email}
+                    onChange={(e) => setNotificationForm({...notificationForm, from_email: e.target.value})}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="email_notifications_enabled"
+                    checked={notificationForm.email_notifications_enabled}
+                    onCheckedChange={(checked) => setNotificationForm({...notificationForm, email_notifications_enabled: checked})}
+                  />
+                  <Label htmlFor="email_notifications_enabled">Enable Email Notifications</Label>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Push Notification Settings
+                </h3>
+                <div>
+                  <Label htmlFor="onesignal_app_id">OneSignal App ID</Label>
+                  <Input
+                    id="onesignal_app_id"
+                    value={notificationForm.onesignal_app_id}
+                    onChange={(e) => setNotificationForm({...notificationForm, onesignal_app_id: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="onesignal_api_key">OneSignal API Key</Label>
+                  <Input
+                    id="onesignal_api_key"
+                    type="password"
+                    value={notificationForm.onesignal_api_key}
+                    onChange={(e) => setNotificationForm({...notificationForm, onesignal_api_key: e.target.value})}
+                    placeholder="Enter to update"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="push_notifications_enabled"
+                    checked={notificationForm.push_notifications_enabled}
+                    onCheckedChange={(checked) => setNotificationForm({...notificationForm, push_notifications_enabled: checked})}
+                  />
+                  <Label htmlFor="push_notifications_enabled">Enable Push Notifications</Label>
+                </div>
+              </div>
+
+              <Button onClick={saveNotificationSettings} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Saving...' : 'Save Notification Settings'}
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">

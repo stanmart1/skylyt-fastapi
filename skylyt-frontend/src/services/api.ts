@@ -501,6 +501,20 @@ class ApiService {
     return this.request(`/localization/convert/${amount}/${fromCurrency}/${toCurrency}`);
   }
 
+  // Notifications
+  async sendPushNotification(data: {
+    title: string;
+    message: string;
+    userIds?: string[];
+    segments?: string[];
+    url?: string;
+  }): Promise<any> {
+    return this.request('/api/v1/notifications/push', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Helper method to get full image URL
   getImageUrl(imagePath: string): string {
     if (!imagePath) return '';

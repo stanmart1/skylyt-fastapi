@@ -1,22 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import { toast } from '@/hooks/use-toast';
-
-interface Notification {
-  id: string;
-  type: 'booking' | 'payment' | 'system';
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-}
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { oneSignalService } from '@/services/oneSignalService';
 
 interface NotificationContextType {
-  notifications: Notification[];
-  unreadCount: number;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  clearNotifications: () => void;
+  isInitialized: boolean;
+  userId: string | null;
+  sendNotification: (title: string, message: string, url?: string) => Promise<void>;
+  sendToUser: (userId: string, title: string, message: string, url?: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -30,52 +19,44 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user, isAuthenticated } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    initializeOneSignal();
+  }, []);
 
-    // Disable WebSocket for now - backend doesn't support it yet
-    // const ws = new WebSocket(`ws://localhost:8002/ws/notifications/${user.id}`);
-    
-    // WebSocket functionality disabled
-    // ws.onmessage = (event) => {
-    //   const notification: Notification = JSON.parse(event.data);
-    //   setNotifications(prev => [notification, ...prev]);
-    //   
-    //   toast({
-    //     title: notification.title,
-    //     description: notification.message,
-    //   });
-    // };
+  const initializeOneSignal = async () => {
+    try {
+      if (typeof window !== 'undefined' && 'OneSignal' in window) {
+        await (window as any).OneSignal.init({
+          appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+          allowLocalhostAsSecureOrigin: true,
+        });
 
-    // return () => ws.close();
-  }, [isAuthenticated, user]);
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+        const playerId = await (window as any).OneSignal.getPlayerId();
+        setUserId(playerId);
+        setIsInitialized(true);
+      }
+    } catch (error) {
+      console.error('Failed to initialize OneSignal:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const sendNotification = async (title: string, message: string, url?: string) => {
+    return oneSignalService.sendToAllUsers(title, message, url);
   };
 
-  const clearNotifications = () => {
-    setNotifications([]);
+  const sendToUser = async (userId: string, title: string, message: string, url?: string) => {
+    return oneSignalService.sendToUser(userId, title, message, url);
   };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      markAsRead,
-      markAllAsRead,
-      clearNotifications,
+      isInitialized,
+      userId,
+      sendNotification,
+      sendToUser,
     }}>
       {children}
     </NotificationContext.Provider>
