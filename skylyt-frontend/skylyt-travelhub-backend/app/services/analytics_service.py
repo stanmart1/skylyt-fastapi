@@ -116,11 +116,11 @@ class AnalyticsService:
                 Booking.created_at < current_month_start
             ).scalar() or 0
             
-            current_revenue = db.query(func.sum(Booking.total_amount)).filter(
+            current_revenue = db.query(func.sum(Booking.total_amount_ngn)).filter(
                 Booking.created_at >= current_month_start
             ).scalar() or 0
             
-            last_revenue = db.query(func.sum(Booking.total_amount)).filter(
+            last_revenue = db.query(func.sum(Booking.total_amount_ngn)).filter(
                 Booking.created_at >= last_month_start,
                 Booking.created_at < current_month_start
             ).scalar() or 0
