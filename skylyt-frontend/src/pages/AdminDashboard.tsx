@@ -202,7 +202,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </div>
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               <Button
                 variant={activeTab === 'overview' ? 'default' : 'ghost'}
                 className="w-full justify-start"
@@ -458,7 +458,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Sidebar Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <Button
             variant={activeTab === 'overview' ? 'default' : 'ghost'}
             className="w-full justify-start"
