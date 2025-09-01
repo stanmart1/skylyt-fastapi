@@ -88,8 +88,8 @@ def search_hotels(
             base_currency = getattr(hotel, 'base_currency', 'NGN')
             
             if currency.upper() != base_currency:
-                converted_price = CurrencyService.convert_amount(
-                    db, base_price, base_currency, currency.upper()
+                converted_price = CurrencyService.convert_currency(
+                    float(base_price), base_currency, currency.upper(), db
                 )
             else:
                 converted_price = base_price
@@ -103,8 +103,8 @@ def search_hotels(
                 "original_price": float(base_price),
                 "base_currency": base_currency,
                 "currency": currency.upper(),
-                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
-                "exchange_rate": float(CurrencyService.get_exchange_rate(db, base_currency, currency.upper())),
+                "currency_symbol": CurrencyService.get_currency_by_code(currency.upper(), db).symbol if CurrencyService.get_currency_by_code(currency.upper(), db) else currency.upper(),
+                "exchange_rate": CurrencyService.convert_currency(1.0, base_currency, currency.upper(), db),
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -135,8 +135,8 @@ def get_featured_hotels(
             base_price = Decimal(str(hotel.price_per_night))
             base_currency = getattr(hotel, 'base_currency', 'NGN')
             
-            converted_price = CurrencyService.convert_amount(
-                db, base_price, base_currency, currency.upper()
+            converted_price = CurrencyService.convert_currency(
+                float(base_price), base_currency, currency.upper(), db
             )
             
             hotel_list.append({

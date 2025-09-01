@@ -52,20 +52,23 @@ def search_cars(
     
     cars_data = []
     for car in cars:
-        base_price = Decimal(str(car.price_per_day))
+        base_price = float(car.price_per_day)
         base_currency = getattr(car, 'base_currency', 'NGN')
         
-        converted_price = CurrencyService.convert_amount(
-            db, base_price, base_currency, currency.upper()
+        converted_price = CurrencyService.convert_currency(
+            base_price, base_currency, currency.upper(), db
         )
+        
+        curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+        symbol = curr_obj.symbol if curr_obj else currency.upper()
         
         cars_data.append({
             "id": car.id,
             "name": car.name or f"{car.make} {car.model}",
             "category": car.category,
-            "price": float(converted_price),
+            "price": converted_price,
             "currency": currency.upper(),
-            "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+            "currency_symbol": symbol,
             "image_url": car.images[0] if car.images else None,
             "passengers": car.seats,
             "transmission": car.transmission,
@@ -88,20 +91,23 @@ def get_all_cars(
     
     cars_data = []
     for car in cars:
-        base_price = Decimal(str(car.price_per_day))
+        base_price = float(car.price_per_day)
         base_currency = getattr(car, 'base_currency', 'NGN')
         
-        converted_price = CurrencyService.convert_amount(
-            db, base_price, base_currency, currency.upper()
+        converted_price = CurrencyService.convert_currency(
+            base_price, base_currency, currency.upper(), db
         )
+        
+        curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+        symbol = curr_obj.symbol if curr_obj else currency.upper()
         
         cars_data.append({
             "id": car.id,
             "name": car.name or f"{car.make} {car.model}",
             "category": car.category,
-            "price": float(converted_price),
+            "price": converted_price,
             "currency": currency.upper(),
-            "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+            "currency_symbol": symbol,
             "image_url": car.images[0] if car.images else None,
             "passengers": car.seats,
             "transmission": car.transmission,
@@ -126,20 +132,23 @@ def get_featured_cars(
         
         car_list = []
         for car in cars:
-            base_price = Decimal(str(car.price_per_day))
+            base_price = float(car.price_per_day)
             base_currency = getattr(car, 'base_currency', 'NGN')
             
-            converted_price = CurrencyService.convert_amount(
-                db, base_price, base_currency, currency.upper()
+            converted_price = CurrencyService.convert_currency(
+                base_price, base_currency, currency.upper(), db
             )
+            
+            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+            symbol = curr_obj.symbol if curr_obj else currency.upper()
             
             car_list.append({
                 "id": car.id,
                 "name": car.name,
                 "category": car.category,
-                "price": float(converted_price),
+                "price": converted_price,
                 "currency": currency.upper(),
-                "currency_symbol": CurrencyService.get_currency_symbol(currency.upper()),
+                "currency_symbol": symbol,
                 "image_url": car.images[0] if car.images and len(car.images) > 0 else None,
                 "passengers": car.seats,
                 "transmission": car.transmission,
