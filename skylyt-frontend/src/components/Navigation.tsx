@@ -67,10 +67,10 @@ const Navigation = () => {
                   <PopoverContent className="w-80">
                     <div className="space-y-2">
                       <h4 className="font-medium">Notifications</h4>
-                      {notifications.length === 0 ? (
+                      {!notifications || notifications.length === 0 ? (
                         <p className="text-sm text-gray-500">No notifications</p>
                       ) : (
-                        notifications.slice(0, 5).map((notification) => (
+                        (notifications || []).slice(0, 5).map((notification) => (
                           <div
                             key={notification.id}
                             className={`p-2 rounded cursor-pointer ${

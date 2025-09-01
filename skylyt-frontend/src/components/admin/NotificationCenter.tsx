@@ -73,7 +73,7 @@ export const NotificationCenter: React.FC = () => {
     try {
       setLoading(true);
       const data = await apiService.request('/admin/notification-templates');
-      setTemplates(data || []);
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch notification templates:', error);
       toast({
@@ -367,7 +367,7 @@ export const NotificationCenter: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            Notification Templates ({templates.length})
+            Notification Templates ({templates?.length || 0})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -377,14 +377,14 @@ export const NotificationCenter: React.FC = () => {
                 <div key={i} className="animate-pulse h-16 bg-gray-200 rounded" />
               ))}
             </div>
-          ) : templates.length === 0 ? (
+          ) : !templates || templates.length === 0 ? (
             <div className="text-center py-8">
               <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No notification templates found</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {templates.map((template) => (
+              {(templates || []).map((template) => (
                 <div key={template.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
