@@ -11,7 +11,7 @@ export const ServerStatus = () => {
   const checkServerStatus = async () => {
     setIsChecking(true);
     try {
-      await apiService.request('/api/v1/health');
+      await apiService.getSystemHealth();
       setIsOnline(true);
     } catch (error) {
       setIsOnline(false);
