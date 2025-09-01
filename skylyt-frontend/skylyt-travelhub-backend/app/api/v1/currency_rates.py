@@ -13,7 +13,7 @@ def get_currency_rates(
 ):
     """Get all currency rates"""
     rates = db.query(CurrencyRate).all()
-    return [{"id": rate.id, "base_currency": rate.base_currency, "target_currency": rate.target_currency, "rate": rate.rate} for rate in rates]
+    return [{"id": rate.id, "from_currency": rate.from_currency, "to_currency": rate.to_currency, "rate": rate.rate} for rate in rates]
 
 @router.put("/{rate_id}")
 def update_currency_rate(
@@ -45,8 +45,8 @@ def convert_currency(
     # If converting from NGN to other currency
     if from_currency == "NGN":
         rate = db.query(CurrencyRate).filter(
-            CurrencyRate.base_currency == "NGN",
-            CurrencyRate.target_currency == to_currency
+            CurrencyRate.from_currency == "NGN",
+            CurrencyRate.to_currency == to_currency
         ).first()
         if not rate:
             raise HTTPException(status_code=404, detail=f"Rate not found for NGN to {to_currency}")
@@ -55,8 +55,8 @@ def convert_currency(
     # If converting from other currency to NGN
     elif to_currency == "NGN":
         rate = db.query(CurrencyRate).filter(
-            CurrencyRate.base_currency == "NGN",
-            CurrencyRate.target_currency == from_currency
+            CurrencyRate.from_currency == "NGN",
+            CurrencyRate.to_currency == from_currency
         ).first()
         if not rate:
             raise HTTPException(status_code=404, detail=f"Rate not found for {from_currency} to NGN")
@@ -66,16 +66,16 @@ def convert_currency(
     else:
         # Convert from_currency to NGN first
         from_rate = db.query(CurrencyRate).filter(
-            CurrencyRate.base_currency == "NGN",
-            CurrencyRate.target_currency == from_currency
+            CurrencyRate.from_currency == "NGN",
+            CurrencyRate.to_currency == from_currency
         ).first()
         if not from_rate:
             raise HTTPException(status_code=404, detail=f"Rate not found for {from_currency}")
         
         # Convert NGN to to_currency
         to_rate = db.query(CurrencyRate).filter(
-            CurrencyRate.base_currency == "NGN",
-            CurrencyRate.target_currency == to_currency
+            CurrencyRate.from_currency == "NGN",
+            CurrencyRate.to_currency == to_currency
         ).first()
         if not to_rate:
             raise HTTPException(status_code=404, detail=f"Rate not found for {to_currency}")

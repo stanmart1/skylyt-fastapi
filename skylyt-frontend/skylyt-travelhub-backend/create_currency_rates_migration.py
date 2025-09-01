@@ -15,12 +15,12 @@ def create_currency_rates_table():
         connection.execute(text("""
             CREATE TABLE IF NOT EXISTS currency_rates (
                 id SERIAL PRIMARY KEY,
-                base_currency VARCHAR(3) NOT NULL DEFAULT 'NGN',
-                target_currency VARCHAR(3) NOT NULL,
+                from_currency VARCHAR(3) NOT NULL DEFAULT 'NGN',
+                to_currency VARCHAR(3) NOT NULL,
                 rate FLOAT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(base_currency, target_currency)
+                UNIQUE(from_currency, to_currency)
             )
         """))
         
@@ -28,7 +28,7 @@ def create_currency_rates_table():
         result = connection.execute(text("SELECT COUNT(*) FROM currency_rates"))
         if result.scalar() == 0:
             connection.execute(text("""
-                INSERT INTO currency_rates (base_currency, target_currency, rate) VALUES
+                INSERT INTO currency_rates (from_currency, to_currency, rate) VALUES
                 ('NGN', 'USD', 0.0012),
                 ('NGN', 'GBP', 0.0010),
                 ('NGN', 'EUR', 0.0011)

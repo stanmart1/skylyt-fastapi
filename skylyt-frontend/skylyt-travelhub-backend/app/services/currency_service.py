@@ -23,16 +23,16 @@ class CurrencyService:
         # Manual rates using NGN as base
         if from_currency == 'NGN':
             rate = db.query(CurrencyRate).filter(
-                CurrencyRate.base_currency == 'NGN',
-                CurrencyRate.target_currency == to_currency
+                CurrencyRate.from_currency == 'NGN',
+                CurrencyRate.to_currency == to_currency
             ).first()
             if rate:
                 cache_manager.set(cache_key, float(rate.rate), 300)
                 return Decimal(str(rate.rate))
         elif to_currency == 'NGN':
             rate = db.query(CurrencyRate).filter(
-                CurrencyRate.base_currency == 'NGN',
-                CurrencyRate.target_currency == from_currency
+                CurrencyRate.from_currency == 'NGN',
+                CurrencyRate.to_currency == from_currency
             ).first()
             if rate:
                 reverse_rate = 1 / rate.rate
@@ -41,12 +41,12 @@ class CurrencyService:
         else:
             # Convert via NGN pivot
             from_rate = db.query(CurrencyRate).filter(
-                CurrencyRate.base_currency == 'NGN',
-                CurrencyRate.target_currency == from_currency
+                CurrencyRate.from_currency == 'NGN',
+                CurrencyRate.to_currency == from_currency
             ).first()
             to_rate = db.query(CurrencyRate).filter(
-                CurrencyRate.base_currency == 'NGN',
-                CurrencyRate.target_currency == to_currency
+                CurrencyRate.from_currency == 'NGN',
+                CurrencyRate.to_currency == to_currency
             ).first()
             if from_rate and to_rate:
                 # from_currency -> NGN -> to_currency

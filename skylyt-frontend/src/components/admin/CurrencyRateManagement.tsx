@@ -9,8 +9,8 @@ import { DollarSign, Edit, Save, X } from 'lucide-react';
 
 interface CurrencyRate {
   id: number;
-  base_currency: string;
-  target_currency: string;
+  from_currency: string;
+  to_currency: string;
   rate: number;
 }
 
@@ -122,10 +122,10 @@ export const CurrencyRateManagement: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium">
-                      1 {getCurrencyName(rate.base_currency)} = {rate.rate} {getCurrencyName(rate.target_currency)}
+                      1 {getCurrencyName(rate.from_currency)} = {rate.rate} {getCurrencyName(rate.to_currency)}
                     </h4>
                     <p className="text-sm text-gray-600">
-                      {rate.base_currency} → {rate.target_currency}
+                      {rate.from_currency} → {rate.to_currency}
                     </p>
                   </div>
                 </div>
