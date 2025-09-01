@@ -1249,15 +1249,21 @@ async def get_admin_cars(
     
     try:
         from app.models.car import Car
+        from app.services.currency_service import CurrencyService
+        
         offset = (page - 1) * per_page
         cars = db.query(Car).offset(offset).limit(per_page).all()
         total = db.query(Car).count()
-        return {
-            "cars": [{
+        
+        cars_data = []
+        for car in cars:
+            # Keep original price and currency for admin (no conversion)
+            cars_data.append({
                 "id": str(car.id),
                 "name": car.name,
                 "category": car.category,
                 "price_per_day": float(car.price_per_day),
+                "price": float(car.price_per_day),  # Add price field for compatibility
                 "currency": car.currency,
                 "image_url": car.image_url,
                 "passengers": car.passengers,
@@ -1273,7 +1279,10 @@ async def get_admin_cars(
                 "last_service": getattr(car, 'last_service', ''),
                 "next_service": getattr(car, 'next_service', ''),
                 "created_at": car.created_at.isoformat() if car.created_at else ''
-            } for car in cars],
+            })
+        
+        return {
+            "cars": cars_data,
             "total": total,
             "page": page,
             "per_page": per_page
