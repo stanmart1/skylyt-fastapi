@@ -194,7 +194,7 @@ const CarDetail = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-3xl font-bold text-blue-600">
-                    <PriceDisplay amount={car.price_per_day || car.price} currency={car.currency || currency} />
+                    <PriceDisplay amount={car.price} currency={car.currency || currency} />
                   </span>
                   <span className="text-gray-600 ml-2">/day</span>
                 </div>
@@ -271,7 +271,7 @@ const CarDetail = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Daily Rate:</span>
                 <span className="font-medium">
-                  <PriceDisplay amount={car.price_per_day || car.price} currency={car.currency || currency} />/day
+                  <PriceDisplay amount={car.price} currency={car.currency || currency} />/day
                 </span>
               </div>
               <div className="flex justify-between">

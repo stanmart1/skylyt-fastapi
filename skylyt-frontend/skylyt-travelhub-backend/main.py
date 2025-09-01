@@ -147,7 +147,7 @@ async def serve_image(folder: str, filename: str):
     logger = logging.getLogger(__name__)
     
     # Validate folder and filename to prevent path traversal
-    allowed_folders = ["general", "hotels", "payment_proofs"]
+    allowed_folders = ["general", "hotels", "payment_proofs", "documents"]
     if folder not in allowed_folders:
         raise HTTPException(status_code=400, detail="Invalid folder")
     
@@ -928,7 +928,7 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     from pathlib import Path
     
     # Validate upload type
-    allowed_upload_types = ["general", "hotels", "payment_proofs"]
+    allowed_upload_types = ["general", "hotels", "payment_proofs", "documents"]
     if upload_type not in allowed_upload_types:
         raise HTTPException(status_code=400, detail="Invalid upload type")
     
@@ -1187,7 +1187,7 @@ async def get_admin_cars(
                 "id": str(car.id),
                 "name": car.name,
                 "category": car.category,
-                "price": float(car.price_per_day),
+                "price_per_day": float(car.price_per_day),
                 "currency": car.currency,
                 "image_url": car.image_url,
                 "passengers": car.passengers,
@@ -1222,7 +1222,7 @@ async def create_car(car_data: dict, current_user = Depends(get_current_user), d
         new_car = Car(
             name=car_data["name"],
             category=car_data["category"],
-            price_per_day=car_data["price"],
+            price_per_day=car_data["price_per_day"],
             currency=car_data.get("currency", "USD"),
             image_url=car_data.get("image_url", ""),
             passengers=car_data.get("passengers", 4),

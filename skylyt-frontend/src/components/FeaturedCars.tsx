@@ -190,7 +190,7 @@ const FeaturedCars = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <PriceDisplay 
-                              amount={car.price_per_day || car.price} 
+                              amount={car.price} 
                               currency={car.currency}
                               className="text-2xl md:text-3xl font-bold text-blue-600"
                             />

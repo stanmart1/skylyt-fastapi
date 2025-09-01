@@ -21,7 +21,7 @@ interface CarData {
   make: string;
   model: string;
   category: string;
-  price: number;
+  price_per_day: number;
   currency: string;
   image_url: string;
   passengers: number;
@@ -113,7 +113,7 @@ export const CarManagement: React.FC = () => {
     make: '',
     model: '',
     category: '',
-    price: 0,
+    price_per_day: 0,
     currency: 'USD',
     image_url: '',
     passengers: 4,
@@ -206,7 +206,7 @@ export const CarManagement: React.FC = () => {
       make: '',
       model: '',
       category: '',
-      price: 0,
+      price_per_day: 0,
       currency: 'USD',
       image_url: '',
       passengers: 4,
@@ -233,7 +233,7 @@ export const CarManagement: React.FC = () => {
       make: car.make || '',
       model: car.model || '',
       category: car.category,
-      price: car.price,
+      price_per_day: car.price_per_day || car.price,
       currency: car.currency || 'USD',
       image_url: car.image_url || '',
       passengers: car.passengers,
@@ -288,6 +288,31 @@ export const CarManagement: React.FC = () => {
         if (imageUrl) {
           finalCarData.image_url = imageUrl;
         }
+      }
+      
+      // Upload documents
+      if (documentFiles.insurance) {
+        const formData = new FormData();
+        formData.append('file', documentFiles.insurance);
+        formData.append('upload_type', 'documents');
+        const response = await apiService.uploadFile(formData);
+        finalCarData.insurance_doc_url = response.url;
+      }
+      
+      if (documentFiles.registration) {
+        const formData = new FormData();
+        formData.append('file', documentFiles.registration);
+        formData.append('upload_type', 'documents');
+        const response = await apiService.uploadFile(formData);
+        finalCarData.registration_doc_url = response.url;
+      }
+      
+      if (documentFiles.roadworthiness) {
+        const formData = new FormData();
+        formData.append('file', documentFiles.roadworthiness);
+        formData.append('upload_type', 'documents');
+        const response = await apiService.uploadFile(formData);
+        finalCarData.roadworthiness_doc_url = response.url;
       }
       
       if (editingCar) {
@@ -565,7 +590,7 @@ export const CarManagement: React.FC = () => {
                     <p className="text-gray-600 mb-1 text-sm">{car.category} • {car.year}</p>
                     <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number || 'No plate number'}</p>
                     <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
-                      <PriceDisplay amount={car.price_per_day || car.price} currency={car.currency || currency} />/day
+                      <PriceDisplay amount={car.price_per_day} currency={car.currency || currency} />/day
                     </p>
                     <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-4">
                       <p className="flex flex-wrap gap-1">
@@ -737,8 +762,8 @@ export const CarManagement: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="price" className="text-sm font-medium">Price per day</Label>
-                <Input id="price" type="number" value={carForm.price} onChange={(e) => setCarForm({...carForm, price: Number(e.target.value)})} className="mt-1" />
+                <Label htmlFor="price_per_day" className="text-sm font-medium">Price per day</Label>
+                <Input id="price_per_day" type="number" value={carForm.price_per_day} onChange={(e) => setCarForm({...carForm, price_per_day: Number(e.target.value)})} className="mt-1" />
               </div>
               <div>
                 <Label htmlFor="passengers" className="text-sm font-medium">Passengers</Label>
@@ -787,11 +812,53 @@ export const CarManagement: React.FC = () => {
                 <Input id="mileage" type="number" value={carForm.mileage} onChange={(e) => setCarForm({...carForm, mileage: Number(e.target.value.replace(/,/g, ''))})} className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="insurance_expiry" className="text-sm font-medium">Insurance Expiry</Label>
                 <Input id="insurance_expiry" type="date" value={carForm.insurance_expiry} onChange={(e) => setCarForm({...carForm, insurance_expiry: e.target.value})} className="mt-1" />
               </div>
+              <div>
+                <Label htmlFor="registration_expiry" className="text-sm font-medium">Registration Expiry</Label>
+                <Input id="registration_expiry" type="date" value={carForm.registration_expiry} onChange={(e) => setCarForm({...carForm, registration_expiry: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="roadworthiness_expiry" className="text-sm font-medium">Roadworthiness Expiry</Label>
+                <Input id="roadworthiness_expiry" type="date" value={carForm.roadworthiness_expiry} onChange={(e) => setCarForm({...carForm, roadworthiness_expiry: e.target.value})} className="mt-1" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="insurance_doc" className="text-sm font-medium">Insurance Document</Label>
+                <input
+                  id="insurance_doc"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setDocumentFiles({...documentFiles, insurance: e.target.files?.[0]})}
+                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              <div>
+                <Label htmlFor="registration_doc" className="text-sm font-medium">Registration Document</Label>
+                <input
+                  id="registration_doc"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setDocumentFiles({...documentFiles, registration: e.target.files?.[0]})}
+                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              <div>
+                <Label htmlFor="roadworthiness_doc" className="text-sm font-medium">Roadworthiness Document</Label>
+                <input
+                  id="roadworthiness_doc"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setDocumentFiles({...documentFiles, roadworthiness: e.target.files?.[0]})}
+                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="status" className="text-sm font-medium">Status</Label>
                 <Select value={carForm.status} onValueChange={(value: any) => setCarForm({...carForm, status: value})}>
