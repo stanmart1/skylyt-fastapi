@@ -125,14 +125,20 @@ def get_car_stats(
     current_user = Depends(get_current_user)
 ):
     """Get car fleet statistics"""
+    from sqlalchemy import func, and_
+    from datetime import datetime
+    
+    # Get basic car statistics
+    total_cars = db.query(Car).count()
+    available_cars = db.query(Car).filter(Car.is_available == True).count()
+    
+    # Initialize other stats
+    active_bookings = 0
+    today_revenue = 0
+    
     try:
         from app.models.booking import Booking
         from app.models.payment import Payment
-        from sqlalchemy import func, and_
-        from datetime import datetime, timedelta
-        
-        total_cars = db.query(Car).count()
-        available_cars = db.query(Car).filter(Car.is_available == True).count()
         
         # Get active car bookings
         active_bookings = db.query(Booking).filter(
@@ -141,9 +147,6 @@ def get_car_stats(
                 Booking.status.in_(['confirmed', 'ongoing'])
             )
         ).count()
-        
-        booked_cars = active_bookings
-        maintenance_cars = total_cars - available_cars - booked_cars if total_cars > available_cars + booked_cars else 0
         
         # Calculate today's revenue
         today = datetime.now().date()
@@ -154,26 +157,23 @@ def get_car_stats(
                 func.date(Payment.created_at) == today
             )
         ).scalar() or 0
-        
-        # Calculate utilization rate
-        utilization_rate = 0
-        if total_cars > 0:
-            utilization_rate = round((active_bookings / total_cars) * 100, 1)
-        
-        return {
-            "total_cars": total_cars,
-            "available": available_cars,
-            "booked": booked_cars,
-            "maintenance": maintenance_cars,
-            "revenue_today": float(today_revenue),
-            "utilization_rate": utilization_rate
-        }
     except Exception as e:
-        return {
-            "total_cars": 0,
-            "available": 0,
-            "booked": 0,
-            "maintenance": 0,
-            "revenue_today": 0.0,
-            "utilization_rate": 0.0
-        }
+        # If booking/payment models don't exist, continue with 0 values
+        pass
+    
+    booked_cars = active_bookings
+    maintenance_cars = total_cars - available_cars - booked_cars if total_cars > available_cars + booked_cars else 0
+    
+    # Calculate utilization rate
+    utilization_rate = 0
+    if total_cars > 0:
+        utilization_rate = round((active_bookings / total_cars) * 100, 1)
+    
+    return {
+        "total_cars": total_cars,
+        "available": available_cars,
+        "booked": booked_cars,
+        "maintenance": maintenance_cars,
+        "revenue_today": float(today_revenue),
+        "utilization_rate": utilization_rate
+    }

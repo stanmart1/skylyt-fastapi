@@ -375,7 +375,7 @@ const AdminDashboard = () => {
               {/* Stats Overview */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
-            [...Array(3)].map((_, i) => (
+            [...Array(4)].map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-6">
                   <div className="animate-pulse">
@@ -426,6 +426,17 @@ const AdminDashboard = () => {
                 <CardContent>
                   <div className="text-2xl font-bold text-green-700">{stats.fleetSize}</div>
                   <p className="text-xs text-gray-600">{stats.totalCars} Cars, {stats.totalHotels} Hotels</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-2 border-purple-500 bg-purple-50">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-purple-800">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-purple-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-700">{stats.activeUsers}</div>
+                  <p className="text-xs text-gray-600">Registered users</p>
                 </CardContent>
               </Card>
             </>
@@ -484,7 +495,7 @@ const AdminDashboard = () => {
                     <>
                       <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                         <div>
-                          <h4 className="font-semibold">Partner Hotels</h4>
+                          <h4 className="font-semibold">Hotels</h4>
                           <p className="text-gray-600">{stats.totalHotels} hotels in network</p>
                         </div>
                         <Badge className="bg-blue-100 text-blue-800">Active</Badge>

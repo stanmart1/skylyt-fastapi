@@ -155,15 +155,21 @@ def get_hotel_stats(
     current_user = Depends(get_current_user)
 ):
     """Get hotel management statistics"""
+    from sqlalchemy import func, and_
+    from datetime import datetime, timedelta
+    
+    # Get hotel statistics
+    total_hotels = db.query(Hotel).count()
+    total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
+    
+    # Initialize other stats
+    active_bookings = 0
+    current_revenue = 0
+    previous_revenue = 0
+    
     try:
         from app.models.booking import Booking
         from app.models.payment import Payment
-        from sqlalchemy import func, and_
-        from datetime import datetime, timedelta
-        
-        # Get hotel statistics
-        total_hotels = db.query(Hotel).count()
-        total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
         
         # Get active hotel bookings
         active_bookings = db.query(Booking).filter(
@@ -172,11 +178,6 @@ def get_hotel_stats(
                 Booking.status.in_(['confirmed', 'ongoing'])
             )
         ).count()
-        
-        # Calculate occupancy rate
-        occupancy_rate = 0
-        if total_rooms > 0:
-            occupancy_rate = round((active_bookings / total_rooms) * 100, 1)
         
         # Calculate revenue (last 30 days)
         thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -198,27 +199,25 @@ def get_hotel_stats(
                 Payment.created_at < thirty_days_ago
             )
         ).scalar() or 0
-        
-        # Calculate revenue change percentage
-        revenue_change = 0
-        if previous_revenue > 0:
-            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
-        
-        return {
-            "totalHotels": total_hotels,
-            "totalRooms": int(total_rooms),
-            "activeBookings": active_bookings,
-            "totalRevenue": float(current_revenue),
-            "revenueChange": round(revenue_change, 1),
-            "occupancyRate": occupancy_rate
-        }
     except Exception as e:
-        # Return default stats if there's an error
-        return {
-            "totalHotels": 0,
-            "totalRooms": 0,
-            "activeBookings": 0,
-            "totalRevenue": 0.0,
-            "revenueChange": 0.0,
-            "occupancyRate": 0.0
-        }
+        # If booking/payment models don't exist, continue with 0 values
+        pass
+    
+    # Calculate occupancy rate
+    occupancy_rate = 0
+    if total_rooms > 0:
+        occupancy_rate = round((active_bookings / total_rooms) * 100, 1)
+    
+    # Calculate revenue change percentage
+    revenue_change = 0
+    if previous_revenue > 0:
+        revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+    
+    return {
+        "totalHotels": total_hotels,
+        "totalRooms": int(total_rooms),
+        "activeBookings": active_bookings,
+        "totalRevenue": float(current_revenue),
+        "revenueChange": round(revenue_change, 1),
+        "occupancyRate": occupancy_rate
+    }

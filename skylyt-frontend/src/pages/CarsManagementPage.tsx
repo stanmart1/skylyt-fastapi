@@ -186,7 +186,7 @@ const CarsManagementPage = () => {
 
       <div className="flex-1 flex flex-col lg:ml-64">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b mt-16">
+        <header className="bg-white shadow-sm border-b mt-9">
           <div className="px-4 sm:px-6 py-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
