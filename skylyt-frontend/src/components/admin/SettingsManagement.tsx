@@ -12,6 +12,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
 import { NotificationSender } from '@/components/admin/NotificationSender';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
+import { CurrencyRateManagement } from '@/components/admin/CurrencyRateManagement';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface SettingsData {
@@ -345,7 +346,7 @@ export const SettingsManagement = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
               General
@@ -357,6 +358,10 @@ export const SettingsManagement = () => {
             <TabsTrigger value="bank-transfer" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Bank Transfer
+            </TabsTrigger>
+            <TabsTrigger value="currency" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Currency
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
@@ -589,6 +594,12 @@ export const SettingsManagement = () => {
                 <p className="text-gray-600">Admin access required for settings management</p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="currency" className="space-y-6">
+            <ErrorBoundary>
+              <CurrencyRateManagement />
+            </ErrorBoundary>
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">

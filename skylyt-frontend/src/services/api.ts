@@ -515,6 +515,22 @@ class ApiService {
     });
   }
 
+  // Currency Rate Management
+  async getCurrencyRates(): Promise<any[]> {
+    return this.request('/admin/currency-rates');
+  }
+
+  async updateCurrencyRate(rateId: number, rate: number): Promise<any> {
+    return this.request(`/admin/currency-rates/${rateId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ rate })
+    });
+  }
+
+  async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<any> {
+    return this.request(`/admin/currency-rates/convert/${amount}/${fromCurrency}/${toCurrency}`);
+  }
+
   // Helper method to get full image URL
   getImageUrl(imagePath: string): string {
     if (!imagePath) return '';

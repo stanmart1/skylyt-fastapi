@@ -430,7 +430,7 @@ const AdminDashboard = () => {
               </Card>
             </>
           ) : (
-            <div className="col-span-3 text-center py-8">
+            <div className="col-span-4 text-center py-8">
               <p className="text-gray-600">Failed to load statistics</p>
             </div>
           )}
