@@ -877,6 +877,20 @@ async def test_admin(db: Session = Depends(get_db)):
         }
     return {"exists": False}
 
+@app.get("/cars-management")
+async def cars_management_page(current_user = Depends(get_current_user)):
+    """Serve cars management dashboard page"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return {"message": "Cars Management Dashboard", "user": current_user.email}
+
+@app.get("/hotel-management")
+async def hotel_management_page(current_user = Depends(get_current_user)):
+    """Serve hotel management dashboard page"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return {"message": "Hotel Management Dashboard", "user": current_user.email}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

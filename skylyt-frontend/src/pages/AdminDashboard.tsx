@@ -29,8 +29,6 @@ import { Plus, Edit, Trash2, Star, Heart, X, Menu, Monitor } from 'lucide-react'
 import Navigation from '@/components/Navigation';
 import { CarManagement } from '@/components/admin/CarManagement';
 import { HotelManagement } from '@/components/admin/HotelManagement';
-import { CarDashboard } from '@/components/admin/CarDashboard';
-import { HotelDashboard } from '@/components/admin/HotelDashboard';
 import { ReviewManagement } from '@/components/admin/ReviewManagement';
 import { SupportTicketManagement } from '@/components/admin/SupportTicketManagement';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
@@ -468,7 +466,7 @@ const AdminDashboard = () => {
                       </div>
                       <Button 
                         className="w-full"
-                        onClick={() => setActiveTab('car-dashboard')}
+                        onClick={() => navigate('/cars-management')}
                       >
                         Manage Fleet
                       </Button>
@@ -502,7 +500,7 @@ const AdminDashboard = () => {
                       </div>
                       <Button 
                         className="w-full"
-                        onClick={() => setActiveTab('hotel-dashboard')}
+                        onClick={() => navigate('/hotel-management')}
                       >
                         Manage Hotels
                       </Button>
@@ -658,17 +656,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'car-dashboard' && hasPermission('dashboard.view_cars') && (
-            <ErrorBoundary>
-              <CarDashboard onBack={() => setActiveTab('overview')} />
-            </ErrorBoundary>
-          )}
 
-          {activeTab === 'hotel-dashboard' && hasPermission('dashboard.view_hotels') && (
-            <ErrorBoundary>
-              <HotelDashboard onBack={() => setActiveTab('overview')} />
-            </ErrorBoundary>
-          )}
 
           {activeTab === 'cars' && hasPermission('dashboard.view_cars') && (
             <ErrorBoundary>
