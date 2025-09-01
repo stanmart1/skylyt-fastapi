@@ -891,6 +891,149 @@ async def hotel_management_page(current_user = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return {"message": "Hotel Management Dashboard", "user": current_user.email}
 
+@app.get("/api/v1/admin/car-stats")
+async def get_car_stats(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get car management statistics"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.car import Car
+        from app.models.booking import Booking
+        from app.models.payment import Payment
+        from sqlalchemy import func, and_
+        from datetime import datetime, timedelta
+        
+        # Get car statistics
+        total_cars = db.query(Car).count()
+        available_cars = db.query(Car).filter(Car.status == 'available').count()
+        
+        # Get active car bookings
+        active_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        # Calculate revenue (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        sixty_days_ago = datetime.now() - timedelta(days=60)
+        
+        current_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Payment.status == 'completed',
+                Payment.created_at >= thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        previous_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Payment.status == 'completed',
+                Payment.created_at >= sixty_days_ago,
+                Payment.created_at < thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        # Calculate revenue change percentage
+        revenue_change = 0
+        if previous_revenue > 0:
+            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+        
+        return {
+            "totalCars": total_cars,
+            "availableCars": available_cars,
+            "activeBookings": active_bookings,
+            "totalRevenue": float(current_revenue),
+            "revenueChange": round(revenue_change, 1)
+        }
+    except Exception as e:
+        # Return default stats if there's an error
+        return {
+            "totalCars": 0,
+            "availableCars": 0,
+            "activeBookings": 0,
+            "totalRevenue": 0.0,
+            "revenueChange": 0.0
+        }
+
+@app.get("/api/v1/admin/hotel-stats")
+async def get_hotel_stats(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get hotel management statistics"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.hotel import Hotel
+        from app.models.booking import Booking
+        from app.models.payment import Payment
+        from sqlalchemy import func, and_
+        from datetime import datetime, timedelta
+        
+        # Get hotel statistics
+        total_hotels = db.query(Hotel).count()
+        total_rooms = db.query(func.sum(Hotel.total_rooms)).scalar() or 0
+        
+        # Get active hotel bookings
+        active_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        # Calculate occupancy rate
+        occupancy_rate = 0
+        if total_rooms > 0:
+            occupancy_rate = round((active_bookings / total_rooms) * 100, 1)
+        
+        # Calculate revenue (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        sixty_days_ago = datetime.now() - timedelta(days=60)
+        
+        current_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Payment.status == 'completed',
+                Payment.created_at >= thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        previous_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
+            and_(
+                Booking.booking_type == 'hotel',
+                Payment.status == 'completed',
+                Payment.created_at >= sixty_days_ago,
+                Payment.created_at < thirty_days_ago
+            )
+        ).scalar() or 0
+        
+        # Calculate revenue change percentage
+        revenue_change = 0
+        if previous_revenue > 0:
+            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+        
+        return {
+            "totalHotels": total_hotels,
+            "totalRooms": int(total_rooms),
+            "activeBookings": active_bookings,
+            "totalRevenue": float(current_revenue),
+            "revenueChange": round(revenue_change, 1),
+            "occupancyRate": occupancy_rate
+        }
+    except Exception as e:
+        # Return default stats if there's an error
+        return {
+            "totalHotels": 0,
+            "totalRooms": 0,
+            "activeBookings": 0,
+            "totalRevenue": 0.0,
+            "revenueChange": 0.0,
+            "occupancyRate": 0.0
+        }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
