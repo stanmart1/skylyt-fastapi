@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { apiService } from '@/services/api';
 
 export interface Payment {
   id: number;
@@ -147,10 +148,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         ),
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch payments');
-      
-      const data = await response.json();
+      const data = await apiService.request(`/api/v1/payments?${params}`);
       dispatch({
         type: 'SET_PAYMENTS',
         payload: {
@@ -170,10 +168,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const fetchPaymentStats = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      
-      const stats = await response.json();
+      const stats = await apiService.request('/api/v1/payments/stats');
       dispatch({ type: 'SET_STATS', payload: stats });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch payment stats' });
@@ -183,10 +178,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   const fetchPaymentDetails = async (id: number) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch payment details');
-      
-      const payment = await response.json();
+      const payment = await apiService.request(`/api/v1/payments/${id}`);
       dispatch({ type: 'SET_SELECTED_PAYMENT', payload: payment });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch payment details' });
@@ -195,10 +187,9 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const verifyPayment = async (id: number) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/verify`, {
+      await apiService.request(`/api/v1/payments/${id}/verify`, {
         method: 'POST',
       });
-      if (!response.ok) throw new Error('Failed to verify payment');
       
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
@@ -209,12 +200,10 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const refundPayment = async (id: number, amount: number, reason: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/refund`, {
+      await apiService.request(`/api/v1/payments/${id}/refund`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, reason }),
       });
-      if (!response.ok) throw new Error('Failed to process refund');
       
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
@@ -225,12 +214,10 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
 
   const updatePaymentStatus = async (id: number, status: string, notes?: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/${id}/status`, {
+      await apiService.request(`/api/v1/payments/${id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, notes }),
       });
-      if (!response.ok) throw new Error('Failed to update status');
       
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
@@ -247,7 +234,9 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         )
       );
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/export/csv?${params}`);
+      const response = await fetch(`${apiService['baseURL']}/api/v1/payments/export/csv?${params}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
       if (!response.ok) throw new Error('Failed to export payments');
       
       const blob = await response.blob();

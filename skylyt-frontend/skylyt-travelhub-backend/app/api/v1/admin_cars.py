@@ -132,9 +132,18 @@ def get_car_stats(
         from datetime import datetime, timedelta
         
         total_cars = db.query(Car).count()
-        available_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'available').count()
-        booked_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'booked').count()
-        maintenance_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'maintenance').count()
+        available_cars = db.query(Car).filter(Car.is_available == True).count()
+        
+        # Get active car bookings
+        active_bookings = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        booked_cars = active_bookings
+        maintenance_cars = total_cars - available_cars - booked_cars if total_cars > available_cars + booked_cars else 0
         
         # Calculate today's revenue
         today = datetime.now().date()
@@ -149,7 +158,7 @@ def get_car_stats(
         # Calculate utilization rate
         utilization_rate = 0
         if total_cars > 0:
-            utilization_rate = round((booked_cars / total_cars) * 100, 1)
+            utilization_rate = round((active_bookings / total_cars) * 100, 1)
         
         return {
             "total_cars": total_cars,

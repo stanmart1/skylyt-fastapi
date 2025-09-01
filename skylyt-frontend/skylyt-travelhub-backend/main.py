@@ -1218,9 +1218,9 @@ async def get_car_fleet_stats(current_user = Depends(get_current_user), db: Sess
         from datetime import datetime, timedelta
         
         total_cars = db.query(Car).count()
-        available_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'available').count()
-        booked_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'booked').count()
-        maintenance_cars = db.query(Car).filter(getattr(Car, 'status', None) == 'maintenance').count()
+        available_cars = db.query(Car).filter(Car.is_available == True).count()
+        booked_cars = 0  # Calculate from active bookings
+        maintenance_cars = 0  # No maintenance status in current model
         
         # Calculate today's revenue
         today = datetime.now().date()
@@ -1232,10 +1232,10 @@ async def get_car_fleet_stats(current_user = Depends(get_current_user), db: Sess
             )
         ).scalar() or 0
         
-        # Calculate utilization rate
+        # Calculate utilization rate based on active bookings
         utilization_rate = 0
         if total_cars > 0:
-            utilization_rate = round((booked_cars / total_cars) * 100, 1)
+            utilization_rate = round((active_bookings / total_cars) * 100, 1)
         
         return {
             "total_cars": total_cars,

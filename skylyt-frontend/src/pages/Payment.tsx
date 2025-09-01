@@ -99,8 +99,11 @@ const Payment = () => {
         formData.append('payment_reference', transactionRef);
         
         console.log('Uploading proof for booking:', bookingId);
-        const response = await fetch('${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/upload-proof', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/upload-proof`, {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`
+          },
           body: formData
         });
         
