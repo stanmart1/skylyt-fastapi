@@ -6,10 +6,28 @@ import uuid
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.car import Car, CarMaintenance
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from fastapi import Query
 
 router = APIRouter(prefix="/admin/cars", tags=["admin-cars"])
+
+# Additional Pydantic Models
+class CarCreateRequest(BaseModel):
+    name: str
+    category: str
+    price_per_day: float
+    currency: Optional[str] = "NGN"
+    image_url: Optional[str] = ""
+    passengers: Optional[int] = 4
+    transmission: Optional[str] = "automatic"
+    fuel_type: Optional[str] = "petrol"
+    features: Optional[List[str]] = []
+    
+    @validator('price_per_day')
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError("Price must be positive")
+        return v
 
 
 @router.get("")
@@ -396,3 +414,93 @@ def update_maintenance_status(
     
     db.commit()
     return {"message": "Maintenance status updated successfully"}
+
+# Additional endpoints from main.py
+@router.get("/fleet-stats")
+async def get_fleet_stats(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get fleet statistics with rental trends and distribution data"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.booking import Booking
+        from app.models.payment import Payment
+        from sqlalchemy import func, and_, extract
+        
+        # Fleet status counts
+        total_cars = db.query(Car).count()
+        available_cars = db.query(Car).filter(Car.is_available == True).count()
+        
+        # Active bookings for rented cars
+        rented_cars = db.query(Booking).filter(
+            and_(
+                Booking.booking_type == 'car',
+                Booking.status.in_(['confirmed', 'ongoing'])
+            )
+        ).count()
+        
+        maintenance_cars = max(0, total_cars - available_cars - rented_cars)
+        
+        # Rental trends over last 6 months
+        rental_trends = []
+        for i in range(6):
+            month_start = datetime.now().replace(day=1) - timedelta(days=30*i)
+            month_end = month_start + timedelta(days=30)
+            
+            monthly_rentals = db.query(func.count(Booking.id)).filter(
+                and_(
+                    Booking.booking_type == 'car',
+                    Booking.created_at >= month_start,
+                    Booking.created_at < month_end
+                )
+            ).scalar() or 0
+            
+            rental_trends.insert(0, {
+                "month": month_start.strftime("%b %Y"),
+                "rentals": monthly_rentals
+            })
+        
+        # Fleet distribution for pie chart
+        fleet_distribution = [
+            {"name": "Available", "value": available_cars, "color": "#10b981"},
+            {"name": "Rented", "value": rented_cars, "color": "#3b82f6"},
+            {"name": "Maintenance", "value": maintenance_cars, "color": "#f59e0b"}
+        ]
+        
+        # Maintenance alerts (mock data for cars due for service)
+        maintenance_alerts = []
+        if maintenance_cars > 0:
+            maintenance_alerts.append({
+                "car_name": "Sample Car 1",
+                "type": "Service Due",
+                "due_date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+            })
+        
+        return {
+            "fleet_status": {
+                "total_cars": total_cars,
+                "available": available_cars,
+                "rented": rented_cars,
+                "maintenance": maintenance_cars
+            },
+            "rental_trends": rental_trends,
+            "fleet_distribution": fleet_distribution,
+            "maintenance_alerts": maintenance_alerts
+        }
+    except Exception as e:
+        # Return default data if error occurs
+        return {
+            "fleet_status": {
+                "total_cars": 0,
+                "available": 0,
+                "rented": 0,
+                "maintenance": 0
+            },
+            "rental_trends": [],
+            "fleet_distribution": [
+                {"name": "Available", "value": 0, "color": "#10b981"},
+                {"name": "Rented", "value": 0, "color": "#3b82f6"},
+                {"name": "Maintenance", "value": 0, "color": "#f59e0b"}
+            ],
+            "maintenance_alerts": []
+        }

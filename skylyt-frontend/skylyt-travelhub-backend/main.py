@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, validator
 from typing import List, Optional
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.config import settings as config_settings
 from app.core.database import engine
@@ -26,7 +26,7 @@ from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies
-from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers
+from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats
 
 # Setup logging
 setup_logging()
@@ -229,6 +229,9 @@ app.include_router(admin_notifications.router, prefix="/api/v1", tags=["Admin No
 app.include_router(currency_rates.router, prefix="/api/v1", tags=["Currency Rates"])
 app.include_router(currencies.router, prefix="/api/v1", tags=["Currencies"])
 app.include_router(drivers.router, prefix="/api/v1", tags=["Drivers"])
+app.include_router(admin_bookings.router, prefix="/api/v1", tags=["Admin Bookings"])
+app.include_router(admin_payments.router, prefix="/api/v1", tags=["Admin Payments"])
+app.include_router(admin_stats.router, prefix="/api/v1", tags=["Admin Stats"])
 
 
 
@@ -296,167 +299,11 @@ async def serve_image(folder: str, filename: str):
 from app.core.dependencies import get_current_user
 from app.core.database import get_db
 
-@app.get("/api/v1/admin/stats")
-async def get_admin_stats(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get admin dashboard statistics with caching"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    from app.services.analytics_service import AnalyticsService
-    from app.utils.cache_manager import cache_manager
-    
-    # Try cache first (5 minute cache)
-    cache_key = "admin_stats"
-    cached_stats = cache_manager.get(cache_key)
-    if cached_stats:
-        return cached_stats
-    
-    stats = AnalyticsService.get_admin_stats(db)
-    cache_manager.set(cache_key, stats, 300)
-    return stats
 
-@app.get("/api/v1/admin/active-users")
-async def get_active_users(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get count of active users online"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.user import User
-        # Count all active users as a simple metric
-        active_count = db.query(User).filter(User.is_active == True).count()
-        return {"active_users": active_count}
-    except Exception as e:
-        return {"active_users": 0}
 
-@app.get("/api/v1/admin/recent-activity")
-async def get_recent_activity(
-    activity_type: str = None,
-    current_user = Depends(get_current_user), 
-    db: Session = Depends(get_db)
-):
-    """Get recent activity for admin dashboard"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from sqlalchemy import desc
-        activities = []
-        
 
-        
-        from app.models.user import User
-        
-        # Recent user registrations only (real data from database)
-        if not activity_type or activity_type == "user":
-            recent_users = db.query(User).order_by(desc(User.created_at)).limit(10).all()
-            for user in recent_users:
-                activities.append({
-                    "id": f"user_{user.id}",
-                    "type": "user",
-                    "title": "New user registration",
-                    "description": f"{user.first_name} {user.last_name} joined the platform",
-                    "timestamp": user.created_at.isoformat(),
-                    "status": "active" if user.is_active else "inactive"
-                })
-        
-        # For bookings and payments, return empty if no real data exists
-        # Remove this section entirely to avoid mock data
-        
-        # Sort by timestamp (most recent first)
-        activities.sort(key=lambda x: x["timestamp"], reverse=True)
-        
-        return {"activities": activities[:10]}
-    except Exception as e:
-        # Return empty activities if there's an error
-        return {"activities": []}
 
-@app.get("/api/v1/admin/bookings")
-async def get_admin_bookings(
-    search: str = None,
-    status: str = None,
-    payment_status: str = None,
-    booking_type: str = None,
-    start_date: str = None,
-    end_date: str = None,
-    sort_by: str = "created_at",
-    sort_order: str = "desc",
-    page: int = 1,
-    per_page: int = 20,
-    current_user = Depends(get_current_user), 
-    db: Session = Depends(get_db)
-):
-    """Get bookings with advanced filtering and search"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    from app.services.booking_service import BookingService
-    from datetime import datetime, timezone
-    
-    booking_service = BookingService(db)
-    
-    # Parse date strings
-    parsed_start_date = None
-    parsed_end_date = None
-    if start_date:
-        try:
-            parsed_start_date = datetime.fromisoformat(start_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid start_date format")
-    if end_date:
-        try:
-            parsed_end_date = datetime.fromisoformat(end_date).date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid end_date format")
-    
-    return booking_service.get_bookings_with_filters(
-        search=search,
-        status=status,
-        payment_status=payment_status,
-        booking_type=booking_type,
-        start_date=parsed_start_date,
-        end_date=parsed_end_date,
-        sort_by=sort_by,
-        sort_order=sort_order,
-        page=page,
-        per_page=per_page
-    )
 
-@app.get("/api/v1/admin/bookings/{booking_id}")
-async def get_admin_booking(booking_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get detailed booking information"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.booking import Booking
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        
-        return serialize_booking(booking)
-    except Exception as e:
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to fetch booking details: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch booking details")
-
-@app.get("/api/v1/admin/bookings/{booking_id}/details")
-async def get_booking_details(booking_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get comprehensive booking details for modal display"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.booking import Booking
-        booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        
-        return serialize_booking(booking)
-    except Exception as e:
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to fetch booking details: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch booking details")
 
 class BookingStatusUpdate(BaseModel):
     status: str
@@ -1506,6 +1353,8 @@ async def get_car_fleet_stats(current_user = Depends(get_current_user), db: Sess
             "revenue_today": 0.0,
             "utilization_rate": 0.0
         }
+
+
 
 @app.post("/api/v1/admin/payments/{payment_id}/refund")
 async def process_refund(payment_id: int, refund_data: RefundRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
