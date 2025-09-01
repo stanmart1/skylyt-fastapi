@@ -42,6 +42,7 @@ import { NotificationSender } from '@/components/admin/NotificationSender';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 
 interface AdminStats {
   totalBookings: number;
@@ -106,9 +107,10 @@ const AdminDashboard = () => {
       setActivityLoading(true);
       const url = filter ? `/admin/recent-activity?activity_type=${filter}` : '/admin/recent-activity';
       const response = await apiService.request(url);
-      setRecentActivity(Array.isArray(response.activities) ? response.activities : []);
+      setRecentActivity(Array.isArray(response?.activities) ? response.activities : Array.isArray(response) ? response : []);
     } catch (error) {
       console.error('Failed to fetch recent activity:', error);
+      setRecentActivity([]);
     } finally {
       setActivityLoading(false);
     }
@@ -132,7 +134,7 @@ const AdminDashboard = () => {
     setSelectedRole({ name: roleName, displayName: roleDisplayName });
     try {
       const response = await apiService.request(`/admin/roles/${roleName}/permissions`);
-      setRolePermissions(response.permissions || []);
+      setRolePermissions(Array.isArray(response?.permissions) ? response.permissions : Array.isArray(response) ? response : []);
     } catch (error) {
       console.error('Failed to load role permissions:', error);
       setRolePermissions([]);
@@ -145,9 +147,9 @@ const AdminDashboard = () => {
     
     setSavingPermissions(true);
     try {
-      const assignedPermissions = rolePermissions
-        .filter(p => p.assigned)
-        .map(p => p.name);
+      const assignedPermissions = Array.isArray(rolePermissions) 
+        ? rolePermissions.filter(p => p && p.assigned).map(p => p.name)
+        : [];
       
       await apiService.request(`/admin/roles/${selectedRole.name}/permissions`, {
         method: 'PUT',
@@ -1148,7 +1150,7 @@ const AdminDashboard = () => {
                   <div className="max-h-96 overflow-y-auto">
                     {editMode ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {rolePermissions.map((permission) => (
+                        {Array.isArray(rolePermissions) && rolePermissions.map((permission) => (
                           <Card key={permission.name} className={`p-3 relative cursor-pointer hover:shadow-md transition-shadow ${
                             permission.assigned ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
                           }`}>
@@ -1180,7 +1182,7 @@ const AdminDashboard = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {rolePermissions.filter(p => p.assigned).map((permission) => (
+                        {Array.isArray(rolePermissions) && rolePermissions.filter(p => p && p.assigned).map((permission) => (
                           <Card key={permission.name} className="p-3 bg-blue-50 border-blue-200">
                             <div>
                               <h4 className="font-medium text-sm text-blue-800">{permission.name}</h4>
@@ -1189,7 +1191,7 @@ const AdminDashboard = () => {
                             </div>
                           </Card>
                         ))}
-                        {rolePermissions.filter(p => p.assigned).length === 0 && (
+                        {(!Array.isArray(rolePermissions) || rolePermissions.filter(p => p && p.assigned).length === 0) && (
                           <p className="text-gray-500 col-span-full text-center py-8">No permissions assigned to this role</p>
                         )}
                       </div>
