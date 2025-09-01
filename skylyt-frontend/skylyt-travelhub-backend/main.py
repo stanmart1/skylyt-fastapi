@@ -578,18 +578,11 @@ async def update_booking(booking_id: int, booking_data: dict, current_user = Dep
             if field in booking_data:
                 setattr(booking, field, booking_data[field])
         
-        # Handle amount updates - convert to NGN if needed
+        # Handle amount updates
         if "total_amount" in booking_data:
-            from app.services.currency_service import CurrencyService
-            display_currency = booking_data.get("display_currency", "NGN")
-            if display_currency != "NGN":
-                booking.total_amount_ngn = CurrencyService.convert_currency(
-                    booking_data["total_amount"], display_currency, "NGN", db
-                )
-            else:
-                booking.total_amount_ngn = booking_data["total_amount"]
-            booking.display_currency = display_currency
-            booking.display_amount = booking_data["total_amount"]
+            booking.total_amount = booking_data["total_amount"]
+        if "currency" in booking_data:
+            booking.currency = booking_data["currency"]
         
         db.commit()
         db.refresh(booking)

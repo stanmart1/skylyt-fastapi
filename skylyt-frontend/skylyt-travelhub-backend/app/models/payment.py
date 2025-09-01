@@ -24,11 +24,10 @@ class Payment(BaseModel):
     __tablename__ = "payments"
     
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
-    payment_method = Column(String(13), nullable=False)
-    amount_ngn = Column(Numeric(15, 2), nullable=False)  # Always in NGN
-    display_currency = Column(String(3), default="NGN", nullable=False)
-    display_amount = Column(Numeric(15, 2), nullable=True)  # For reference
-    status = Column(String(9), default="pending", nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    currency = Column(String(3), default="USD", nullable=False)
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False)
+    payment_method = Column(Enum(PaymentMethod), nullable=False)
     
     # Provider specific fields (matching actual database schema)
     stripe_payment_intent_id = Column(String(255), nullable=True)

@@ -9,8 +9,8 @@ class Car(Base):
     __tablename__ = "cars"
     
     id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
-    created_at = Column(String, default=lambda: datetime.utcnow().isoformat(), nullable=False)
-    updated_at = Column(String, default=lambda: datetime.utcnow().isoformat(), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     name = Column(String, nullable=False)
     make = Column(String, nullable=False)
