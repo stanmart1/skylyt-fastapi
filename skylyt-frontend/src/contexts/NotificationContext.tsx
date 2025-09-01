@@ -41,12 +41,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           allowLocalhostAsSecureOrigin: true,
         });
 
-        const playerId = await (window as any).OneSignal.getPlayerId();
+        // Use modern OneSignal API
+        const playerId = await (window as any).OneSignal.User.PushSubscription.id;
         setUserId(playerId);
         setIsInitialized(true);
       }
     } catch (error) {
       console.error('Failed to initialize OneSignal:', error);
+      // Set as initialized even if getting player ID fails
+      setIsInitialized(true);
     }
   };
 
