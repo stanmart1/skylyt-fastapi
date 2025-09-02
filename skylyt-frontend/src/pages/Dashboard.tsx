@@ -31,6 +31,7 @@ import { ProfileManager } from '@/components/profile/ProfileManager';
 import { BookingHistory } from '@/components/booking/BookingHistory';
 import { FavoritesManager } from '@/components/favorites/FavoritesManager';
 import { apiService } from '@/services/api';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -315,7 +316,7 @@ const Dashboard = () => {
                         <div>
                           <p className="text-sm font-medium text-gray-600">Total Spent</p>
                           <p className="text-2xl font-bold">
-                            {statsLoading ? '...' : `$${userStats.total_spent.toFixed(2)}`}
+                            {statsLoading ? '...' : <PriceDisplay amount={userStats.total_spent} currency="NGN" isNGNStored={true} />}
                           </p>
                         </div>
                         <DollarSign className="h-8 w-8 text-orange-600" />

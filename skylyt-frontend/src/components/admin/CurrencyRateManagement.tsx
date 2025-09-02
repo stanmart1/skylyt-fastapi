@@ -64,6 +64,10 @@ export const CurrencyRateManagement: React.FC = () => {
       ));
       
       setEditingId(null);
+      
+      // Trigger currency context refresh
+      window.dispatchEvent(new CustomEvent('currencyRatesUpdated'));
+      
       toast({
         title: 'Success',
         description: 'Exchange rate updated successfully'

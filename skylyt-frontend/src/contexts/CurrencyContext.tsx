@@ -48,6 +48,17 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     loadCurrencies();
     detectUserLocation();
+    
+    // Listen for currency rate updates
+    const handleRatesUpdate = () => {
+      loadCurrencies();
+    };
+    
+    window.addEventListener('currencyRatesUpdated', handleRatesUpdate);
+    
+    return () => {
+      window.removeEventListener('currencyRatesUpdated', handleRatesUpdate);
+    };
   }, []);
 
   const loadCurrencies = async () => {
