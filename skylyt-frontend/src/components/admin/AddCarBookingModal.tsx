@@ -53,7 +53,7 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
     setLoadingUsers(true);
     try {
       const data = await apiService.getUsers();
-      const usersList = data?.users || data || [];
+      const usersList = data?.users || data;
       setUsers(Array.isArray(usersList) ? usersList : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -67,7 +67,7 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
     setLoadingCars(true);
     try {
       const data = await apiService.searchCars({ limit: 100 });
-      const carsList = data?.cars || [];
+      const carsList = data?.cars;
       setCars(Array.isArray(carsList) ? carsList : []);
     } catch (error) {
       console.error('Failed to fetch cars:', error);
@@ -212,12 +212,12 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
               <PopoverContent className="w-full p-0">
                 {loadingUsers ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : (
+                ) : Array.isArray(users) ? (
                   <Command>
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users && users.length > 0 ? users.map((user) => (
+                      {users.length > 0 ? users.filter(Boolean).map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -236,6 +236,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                       )}
                     </CommandGroup>
                   </Command>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
                 )}
               </PopoverContent>
             </Popover>
@@ -259,12 +261,12 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
               <PopoverContent className="w-full p-0">
                 {loadingCars ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading cars...</div>
-                ) : (
+                ) : Array.isArray(cars) ? (
                   <Command>
                     <CommandInput placeholder="Search cars..." />
                     <CommandEmpty>No cars found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {cars && cars.length > 0 ? cars.map((car) => (
+                      {cars.length > 0 ? cars.filter(Boolean).map((car) => (
                         <CommandItem
                           key={car?.id || Math.random()}
                           value={`${car?.name || 'Unknown Car'}`}
@@ -283,6 +285,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                       )}
                     </CommandGroup>
                   </Command>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
                 )}
               </PopoverContent>
             </Popover>

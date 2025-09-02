@@ -58,7 +58,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     try {
       const data = await apiService.getUsers();
       // Handle the nested response structure from /rbac/users
-      const usersList = data?.users || data || [];
+      const usersList = data?.users || data;
       setUsers(Array.isArray(usersList) ? usersList : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -72,7 +72,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     setLoadingHotels(true);
     try {
       const data = await apiService.searchHotels({ limit: 100 });
-      const hotelsList = data?.hotels || [];
+      const hotelsList = data?.hotels;
       setHotels(Array.isArray(hotelsList) ? hotelsList : []);
     } catch (error) {
       console.error('Failed to fetch hotels:', error);
@@ -217,12 +217,12 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
               <PopoverContent className="w-full p-0">
                 {loadingUsers ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : (
+                ) : Array.isArray(users) ? (
                   <Command>
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users && users.length > 0 ? users.map((user) => (
+                      {users.length > 0 ? users.filter(Boolean).map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -241,6 +241,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                       )}
                     </CommandGroup>
                   </Command>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
                 )}
               </PopoverContent>
             </Popover>
@@ -264,12 +266,12 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
               <PopoverContent className="w-full p-0">
                 {loadingHotels ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading hotels...</div>
-                ) : (
+                ) : Array.isArray(hotels) ? (
                   <Command>
                     <CommandInput placeholder="Search hotels..." />
                     <CommandEmpty>No hotels found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {hotels && hotels.length > 0 ? hotels.map((hotel) => (
+                      {hotels.length > 0 ? hotels.filter(Boolean).map((hotel) => (
                         <CommandItem
                           key={hotel?.id || Math.random()}
                           value={`${hotel?.name || 'Unknown Hotel'}`}
@@ -288,6 +290,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                       )}
                     </CommandGroup>
                   </Command>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
                 )}
               </PopoverContent>
             </Popover>
