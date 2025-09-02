@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Car, Hotel, MapPin, Calendar, Users, Star, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -88,12 +89,16 @@ const Index = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
-                        <Input 
-                          placeholder="Pick-up location" 
-                          className="border-0 bg-gray-50" 
-                          value={searchData.cars.location}
-                          onChange={(e) => handleInputChange('cars', 'location', e.target.value)}
-                        />
+                        <Select value={searchData.cars.location} onValueChange={(value) => handleInputChange('cars', 'location', value)}>
+                          <SelectTrigger className="border-0 bg-gray-50">
+                            <SelectValue placeholder="Pick-up location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Lagos">Lagos</SelectItem>
+                            <SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
+                            <SelectItem value="Abuja">Abuja</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
@@ -131,12 +136,16 @@ const Index = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
-                        <Input 
-                          placeholder="Destination" 
-                          className="border-0 bg-gray-50" 
-                          value={searchData.hotels.destination}
-                          onChange={(e) => handleInputChange('hotels', 'destination', e.target.value)}
-                        />
+                        <Select value={searchData.hotels.destination} onValueChange={(value) => handleInputChange('hotels', 'destination', value)}>
+                          <SelectTrigger className="border-0 bg-gray-50">
+                            <SelectValue placeholder="Destination" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Lagos">Lagos</SelectItem>
+                            <SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
+                            <SelectItem value="Abuja">Abuja</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />

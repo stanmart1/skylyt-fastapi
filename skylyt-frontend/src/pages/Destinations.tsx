@@ -15,7 +15,7 @@ const Destinations = () => {
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        const response = await apiService.request('/destinations');
+        const response = await apiService.request('/destinations/states');
         setStates(response.states || []);
         setFilteredStates(response.states || []);
       } catch (error) {

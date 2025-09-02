@@ -906,8 +906,38 @@ export const CarManagement: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="features" className="text-sm font-medium">Features (comma separated)</Label>
-              <Input id="features" value={carForm.features} onChange={(e) => setCarForm({...carForm, features: e.target.value})} placeholder="GPS, AC, Bluetooth" className="mt-1" />
+              <Label htmlFor="features" className="text-sm font-medium">Features</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2 p-3 border rounded-md bg-gray-50 max-h-32 overflow-y-auto">
+                {['GPS', 'Bluetooth', 'AC', 'USB', 'Leather Seats', 'Sunroof', 'Premium Audio', 'Child Seat'].map(feature => (
+                  <div key={feature} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={feature}
+                      checked={carForm.features.split(',').map(f => f.trim()).includes(feature)}
+                      onChange={(e) => {
+                        const currentFeatures = carForm.features.split(',').map(f => f.trim()).filter(f => f);
+                        if (e.target.checked) {
+                          setCarForm({...carForm, features: [...currentFeatures, feature].join(', ')});
+                        } else {
+                          setCarForm({...carForm, features: currentFeatures.filter(f => f !== feature).join(', ')});
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <Label htmlFor={feature} className="text-sm cursor-pointer">{feature}</Label>
+                  </div>
+                ))}
+              </div>
+              <Input 
+                placeholder="Add custom features (comma separated)" 
+                value={carForm.features.split(',').map(f => f.trim()).filter(f => !['GPS', 'Bluetooth', 'AC', 'USB', 'Leather Seats', 'Sunroof', 'Premium Audio', 'Child Seat'].includes(f)).join(', ')}
+                onChange={(e) => {
+                  const predefinedFeatures = carForm.features.split(',').map(f => f.trim()).filter(f => ['GPS', 'Bluetooth', 'AC', 'USB', 'Leather Seats', 'Sunroof', 'Premium Audio', 'Child Seat'].includes(f));
+                  const customFeatures = e.target.value.split(',').map(f => f.trim()).filter(f => f);
+                  setCarForm({...carForm, features: [...predefinedFeatures, ...customFeatures].join(', ')});
+                }}
+                className="mt-2" 
+              />
             </div>
             <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <Button onClick={handleSaveCar} className="w-full sm:w-auto" disabled={uploadingCarImages}>

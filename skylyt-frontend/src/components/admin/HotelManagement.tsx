@@ -589,8 +589,38 @@ export const HotelManagement: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="amenities" className="text-sm font-medium">Amenities (comma separated)</Label>
-              <Input id="amenities" value={hotelForm.amenities} onChange={(e) => setHotelForm({...hotelForm, amenities: e.target.value})} placeholder="WiFi, Pool, Gym, Spa" className="mt-1" />
+              <Label htmlFor="amenities" className="text-sm font-medium">Amenities</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2 p-3 border rounded-md bg-gray-50 max-h-32 overflow-y-auto">
+                {['WiFi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Parking', 'Pet Friendly', 'Business Center'].map(amenity => (
+                  <div key={amenity} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={amenity}
+                      checked={hotelForm.amenities.split(',').map(a => a.trim()).includes(amenity)}
+                      onChange={(e) => {
+                        const currentAmenities = hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a);
+                        if (e.target.checked) {
+                          setHotelForm({...hotelForm, amenities: [...currentAmenities, amenity].join(', ')});
+                        } else {
+                          setHotelForm({...hotelForm, amenities: currentAmenities.filter(a => a !== amenity).join(', ')});
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <Label htmlFor={amenity} className="text-sm cursor-pointer">{amenity}</Label>
+                  </div>
+                ))}
+              </div>
+              <Input 
+                placeholder="Add custom amenities (comma separated)" 
+                value={hotelForm.amenities.split(',').map(a => a.trim()).filter(a => !['WiFi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Parking', 'Pet Friendly', 'Business Center'].includes(a)).join(', ')}
+                onChange={(e) => {
+                  const predefinedAmenities = hotelForm.amenities.split(',').map(a => a.trim()).filter(a => ['WiFi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Parking', 'Pet Friendly', 'Business Center'].includes(a));
+                  const customAmenities = e.target.value.split(',').map(a => a.trim()).filter(a => a);
+                  setHotelForm({...hotelForm, amenities: [...predefinedAmenities, ...customAmenities].join(', ')});
+                }}
+                className="mt-2" 
+              />
             </div>
             <div>
               <Label htmlFor="features" className="text-sm font-medium">Features (comma separated)</Label>

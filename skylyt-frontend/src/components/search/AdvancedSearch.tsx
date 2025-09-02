@@ -19,13 +19,18 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
   const { currency, formatPrice, convertAmount } = useCurrency();
   const [searchParams, setSearchParams] = useState<SearchParams>({
     destination: '',
+    city: '',
     check_in: '',
     check_out: '',
+    pickup_date: '',
+    return_date: '',
+    location: '',
     guests: 1,
     min_price: 0,
     max_price: 1000,
     amenities: [],
     rating: 0,
+    star_rating: 0,
     sort_by: 'price',
     page: 1,
     per_page: 20,
@@ -47,7 +52,19 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
   };
 
   const handleSearch = () => {
-    onSearch(searchParams);
+    const params = { ...searchParams };
+    
+    // Map fields for different types
+    if (type === 'hotel') {
+      params.city = searchParams.destination;
+      params.star_rating = searchParams.rating;
+    } else {
+      params.location = searchParams.destination;
+      params.pickup_date = searchParams.check_in;
+      params.return_date = searchParams.check_out;
+    }
+    
+    onSearch(params);
   };
 
   const amenitiesList = type === 'hotel' 
@@ -83,7 +100,7 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
-              Check-in
+              {type === 'hotel' ? 'Check-in' : 'Pickup Date'}
             </Label>
             <Input
               type="date"
@@ -96,7 +113,7 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
-              Check-out
+              {type === 'hotel' ? 'Check-out' : 'Return Date'}
             </Label>
             <Input
               type="date"
@@ -111,15 +128,15 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
         <div className="space-y-2">
           <Label className="text-sm font-medium flex items-center gap-2">
             <Users className="h-4 w-4 text-gray-500" />
-            Guests
+            {type === 'hotel' ? 'Guests' : 'Passengers'}
           </Label>
           <Select value={String(searchParams.guests)} onValueChange={(value) => handleInputChange('guests', Number(value))}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select guests" />
+              <SelectValue placeholder={`Select ${type === 'hotel' ? 'guests' : 'passengers'}`} />
             </SelectTrigger>
             <SelectContent>
               {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-                <SelectItem key={num} value={String(num)}>{num} Guest{num > 1 ? 's' : ''}</SelectItem>
+                <SelectItem key={num} value={String(num)}>{num} {type === 'hotel' ? 'Guest' : 'Passenger'}{num > 1 ? 's' : ''}</SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -22,13 +22,16 @@ import {
 import Navigation from '@/components/Navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiService } from '@/services/api';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const Booking = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
+  const { currency } = useCurrency();
   
   const type = searchParams.get('type') || 'car';
   const itemId = searchParams.get('id') || '1';
@@ -617,7 +620,11 @@ const Booking = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>{type === 'car' ? 'Daily Rate' : 'Nightly Rate'}</span>
-                    <span>₦{basePrice.toLocaleString()}</span>
+                    <PriceDisplay 
+                      amount={basePrice} 
+                      currency={currentItem?.currency || currency}
+                      isNGNStored={false}
+                    />
                   </div>
                   {hasBothDates && days && (
                     <>
@@ -627,11 +634,19 @@ const Booking = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>₦{subtotal.toLocaleString()}</span>
+                        <PriceDisplay 
+                          amount={subtotal} 
+                          currency={currentItem?.currency || currency}
+                          isNGNStored={false}
+                        />
                       </div>
                       <div className="flex justify-between">
                         <span>Taxes & Fees (12%)</span>
-                        <span>₦{taxes.toLocaleString()}</span>
+                        <PriceDisplay 
+                          amount={taxes} 
+                          currency={currentItem?.currency || currency}
+                          isNGNStored={false}
+                        />
                       </div>
                     </>
                   )}
@@ -646,7 +661,12 @@ const Booking = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>{hasBothDates ? 'Total' : 'Base Price'}</span>
-                  <span className="text-blue-600">₦{finalTotal.toLocaleString()}</span>
+                  <PriceDisplay 
+                    amount={finalTotal} 
+                    currency={currentItem?.currency || currency}
+                    isNGNStored={false}
+                    className="text-blue-600 font-semibold text-lg"
+                  />
                 </div>
 
                 <div className="bg-green-50 p-3 rounded-lg border border-green-200">
