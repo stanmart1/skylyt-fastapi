@@ -85,22 +85,20 @@ export const FooterManagement = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Footer Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4" />
-            <div className="h-10 bg-gray-200 rounded" />
-            <div className="h-4 bg-gray-200 rounded w-1/4" />
-            <div className="h-20 bg-gray-200 rounded" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Footer Management</h1>
+            <p className="text-gray-600">Manage company information and contact details</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4" />
+          <div className="h-10 bg-gray-200 rounded" />
+          <div className="h-4 bg-gray-200 rounded w-1/4" />
+          <div className="h-20 bg-gray-200 rounded" />
+        </div>
+      </div>
     );
   }
 

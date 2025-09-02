@@ -20,10 +20,6 @@ async def get_module_settings(
     if not current_user.has_permission('dashboard', 'view_modules'):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    car_setting = db.query(Settings).filter(Settings.additional_settings['car_rental_enabled'].astext == 'true').first()
-    hotel_setting = db.query(Settings).filter(Settings.additional_settings['hotel_booking_enabled'].astext == 'true').first()
-    
-    # Get first settings record or create default
     settings_record = db.query(Settings).first()
     if not settings_record:
         return {"car_rental_enabled": True, "hotel_booking_enabled": True}
