@@ -102,13 +102,14 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const convertAmount = (amount: number, fromCurrency: string = 'NGN'): number => {
-    if (fromCurrency === currency) return amount;
+    const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+    if (fromCurrency === currency) return safeAmount;
     
     // Convert through NGN base currency
-    let amountInNGN = amount;
+    let amountInNGN = safeAmount;
     if (fromCurrency !== 'NGN') {
       const fromRate = exchangeRates[fromCurrency] || 1;
-      amountInNGN = amount * fromRate;
+      amountInNGN = safeAmount * fromRate;
     }
     
     if (currency === 'NGN') {
@@ -121,7 +122,8 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const formatPrice = (amount: number, curr: string = currency): string => {
     const symbol = currencySymbols[curr] || curr;
-    return `${symbol}${amount.toLocaleString('en-US', { 
+    const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+    return `${symbol}${safeAmount.toLocaleString('en-US', { 
       minimumFractionDigits: 0,
       maximumFractionDigits: 2 
     })}`;

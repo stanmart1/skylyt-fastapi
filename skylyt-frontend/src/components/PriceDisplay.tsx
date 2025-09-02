@@ -22,10 +22,13 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
 }) => {
   const { formatPrice, convertAmount, currency: currentCurrency } = useCurrency();
   
+  // Ensure amount is a valid number
+  const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  
   // If currency is provided and different from current currency, convert it
   // If isNGNStored is true, treat the amount as NGN regardless of currency param
   const fromCurrency = isNGNStored ? 'NGN' : (currency || currentCurrency);
-  const convertedAmount = convertAmount(amount, fromCurrency);
+  const convertedAmount = convertAmount(safeAmount, fromCurrency);
   const formattedPrice = formatPrice(convertedAmount, currentCurrency);
 
   return (

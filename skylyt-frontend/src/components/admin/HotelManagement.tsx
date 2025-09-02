@@ -340,7 +340,7 @@ export const HotelManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Hotels</p>
-                <p className="text-xl sm:text-2xl font-bold">{loading ? '...' : stats.total_hotels}</p>
+                <p className="text-xl sm:text-2xl font-bold">{loading ? '...' : (stats.total_hotels || 0)}</p>
               </div>
               <Hotel className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
             </div>
@@ -351,7 +351,7 @@ export const HotelManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Rooms</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{loading ? '...' : stats.total_rooms}</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{loading ? '...' : (stats.total_rooms || 0)}</p>
               </div>
               <Bed className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
             </div>
@@ -362,7 +362,7 @@ export const HotelManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Occupied</p>
-                <p className="text-xl sm:text-2xl font-bold text-blue-600">{loading ? '...' : stats.occupied_rooms}</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{loading ? '...' : (stats.occupied_rooms || 0)}</p>
               </div>
               <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 self-end sm:self-auto" />
             </div>
@@ -373,7 +373,7 @@ export const HotelManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Occupancy</p>
-                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{loading ? '...' : stats.average_occupancy}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{loading ? '...' : (stats.average_occupancy || 0)}%</p>
               </div>
               <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 self-end sm:self-auto" />
             </div>
@@ -385,7 +385,7 @@ export const HotelManagement: React.FC = () => {
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Revenue</p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">
-                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today} currency={currency} />}
+                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today || 0} currency={currency} />}
                 </p>
               </div>
               <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
@@ -397,7 +397,7 @@ export const HotelManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Avg Rating</p>
-                <p className="text-xl sm:text-2xl font-bold text-purple-600">{loading ? '...' : stats.average_rating}</p>
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">{loading ? '...' : (stats.average_rating || 0)}</p>
               </div>
               <Star className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 self-end sm:self-auto" />
             </div>
@@ -458,12 +458,12 @@ export const HotelManagement: React.FC = () => {
                 <p className="text-gray-600 mb-2 text-sm truncate">{hotel.location}</p>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-3 w-3 sm:h-4 sm:w-4 ${i < (hotel.star_rating || hotel.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                    <Star key={i} className={`h-3 w-3 sm:h-4 sm:w-4 ${i < (hotel.star_rating || hotel.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
                   ))}
-                  <span className="text-xs sm:text-sm text-gray-600 ml-1">({hotel.star_rating || hotel.rating})</span>
+                  <span className="text-xs sm:text-sm text-gray-600 ml-1">({hotel.star_rating || hotel.rating || 0})</span>
                 </div>
                 <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
-                  <PriceDisplay amount={hotel.price_per_night || hotel.price} currency={hotel.currency || currency} />/night
+                  <PriceDisplay amount={hotel.price_per_night || hotel.price || 0} currency={hotel.currency || currency} />/night
                 </p>
                 <p className="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2">{hotel.description}</p>
                 <div className="flex flex-wrap gap-2">
