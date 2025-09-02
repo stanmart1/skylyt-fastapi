@@ -255,19 +255,17 @@ def get_user_favorites(
     
     favorites = db.query(Favorite).filter(Favorite.user_id == current_user.id).all()
     
-    return {
-        "favorites": [
-            {
-                "id": fav.id,
-                "item_type": fav.item_type,
-                "item_id": fav.item_id,
-                "name": fav.item_data.get("name", "Unknown"),
-                "item_data": fav.item_data,
-                "created_at": fav.created_at.isoformat()
-            }
-            for fav in favorites
-        ]
-    }
+    return [
+        {
+            "id": fav.id,
+            "item_type": fav.item_type,
+            "item_id": fav.item_id,
+            "name": fav.item_data.get("name", "Unknown"),
+            "item_data": fav.item_data,
+            "created_at": fav.created_at.isoformat()
+        }
+        for fav in favorites
+    ]
 
 
 @router.post("/me/favorites")

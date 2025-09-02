@@ -34,6 +34,7 @@ import FleetManagement from "./pages/FleetManagement";
 import HotelManagement from "./pages/HotelManagement";
 import CarManagement from "./pages/CarManagement";
 
+import Destinations from "./pages/Destinations";
 import StateDestinationPage from "./pages/StateDestinationPage";
 import CityHotelsPage from "./pages/CityHotelsPage";
 import TermsOfService from "./pages/TermsOfService";
@@ -136,6 +137,7 @@ const PageTransitionWrapper = () => {
                   </ProtectedRoute>
                 } />
 
+                <Route path="/destinations" element={<Destinations />} />
                 <Route path="/destinations/:stateSlug" element={<StateDestinationPage />} />
                 <Route path="/destinations/:stateSlug/:citySlug" element={<CityHotelsPage />} />
                 <Route path="/terms" element={<TermsOfService />} />

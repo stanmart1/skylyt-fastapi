@@ -19,7 +19,7 @@ export const useFavorites = () => {
     setIsLoading(true);
     try {
       const response = await apiService.getFavorites();
-      const userFavorites = Array.isArray(response) ? response : response.favorites || [];
+      const userFavorites = Array.isArray(response) ? response : [];
       setFavorites(userFavorites);
     } catch (error) {
       console.error('Favorites fetch error:', error);
