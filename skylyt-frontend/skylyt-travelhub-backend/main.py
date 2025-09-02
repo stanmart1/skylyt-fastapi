@@ -381,7 +381,7 @@ class CarCreateRequest(BaseModel):
     category: str
     price_per_day: float
     currency: Optional[str] = "USD"
-    image_url: Optional[str] = ""
+    images: Optional[List[str]] = []
     passengers: Optional[int] = 4
     transmission: Optional[str] = "automatic"
     fuel_type: Optional[str] = "petrol"
@@ -1135,7 +1135,8 @@ async def get_admin_cars(
                 "price_per_day": float(car.price_per_day),
                 "price": float(car.price_per_day),  # Add price field for compatibility
                 "currency": "NGN",
-                "image_url": car.image_url,
+                "images": car.images or [],
+                "image_url": car.images[0] if car.images else None,
                 "passengers": car.passengers,
                 "transmission": car.transmission,
                 "fuel_type": car.fuel_type,
@@ -1173,7 +1174,7 @@ async def create_car(car_data: CarCreateRequest, current_user = Depends(get_curr
             category=car_data.category,
             price_per_day=car_data.price_per_day,
             currency=car_data.currency,
-            image_url=car_data.image_url,
+            images=car_data.images,
             passengers=car_data.passengers,
             transmission=car_data.transmission,
             fuel_type=car_data.fuel_type,

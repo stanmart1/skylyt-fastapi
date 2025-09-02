@@ -141,8 +141,8 @@ export const CarManagement: React.FC = () => {
     notes: ''
   });
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
-  const [carImageFile, setCarImageFile] = useState<File | null>(null);
-  const [uploadingCarImage, setUploadingCarImage] = useState(false);
+  const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
+  const [uploadingCarImages, setUploadingCarImages] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; carId: string; carName: string }>({
     open: false,
     carId: '',
@@ -222,7 +222,7 @@ export const CarManagement: React.FC = () => {
       roadworthiness_expiry: ''
     });
     setDocumentFiles({});
-    setCarImageFile(null);
+    setCarImageFiles([]);
     setIsModalOpen(true);
   };
 
@@ -249,30 +249,36 @@ export const CarManagement: React.FC = () => {
       roadworthiness_expiry: car.roadworthiness_expiry ? car.roadworthiness_expiry.split('T')[0] : ''
     });
     setDocumentFiles({});
-    setCarImageFile(null);
+    setCarImageFiles([]);
     setIsModalOpen(true);
   };
 
-  const handleCarImageUpload = async (file: File): Promise<string> => {
-    setUploadingCarImage(true);
+  const handleCarImagesUpload = async (files: File[]): Promise<string[]> => {
+    setUploadingCarImages(true);
+    const uploadedUrls: string[] = [];
+    
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_type', 'cars');
-      
-      const response = await apiService.uploadFile(formData);
-      const imageUrl = response.url;
-      return imageUrl;
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_type', 'cars');
+        
+        const response = await apiService.uploadFile(formData);
+        if (response.url) {
+          uploadedUrls.push(response.url);
+        }
+      }
+      return uploadedUrls;
     } catch (error) {
-      console.error('Failed to upload image:', error);
+      console.error('Failed to upload images:', error);
       toast({
         title: 'Error',
-        description: 'Failed to upload image',
+        description: 'Failed to upload images',
         variant: 'error'
       });
-      return '';
+      return uploadedUrls;
     } finally {
-      setUploadingCarImage(false);
+      setUploadingCarImages(false);
     }
   };
 
@@ -283,10 +289,10 @@ export const CarManagement: React.FC = () => {
         features: carForm.features.split(',').map(f => f.trim()).filter(f => f)
       };
       
-      if (carImageFile) {
-        const imageUrl = await handleCarImageUpload(carImageFile);
-        if (imageUrl) {
-          finalCarData.image_url = imageUrl;
+      if (carImageFiles.length > 0) {
+        const uploadedUrls = await handleCarImagesUpload(carImageFiles);
+        if (uploadedUrls.length > 0) {
+          finalCarData.images = uploadedUrls;
         }
       }
       
@@ -333,7 +339,7 @@ export const CarManagement: React.FC = () => {
       await fetchCars();
       await fetchStats();
       setIsModalOpen(false);
-      setCarImageFile(null);
+      setCarImageFiles([]);
     } catch (error) {
       console.error('Failed to save car:', error);
       toast({
@@ -877,25 +883,26 @@ export const CarManagement: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="car_image" className="text-sm font-medium">Car Image</Label>
+              <Label htmlFor="car_images" className="text-sm font-medium">Car Images</Label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
                 <input
-                  id="car_image"
+                  id="car_images"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setCarImageFile(e.target.files?.[0] || null)}
+                  multiple
+                  onChange={(e) => setCarImageFiles(Array.from(e.target.files || []))}
                   className="hidden"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('car_image')?.click()}
-                  disabled={uploadingCarImage}
+                  onClick={() => document.getElementById('car_images')?.click()}
+                  disabled={uploadingCarImages}
                   className="w-full sm:w-auto"
                 >
-                  {uploadingCarImage ? 'Uploading...' : 'Choose File'}
+                  {uploadingCarImages ? 'Uploading...' : 'Choose Images'}
                 </Button>
-                {carImageFile && <span className="text-sm text-gray-600 truncate">{carImageFile.name}</span>}
+                {carImageFiles.length > 0 && <span className="text-sm text-gray-600">{carImageFiles.length} files selected</span>}
               </div>
             </div>
             <div>
@@ -903,8 +910,8 @@ export const CarManagement: React.FC = () => {
               <Input id="features" value={carForm.features} onChange={(e) => setCarForm({...carForm, features: e.target.value})} placeholder="GPS, AC, Bluetooth" className="mt-1" />
             </div>
             <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <Button onClick={handleSaveCar} className="w-full sm:w-auto" disabled={uploadingCarImage}>
-                {uploadingCarImage ? 'Uploading...' : (editingCar ? 'Update Car' : 'Add Car')}
+              <Button onClick={handleSaveCar} className="w-full sm:w-auto" disabled={uploadingCarImages}>
+                {uploadingCarImages ? 'Uploading Images...' : (editingCar ? 'Update Car' : 'Add Car')}
               </Button>
               <Button variant="outline" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
             </div>
