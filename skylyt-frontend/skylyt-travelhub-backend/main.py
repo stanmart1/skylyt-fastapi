@@ -191,6 +191,20 @@ app = FastAPI(
 # Configure custom OpenAPI to exclude database schemas
 app.openapi = lambda: custom_openapi(app)
 
+# Add CSP headers for Swagger UI
+@app.middleware("http")
+async def add_swagger_csp(request, call_next):
+    response = await call_next(request)
+    if request.url.path in ["/docs", "/redoc"]:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            "font-src 'self' https://cdn.jsdelivr.net;"
+        )
+    return response
+
 # CORS - Add explicit CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -218,8 +232,8 @@ app.add_middleware(ErrorHandlingMiddleware, error_tracker=error_tracker)
 if not config_settings.DEBUG:
     app.add_middleware(HTTPSRedirectMiddleware, force_https=True)
 
-# Skip security headers that block CORS
-# app.add_middleware(SecurityHeadersMiddleware)
+# Skip security headers that block Swagger UI and CORS
+# app.add_middleware(SecurityHeadersMiddleware)  # Blocks Swagger UI resources
 # app.add_middleware(RequestValidationMiddleware)
 
 # Performance middleware - optimized compression
