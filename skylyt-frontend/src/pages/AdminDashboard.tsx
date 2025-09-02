@@ -46,7 +46,7 @@ import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { CarFleetStats } from '@/components/admin/CarFleetStats';
 import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
-import { ModuleManagement } from '@/components/admin/ModuleManagement';
+
 import { FooterManagement } from '@/components/admin/FooterManagement';
 import { ContactManagement } from '@/components/admin/ContactManagement';
 import { AboutManagement } from '@/components/admin/AboutManagement';
@@ -355,7 +355,7 @@ const AdminDashboard = () => {
                   System
                 </Button>
               )}
-              {hasPermission('dashboard.view_cars') && features.car_rental_enabled && (
+              {hasPermission('dashboard.view_cars') && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -422,7 +422,7 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
-              {hasPermission('dashboard.view_hotels') && features.hotel_booking_enabled && (
+              {hasPermission('dashboard.view_hotels') && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -580,16 +580,7 @@ const AdminDashboard = () => {
                           Security
                         </Button>
                       )}
-                      {hasPermission('dashboard.view_modules') && (
-                        <Button
-                          variant={activeSettingsTab === 'modules' ? 'default' : 'ghost'}
-                          size="sm"
-                          className="w-full justify-start text-sm"
-                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('modules'); setSidebarOpen(false); }}
-                        >
-                          Module Management
-                        </Button>
-                      )}
+
 
                     </div>
                   )}
@@ -880,16 +871,7 @@ const AdminDashboard = () => {
                       Security
                     </Button>
                   )}
-                  {hasPermission('dashboard.view_modules') && (
-                    <Button
-                      variant={activeSettingsTab === 'modules' ? 'default' : 'ghost'}
-                      size="sm"
-                      className="w-full justify-start text-sm"
-                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('modules'); }}
-                    >
-                      Module Management
-                    </Button>
-                  )}
+
 
                 </div>
               )}
@@ -1446,7 +1428,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Currency Settings'}
                   {activeSettingsTab === 'notifications' && 'Notification Settings'}
                   {activeSettingsTab === 'security' && 'Security Settings'}
-                  {activeSettingsTab === 'modules' && 'Module Management'}
+
                   {!activeSettingsTab && 'Admin Settings'}
                 </h1>
                 <p className="text-gray-600">
@@ -1456,7 +1438,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Manage currency rates and exchange settings'}
                   {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
                   {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
-                  {activeSettingsTab === 'modules' && 'Manage system modules and features'}
+
                   {!activeSettingsTab && 'Configure system settings and preferences'}
                 </p>
               </div>
@@ -1467,7 +1449,7 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'currency' && hasPermission('settings.view_currency') && <CurrencySettings />}
                 {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
                 {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
-                {activeSettingsTab === 'modules' && hasPermission('dashboard.view_modules') && <ModuleManagement />}
+
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>

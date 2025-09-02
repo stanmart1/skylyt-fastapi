@@ -59,8 +59,8 @@ export const ContactManagement = () => {
       });
       
       toast({
-        title: 'Success',
-        description: 'Contact settings updated successfully',
+        title: 'Settings Saved Successfully',
+        description: 'Contact page settings have been updated',
         variant: 'default'
       });
     } catch (error) {

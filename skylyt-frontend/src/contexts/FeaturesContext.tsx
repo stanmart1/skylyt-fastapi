@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiService } from '@/services/api';
+import React, { createContext, useContext } from 'react';
 
 interface Features {
   car_rental_enabled: boolean;
@@ -15,29 +14,13 @@ interface FeaturesContextType {
 const FeaturesContext = createContext<FeaturesContextType | undefined>(undefined);
 
 export const FeaturesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [features, setFeatures] = useState<Features>({
+  const features: Features = {
     car_rental_enabled: true,
     hotel_booking_enabled: true
-  });
-  const [loading, setLoading] = useState(true);
-
-  const fetchFeatures = async () => {
-    try {
-      const response = await apiService.request('/config/features');
-      setFeatures(response);
-    } catch (error) {
-      console.error('Failed to fetch features:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  useEffect(() => {
-    fetchFeatures();
-  }, []);
-
   return (
-    <FeaturesContext.Provider value={{ features, loading, refreshFeatures: fetchFeatures }}>
+    <FeaturesContext.Provider value={{ features, loading: false, refreshFeatures: async () => {} }}>
       {children}
     </FeaturesContext.Provider>
   );
