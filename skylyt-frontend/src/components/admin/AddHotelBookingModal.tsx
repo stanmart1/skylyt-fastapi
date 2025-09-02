@@ -226,35 +226,9 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                {loadingUsers ? (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : (usersReady && Array.isArray(users)) ? (
-                  <Command>
-                    <CommandInput placeholder="Search users..." />
-                    <CommandEmpty>No users found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users.length > 0 ? users.map((user) => (
-                        <CommandItem
-                          key={user?.id || Math.random()}
-                          value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
-                          onSelect={() => handleUserSelect(user)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
-                        </CommandItem>
-                      )) : (
-                        <div className="p-2 text-sm text-gray-500">No users available</div>
-                      )}
-                    </CommandGroup>
-                  </Command>
-                ) : (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
-                )}
+                <div className="p-4 text-center text-sm text-gray-600">
+                  {loadingUsers ? "Loading users..." : "Select a user"}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -275,35 +249,9 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                {loadingHotels ? (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading hotels...</div>
-                ) : (hotelsReady && Array.isArray(hotels)) ? (
-                  <Command>
-                    <CommandInput placeholder="Search hotels..." />
-                    <CommandEmpty>No hotels found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-y-auto">
-                      {hotels.length > 0 ? hotels.map((hotel) => (
-                        <CommandItem
-                          key={hotel?.id || Math.random()}
-                          value={`${hotel?.name || 'Unknown Hotel'}`}
-                          onSelect={() => handleHotelSelect(hotel)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedHotel?.id === hotel?.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {hotel?.name || 'Unknown Hotel'} - ₦{(hotel?.price_per_night || 0).toLocaleString()}/night
-                        </CommandItem>
-                      )) : (
-                        <div className="p-2 text-sm text-gray-500">No hotels available</div>
-                      )}
-                    </CommandGroup>
-                  </Command>
-                ) : (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
-                )}
+                <div className="p-4 text-center text-sm text-gray-600">
+                  {loadingHotels ? "Loading hotels..." : "Select a hotel"}
+                </div>
               </PopoverContent>
             </Popover>
           </div>

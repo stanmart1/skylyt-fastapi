@@ -222,35 +222,9 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                {loadingUsers ? (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : (usersReady && Array.isArray(users)) ? (
-                  <Command>
-                    <CommandInput placeholder="Search users..." />
-                    <CommandEmpty>No users found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users.length > 0 ? users.map((user) => (
-                        <CommandItem
-                          key={user?.id || Math.random()}
-                          value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
-                          onSelect={() => handleUserSelect(user)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
-                        </CommandItem>
-                      )) : (
-                        <div className="p-2 text-sm text-gray-500">No users available</div>
-                      )}
-                    </CommandGroup>
-                  </Command>
-                ) : (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
-                )}
+                <div className="p-4 text-center text-sm text-gray-600">
+                  {loadingUsers ? "Loading users..." : "Select a user"}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -271,35 +245,9 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                {loadingCars ? (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading cars...</div>
-                ) : (carsReady && Array.isArray(cars)) ? (
-                  <Command>
-                    <CommandInput placeholder="Search cars..." />
-                    <CommandEmpty>No cars found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-y-auto">
-                      {cars.length > 0 ? cars.map((car) => (
-                        <CommandItem
-                          key={car?.id || Math.random()}
-                          value={`${car?.name || 'Unknown Car'}`}
-                          onSelect={() => handleCarSelect(car)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCar?.id === car?.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {car?.name || 'Unknown Car'} - ₦{(car?.price || 0).toLocaleString()}/day
-                        </CommandItem>
-                      )) : (
-                        <div className="p-2 text-sm text-gray-500">No cars available</div>
-                      )}
-                    </CommandGroup>
-                  </Command>
-                ) : (
-                  <div className="p-4 text-center text-sm text-gray-600">Loading...</div>
-                )}
+                <div className="p-4 text-center text-sm text-gray-600">
+                  {loadingCars ? "Loading cars..." : "Select a car"}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
