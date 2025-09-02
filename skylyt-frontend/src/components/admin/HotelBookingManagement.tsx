@@ -4,15 +4,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Hotel, Edit, Trash2 } from 'lucide-react';
+import { Hotel, Edit, Trash2, Eye, Plus } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import BookingDetailsModal from '@/components/booking/BookingDetailsModal';
+import AddHotelBookingModal from '@/components/admin/AddHotelBookingModal';
 
 const HotelBookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [editForm, setEditForm] = useState({ status: '' });
   const { hasPermission } = useAuth();
 
@@ -38,6 +43,11 @@ const HotelBookingManagement = () => {
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
+    setIsDetailsModalOpen(true);
   };
 
   const handleEditBooking = (booking) => {
@@ -92,10 +102,18 @@ const HotelBookingManagement = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Hotel className="h-5 w-5" />
-          Hotel Bookings ({bookings.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Hotel className="h-5 w-5" />
+            Hotel Bookings ({bookings.length})
+          </CardTitle>
+          {hasPermission('bookings.create') && (
+            <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Hotel Booking
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {bookings.length === 0 ? (
@@ -125,6 +143,14 @@ const HotelBookingManagement = () => {
                     <Badge className={getStatusColor(booking.status)}>
                       {booking.status}
                     </Badge>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewDetails(booking)}
+                      title="View Details"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
                     {hasPermission('bookings.update') && (
                       <Button variant="outline" size="sm" onClick={() => handleEditBooking(booking)}>
                         <Edit className="h-3 w-3" />
@@ -147,6 +173,18 @@ const HotelBookingManagement = () => {
           </div>
         )}
       </CardContent>
+      
+      <AddHotelBookingModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchHotelBookings}
+      />
+      
+      <BookingDetailsModal 
+        booking={selectedBooking}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+      />
       
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent>

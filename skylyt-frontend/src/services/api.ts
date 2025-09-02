@@ -158,6 +158,13 @@ class ApiService {
     });
   }
 
+  async createAdminBooking(bookingData: Partial<Booking> & { user_id: number }): Promise<Booking> {
+    return this.request('/admin/bookings', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
+  }
+
   async getBookings(): Promise<Booking[]> {
     return this.request('/bookings');
   }
