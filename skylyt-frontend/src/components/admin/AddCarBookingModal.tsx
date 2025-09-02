@@ -24,6 +24,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
   const [loadingCars, setLoadingCars] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [cars, setCars] = useState<any[]>([]);
+  const [usersReady, setUsersReady] = useState(false);
+  const [carsReady, setCarsReady] = useState(false);
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [carSearchOpen, setCarSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -42,6 +44,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
     if (isOpen) {
       setUsers([]);
       setCars([]);
+      setUsersReady(false);
+      setCarsReady(false);
       setSelectedUser(null);
       setSelectedCar(null);
       fetchUsers();
@@ -51,13 +55,17 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
+    setUsersReady(false);
     try {
       const data = await apiService.getUsers();
       const usersList = data?.users || data;
-      setUsers(Array.isArray(usersList) ? usersList : []);
+      const validUsers = Array.isArray(usersList) ? usersList.filter(u => u && u.id) : [];
+      setUsers(validUsers);
+      setUsersReady(true);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       setUsers([]);
+      setUsersReady(true);
     } finally {
       setLoadingUsers(false);
     }
@@ -65,13 +73,17 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
 
   const fetchCars = async () => {
     setLoadingCars(true);
+    setCarsReady(false);
     try {
       const data = await apiService.searchCars({ limit: 100 });
       const carsList = data?.cars;
-      setCars(Array.isArray(carsList) ? carsList : []);
+      const validCars = Array.isArray(carsList) ? carsList.filter(c => c && c.id) : [];
+      setCars(validCars);
+      setCarsReady(true);
     } catch (error) {
       console.error('Failed to fetch cars:', error);
       setCars([]);
+      setCarsReady(true);
     } finally {
       setLoadingCars(false);
     }
@@ -212,12 +224,12 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
               <PopoverContent className="w-full p-0">
                 {loadingUsers ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : Array.isArray(users) ? (
+                ) : (usersReady && Array.isArray(users)) ? (
                   <Command>
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users.length > 0 ? users.filter(Boolean).map((user) => (
+                      {users.length > 0 ? users.map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -261,12 +273,12 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
               <PopoverContent className="w-full p-0">
                 {loadingCars ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading cars...</div>
-                ) : Array.isArray(cars) ? (
+                ) : (carsReady && Array.isArray(cars)) ? (
                   <Command>
                     <CommandInput placeholder="Search cars..." />
                     <CommandEmpty>No cars found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {cars.length > 0 ? cars.filter(Boolean).map((car) => (
+                      {cars.length > 0 ? cars.map((car) => (
                         <CommandItem
                           key={car?.id || Math.random()}
                           value={`${car?.name || 'Unknown Car'}`}

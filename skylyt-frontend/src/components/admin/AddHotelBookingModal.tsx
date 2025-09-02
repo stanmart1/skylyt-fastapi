@@ -25,6 +25,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
   const [loadingHotels, setLoadingHotels] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
+  const [usersReady, setUsersReady] = useState(false);
+  const [hotelsReady, setHotelsReady] = useState(false);
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [hotelSearchOpen, setHotelSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -45,6 +47,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
       // Reset state first
       setUsers([]);
       setHotels([]);
+      setUsersReady(false);
+      setHotelsReady(false);
       setSelectedUser(null);
       setSelectedHotel(null);
       // Then fetch data
@@ -55,14 +59,17 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
+    setUsersReady(false);
     try {
       const data = await apiService.getUsers();
-      // Handle the nested response structure from /rbac/users
       const usersList = data?.users || data;
-      setUsers(Array.isArray(usersList) ? usersList : []);
+      const validUsers = Array.isArray(usersList) ? usersList.filter(u => u && u.id) : [];
+      setUsers(validUsers);
+      setUsersReady(true);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       setUsers([]);
+      setUsersReady(true);
     } finally {
       setLoadingUsers(false);
     }
@@ -70,13 +77,17 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
 
   const fetchHotels = async () => {
     setLoadingHotels(true);
+    setHotelsReady(false);
     try {
       const data = await apiService.searchHotels({ limit: 100 });
       const hotelsList = data?.hotels;
-      setHotels(Array.isArray(hotelsList) ? hotelsList : []);
+      const validHotels = Array.isArray(hotelsList) ? hotelsList.filter(h => h && h.id) : [];
+      setHotels(validHotels);
+      setHotelsReady(true);
     } catch (error) {
       console.error('Failed to fetch hotels:', error);
       setHotels([]);
+      setHotelsReady(true);
     } finally {
       setLoadingHotels(false);
     }
@@ -217,12 +228,12 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
               <PopoverContent className="w-full p-0">
                 {loadingUsers ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
-                ) : Array.isArray(users) ? (
+                ) : (usersReady && Array.isArray(users)) ? (
                   <Command>
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {users.length > 0 ? users.filter(Boolean).map((user) => (
+                      {users.length > 0 ? users.map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -266,12 +277,12 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
               <PopoverContent className="w-full p-0">
                 {loadingHotels ? (
                   <div className="p-4 text-center text-sm text-gray-600">Loading hotels...</div>
-                ) : Array.isArray(hotels) ? (
+                ) : (hotelsReady && Array.isArray(hotels)) ? (
                   <Command>
                     <CommandInput placeholder="Search hotels..." />
                     <CommandEmpty>No hotels found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {hotels.length > 0 ? hotels.filter(Boolean).map((hotel) => (
+                      {hotels.length > 0 ? hotels.map((hotel) => (
                         <CommandItem
                           key={hotel?.id || Math.random()}
                           value={`${hotel?.name || 'Unknown Hotel'}`}
