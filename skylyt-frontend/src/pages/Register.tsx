@@ -190,16 +190,6 @@ const Register = () => {
               )}
             </div>
 
-            {/* Registration Help */}
-            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-              <p className="font-medium mb-1">Password Requirements:</p>
-              <ul className="space-y-1">
-                <li>• At least 8 characters long</li>
-                <li>• Use a mix of letters, numbers, and symbols</li>
-                <li>• Avoid common passwords or personal information</li>
-              </ul>
-            </div>
-
             <div className="flex items-start space-x-2">
               <input type="checkbox" className="mt-1 rounded" required />
               <span className="text-sm text-gray-600">

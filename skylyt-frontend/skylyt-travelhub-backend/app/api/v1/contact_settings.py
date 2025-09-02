@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.contact_settings import ContactSettings
-from app.core.auth import get_current_user, require_admin
+from app.core.dependencies import get_current_user, get_admin_user as require_admin
 from pydantic import BaseModel
 from typing import Optional
 

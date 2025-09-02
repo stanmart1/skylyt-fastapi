@@ -129,16 +129,6 @@ const Login = () => {
               </Link>
             </div>
 
-            {/* Login Help */}
-            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-              <p className="font-medium mb-1">Having trouble logging in?</p>
-              <ul className="space-y-1">
-                <li>• Check your email address for typos</li>
-                <li>• Ensure your password is correct (case-sensitive)</li>
-                <li>• Try resetting your password if you've forgotten it</li>
-              </ul>
-            </div>
-
             <Button
               type="submit"
               disabled={isLoading}
