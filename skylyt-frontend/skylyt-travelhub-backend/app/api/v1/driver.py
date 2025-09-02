@@ -23,6 +23,9 @@ class AvailabilityUpdate(BaseModel):
 class TripStatusUpdate(BaseModel):
     trip_status: str
 
+class NotificationReadUpdate(BaseModel):
+    is_read: bool = True
+
 # Helper Functions
 def serialize_driver(driver) -> dict:
     """Serialize driver object to dictionary"""
@@ -65,6 +68,17 @@ def serialize_trip(booking) -> dict:
         "total_amount": float(booking.total_amount) if booking.total_amount else 0,
         "currency": booking.currency,
         "created_at": booking.created_at.isoformat() if booking.created_at else None
+    }
+
+def serialize_notification(notification) -> dict:
+    """Serialize notification object to dictionary"""
+    return {
+        "id": notification.id,
+        "title": notification.title,
+        "message": notification.message,
+        "type": notification.type,
+        "is_read": notification.is_read,
+        "created_at": notification.created_at.isoformat() if notification.created_at else None
     }
 
 def get_driver_by_user_id(user_id: int, db: Session):
@@ -235,3 +249,72 @@ async def update_trip_status(
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to update trip status: {e}")
         raise HTTPException(status_code=500, detail="Failed to update trip status")
+
+@router.get("/driver/notifications")
+async def get_driver_notifications(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get notifications for current driver"""
+    try:
+        from app.models.notification import Notification
+        
+        notifications = db.query(Notification).filter(
+            Notification.user_id == current_user.id
+        ).order_by(Notification.created_at.desc()).limit(50).all()
+        
+        return {
+            "notifications": [serialize_notification(n) for n in notifications],
+            "unread_count": sum(1 for n in notifications if not n.is_read)
+        }
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to fetch notifications: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch notifications")
+
+@router.put("/driver/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: int,
+    current_user = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Mark notification as read"""
+    try:
+        from app.models.notification import Notification
+        
+        notification = db.query(Notification).filter(
+            Notification.id == notification_id,
+            Notification.user_id == current_user.id
+        ).first()
+        
+        if not notification:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        
+        notification.is_read = True
+        db.commit()
+        
+        return {"message": "Notification marked as read"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to mark notification as read: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update notification")
+
+@router.put("/driver/notifications/mark-all-read")
+async def mark_all_notifications_read(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Mark all notifications as read"""
+    try:
+        from app.models.notification import Notification
+        
+        db.query(Notification).filter(
+            Notification.user_id == current_user.id,
+            Notification.is_read == False
+        ).update({"is_read": True})
+        
+        db.commit()
+        
+        return {"message": "All notifications marked as read"}
+    except Exception as e:
+        db.rollback()
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to mark all notifications as read: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update notifications")

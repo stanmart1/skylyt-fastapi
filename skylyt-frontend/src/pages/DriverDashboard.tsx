@@ -21,7 +21,11 @@ import {
   Edit,
   Navigation,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Bell,
+  AlertCircle,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,13 +69,25 @@ interface Trip {
   created_at: string;
 }
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 const DriverDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tripsLoading, setTripsLoading] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     phone: '',
@@ -84,6 +100,7 @@ const DriverDashboard = () => {
   useEffect(() => {
     fetchDriverProfile();
     fetchMyTrips();
+    fetchNotifications();
   }, []);
 
   const fetchDriverProfile = async () => {
@@ -180,6 +197,41 @@ const DriverDashboard = () => {
     }
   };
 
+  const fetchNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const data = await apiService.request('/driver/notifications');
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unread_count || 0);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      await apiService.request(`/driver/notifications/${notificationId}/read`, {
+        method: 'PUT'
+      });
+      await fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await apiService.request('/driver/notifications/mark-all-read', {
+        method: 'PUT'
+      });
+      await fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
   const handleUpdateTripStatus = async (tripId: number, newStatus: string) => {
     try {
       await apiService.request(`/driver/trips/${tripId}/status`, {
@@ -223,6 +275,15 @@ const DriverDashboard = () => {
       case 'completed': return 'Completed';
       case 'cancelled': return 'Cancelled';
       default: return 'Unknown';
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'warning': return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
+      default: return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
 
@@ -449,6 +510,84 @@ const DriverDashboard = () => {
                             <p className="text-sm text-gray-600">{trip.special_requests}</p>
                           </div>
                         )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Notifications Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Notifications
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="ml-2">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </span>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleMarkAllAsRead}
+                    >
+                      Mark All Read
+                    </Button>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {notificationsLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="animate-pulse h-16 bg-gray-200 rounded" />
+                    ))}
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No notifications</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          notification.is_read 
+                            ? 'bg-gray-50 border-gray-200' 
+                            : 'bg-blue-50 border-blue-200'
+                        }`}
+                        onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {getNotificationIcon(notification.type)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className={`text-sm font-medium ${
+                                notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                              }`}>
+                                {notification.title}
+                              </h4>
+                              <span className="text-xs text-gray-500">
+                                {new Date(notification.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className={`text-sm mt-1 ${
+                              notification.is_read ? 'text-gray-600' : 'text-gray-800'
+                            }`}>
+                              {notification.message}
+                            </p>
+                          </div>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
