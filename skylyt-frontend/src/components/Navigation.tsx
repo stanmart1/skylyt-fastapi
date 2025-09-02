@@ -8,6 +8,7 @@ import { Car, Hotel, User, Menu, X, LogOut, Settings, Bell, ChevronDown } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useFeatures } from '@/contexts/FeaturesContext';
 import CurrencySelector from './CurrencySelector';
 
 const Navigation = () => {
@@ -15,6 +16,7 @@ const Navigation = () => {
   const { user, logout, isAuthenticated, hasRole } = useAuth();
   const { settings } = useSettings();
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { features } = useFeatures();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -37,14 +39,18 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/cars" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
-              <Car className="h-4 w-4" />
-              <span>Cars</span>
-            </Link>
-            <Link to="/hotels" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
-              <Hotel className="h-4 w-4" />
-              <span>Hotels</span>
-            </Link>
+            {features.car_rental_enabled && (
+              <Link to="/cars" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                <Car className="h-4 w-4" />
+                <span>Cars</span>
+              </Link>
+            )}
+            {features.hotel_booking_enabled && (
+              <Link to="/hotels" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
+                <Hotel className="h-4 w-4" />
+                <span>Hotels</span>
+              </Link>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -181,14 +187,18 @@ const Navigation = () => {
                 </button>
               </div>
               <div className="flex-1 p-4 space-y-4">
-                <Link to="/cars" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                  <Car className="h-4 w-4" />
-                  <span>Cars</span>
-                </Link>
-                <Link to="/hotels" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                  <Hotel className="h-4 w-4" />
-                  <span>Hotels</span>
-                </Link>
+                {features.car_rental_enabled && (
+                  <Link to="/cars" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                    <Car className="h-4 w-4" />
+                    <span>Cars</span>
+                  </Link>
+                )}
+                {features.hotel_booking_enabled && (
+                  <Link to="/hotels" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                    <Hotel className="h-4 w-4" />
+                    <span>Hotels</span>
+                  </Link>
+                )}
                 {isAuthenticated && (
                   <>
                     <div className="border-t pt-2 mt-4">

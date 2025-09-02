@@ -47,6 +47,7 @@ import { CarFleetStats } from '@/components/admin/CarFleetStats';
 import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
 import { ModuleManagement } from '@/components/admin/ModuleManagement';
+import { useFeatures } from '@/contexts/FeaturesContext';
 
 interface AdminStats {
   totalBookings: number;
@@ -63,6 +64,7 @@ const AdminDashboard = () => {
   const { user, logout, hasRole, hasPermission } = useAuth();
   const { currency } = useCurrency();
   const { toast, dismiss, toasts } = useToast();
+  const { features } = useFeatures();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -350,7 +352,7 @@ const AdminDashboard = () => {
                   System
                 </Button>
               )}
-              {hasPermission('dashboard.view_cars') && (
+              {hasPermission('dashboard.view_cars') && features.car_rental_enabled && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -417,7 +419,7 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
-              {hasPermission('dashboard.view_hotels') && (
+              {hasPermission('dashboard.view_hotels') && features.hotel_booking_enabled && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -636,7 +638,7 @@ const AdminDashboard = () => {
               System
             </Button>
           )}
-          {hasPermission('dashboard.view_cars') && (
+          {hasPermission('dashboard.view_cars') && features.car_rental_enabled && (
             <div className="space-y-1">
               <Button
                 variant="ghost"
@@ -703,7 +705,7 @@ const AdminDashboard = () => {
               )}
             </div>
           )}
-          {hasPermission('dashboard.view_hotels') && (
+          {hasPermission('dashboard.view_hotels') && features.hotel_booking_enabled && (
             <div className="space-y-1">
               <Button
                 variant="ghost"
@@ -1440,7 +1442,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'car-management' && hasPermission('dashboard.view_cars') && (
+          {activeTab === 'car-management' && hasPermission('dashboard.view_cars') && features.car_rental_enabled && (
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold mb-2">
@@ -1474,7 +1476,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'hotel-management' && hasPermission('dashboard.view_hotels') && (
+          {activeTab === 'hotel-management' && hasPermission('dashboard.view_hotels') && features.hotel_booking_enabled && (
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold mb-2">

@@ -50,6 +50,9 @@ export const ModuleManagement = () => {
       
       setSettings(prev => ({ ...prev, [module]: enabled }));
       
+      // Refresh features context to update navigation
+      window.location.reload();
+      
       toast({
         title: 'Success',
         description: `${module === 'car_rental_enabled' ? 'Car Rental' : 'Hotel Booking'} ${enabled ? 'enabled' : 'disabled'} successfully`,

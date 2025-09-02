@@ -9,6 +9,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { PaymentProvider } from "./contexts/PaymentContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
+import { FeaturesProvider } from "./contexts/FeaturesContext";
 import { MaintenanceMode } from "./components/MaintenanceMode";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -47,19 +48,21 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SettingsProvider>
-            <NotificationProvider>
-              <PaymentProvider>
-                <CurrencyProvider>
-                  <TooltipProvider>
+            <FeaturesProvider>
+              <NotificationProvider>
+                <PaymentProvider>
+                  <CurrencyProvider>
+                    <TooltipProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
                 <PageTransitionWrapper />
               </BrowserRouter>
-                  </TooltipProvider>
-                </CurrencyProvider>
-              </PaymentProvider>
-            </NotificationProvider>
+                    </TooltipProvider>
+                  </CurrencyProvider>
+                </PaymentProvider>
+              </NotificationProvider>
+            </FeaturesProvider>
           </SettingsProvider>
         </AuthProvider>
       </QueryClientProvider>
