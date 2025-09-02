@@ -82,6 +82,10 @@ const AdminDashboard = () => {
   const [activeCarTab, setActiveCarTab] = useState<string | null>(null);
   const [hotelDropdownOpen, setHotelDropdownOpen] = useState(false);
   const [activeHotelTab, setActiveHotelTab] = useState<string | null>(null);
+  const [roles, setRoles] = useState([]);
+  const [isAddRoleModalOpen, setIsAddRoleModalOpen] = useState(false);
+  const [newRoleForm, setNewRoleForm] = useState({ name: '', description: '' });
+  const [savingNewRole, setSavingNewRole] = useState(false);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -103,7 +107,18 @@ const AdminDashboard = () => {
     fetchStats();
     fetchRecentActivity();
     fetchActiveUsers();
+    fetchRoles();
   }, [hasRole, navigate]);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await apiService.request('/admin/roles');
+      setRoles(response.roles || []);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+      setRoles([]);
+    }
+  };
 
   const fetchRecentActivity = async (filter = '') => {
     try {
@@ -174,6 +189,48 @@ const AdminDashboard = () => {
       });
     } finally {
       setSavingPermissions(false);
+    }
+  };
+
+  const handleAddNewRole = () => {
+    setNewRoleForm({ name: '', description: '' });
+    setIsAddRoleModalOpen(true);
+  };
+
+  const handleSaveNewRole = async () => {
+    if (!newRoleForm.name.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Role name is required',
+        variant: 'error'
+      });
+      return;
+    }
+
+    setSavingNewRole(true);
+    try {
+      await apiService.request('/admin/roles', {
+        method: 'POST',
+        body: JSON.stringify(newRoleForm)
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Role created successfully!',
+        variant: 'success'
+      });
+      
+      await fetchRoles();
+      setIsAddRoleModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create role:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create role. Please try again.',
+        variant: 'error'
+      });
+    } finally {
+      setSavingNewRole(false);
     }
   };
 
@@ -1048,103 +1105,63 @@ const AdminDashboard = () => {
 
           {activeTab === 'roles' && hasPermission('dashboard.view_roles') && (
             <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Role Management</h1>
-                <p className="text-gray-600">Manage user roles and permissions</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Role Management</h1>
+                  <p className="text-gray-600">Manage user roles and permissions</p>
+                </div>
+                {hasRole('superadmin') && (
+                  <Button onClick={handleAddNewRole}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Role
+                  </Button>
+                )}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border-2 border-red-200 bg-red-50 relative">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-red-100"
-                    onClick={() => handleRoleSettings('superadmin', 'Super Admin')}
-                  >
-                    <Settings className="h-4 w-4 text-red-600" />
-                  </Button>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                        <Shield className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-red-800">Super Admin</h3>
-                        <p className="text-sm text-red-600">All Permissions</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">Super Administrator with all permissions</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-2 border-blue-200 bg-blue-50 relative">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-blue-100"
-                    onClick={() => handleRoleSettings('admin', 'Admin')}
-                  >
-                    <Settings className="h-4 w-4 text-blue-600" />
-                  </Button>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <Monitor className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-blue-800">Admin</h3>
-                        <p className="text-sm text-blue-600">Management Access</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">Administrator with management permissions</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-2 border-green-200 bg-green-50 relative">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-green-100"
-                    onClick={() => handleRoleSettings('accountant', 'Accountant')}
-                  >
-                    <Settings className="h-4 w-4 text-green-600" />
-                  </Button>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                        <DollarSign className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-green-800">Accountant</h3>
-                        <p className="text-sm text-green-600">Financial Access</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">Accountant with financial permissions</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border-2 border-gray-200 bg-gray-50 relative">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100"
-                    onClick={() => handleRoleSettings('customer', 'Customer')}
-                  >
-                    <Settings className="h-4 w-4 text-gray-600" />
-                  </Button>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center">
-                        <User className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">Customer</h3>
-                        <p className="text-sm text-gray-600">Basic Access</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">Customer with basic permissions</p>
-                  </CardContent>
-                </Card>
+                {roles.map((role, index) => {
+                  const colors = [
+                    { bg: 'border-red-200 bg-red-50', text: 'text-red-800', icon: 'bg-red-600', hover: 'hover:bg-red-100', iconColor: 'text-red-600' },
+                    { bg: 'border-blue-200 bg-blue-50', text: 'text-blue-800', icon: 'bg-blue-600', hover: 'hover:bg-blue-100', iconColor: 'text-blue-600' },
+                    { bg: 'border-green-200 bg-green-50', text: 'text-green-800', icon: 'bg-green-600', hover: 'hover:bg-green-100', iconColor: 'text-green-600' },
+                    { bg: 'border-purple-200 bg-purple-50', text: 'text-purple-800', icon: 'bg-purple-600', hover: 'hover:bg-purple-100', iconColor: 'text-purple-600' }
+                  ];
+                  const colorScheme = colors[index % colors.length];
+                  
+                  return (
+                    <Card key={role.name} className={`border-2 ${colorScheme.bg} relative`}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className={`absolute top-2 right-2 h-8 w-8 p-0 ${colorScheme.hover}`}
+                        onClick={() => handleRoleSettings(role.name, role.name.charAt(0).toUpperCase() + role.name.slice(1))}
+                      >
+                        <Settings className={`h-4 w-4 ${colorScheme.iconColor}`} />
+                      </Button>
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className={`w-10 h-10 ${colorScheme.icon} rounded-lg flex items-center justify-center`}>
+                            <Shield className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className={`text-lg font-semibold ${colorScheme.text}`}>
+                              {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                            </h3>
+                            <p className={`text-sm ${colorScheme.text.replace('800', '600')}`}>
+                              {role.permission_count} permissions
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {role.description || `${role.name.charAt(0).toUpperCase() + role.name.slice(1)} role`}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {role.user_count} users assigned
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
               
               {/* Role Permissions Modal */}
@@ -1217,6 +1234,43 @@ const AdminDashboard = () => {
                       <Button onClick={handleSavePermissions} disabled={savingPermissions}>Save Changes</Button>
                     )}
                     <Button variant="outline" onClick={() => { setRoleModalOpen(false); setEditMode(false); }}>Close</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Add New Role Modal */}
+              <Dialog open={isAddRoleModalOpen} onOpenChange={setIsAddRoleModalOpen}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Role</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="roleName">Role Name</Label>
+                      <Input
+                        id="roleName"
+                        value={newRoleForm.name}
+                        onChange={(e) => setNewRoleForm({ ...newRoleForm, name: e.target.value })}
+                        placeholder="Enter role name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="roleDescription">Description</Label>
+                      <Input
+                        id="roleDescription"
+                        value={newRoleForm.description}
+                        onChange={(e) => setNewRoleForm({ ...newRoleForm, description: e.target.value })}
+                        placeholder="Enter role description"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                      <Button onClick={handleSaveNewRole} disabled={savingNewRole}>
+                        {savingNewRole ? 'Creating...' : 'Create Role'}
+                      </Button>
+                      <Button variant="outline" onClick={() => setIsAddRoleModalOpen(false)}>
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
