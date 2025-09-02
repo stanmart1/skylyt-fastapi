@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +67,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
     setLoadingCars(true);
     try {
       const data = await apiService.searchCars({ limit: 100 });
-      setCars(Array.isArray(data?.cars) ? data.cars : []);
+      const carsList = data?.cars || [];
+      setCars(Array.isArray(carsList) ? carsList : []);
     } catch (error) {
       console.error('Failed to fetch cars:', error);
       setCars([]);
@@ -181,6 +182,9 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
             <Car className="h-5 w-5" />
             Add Car Booking
           </DialogTitle>
+          <DialogDescription>
+            Create a new car rental booking for a user
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -213,7 +217,7 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {Array.isArray(users) && users.length > 0 ? users.map((user) => (
+                      {users && users.length > 0 ? users.map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -260,7 +264,7 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                     <CommandInput placeholder="Search cars..." />
                     <CommandEmpty>No cars found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {Array.isArray(cars) && cars.length > 0 ? cars.map((car) => (
+                      {cars && cars.length > 0 ? cars.map((car) => (
                         <CommandItem
                           key={car?.id || Math.random()}
                           value={`${car?.name || 'Unknown Car'}`}

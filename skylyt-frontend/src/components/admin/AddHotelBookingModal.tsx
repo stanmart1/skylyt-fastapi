@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,7 +72,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     setLoadingHotels(true);
     try {
       const data = await apiService.searchHotels({ limit: 100 });
-      setHotels(Array.isArray(data?.hotels) ? data.hotels : []);
+      const hotelsList = data?.hotels || [];
+      setHotels(Array.isArray(hotelsList) ? hotelsList : []);
     } catch (error) {
       console.error('Failed to fetch hotels:', error);
       setHotels([]);
@@ -186,6 +187,9 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
             <Hotel className="h-5 w-5" />
             Add Hotel Booking
           </DialogTitle>
+          <DialogDescription>
+            Create a new hotel booking for a user
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -218,7 +222,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                     <CommandInput placeholder="Search users..." />
                     <CommandEmpty>No users found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {Array.isArray(users) && users.length > 0 ? users.map((user) => (
+                      {users && users.length > 0 ? users.map((user) => (
                         <CommandItem
                           key={user?.id || Math.random()}
                           value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
@@ -265,7 +269,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                     <CommandInput placeholder="Search hotels..." />
                     <CommandEmpty>No hotels found.</CommandEmpty>
                     <CommandGroup className="max-h-48 overflow-y-auto">
-                      {Array.isArray(hotels) && hotels.length > 0 ? hotels.map((hotel) => (
+                      {hotels && hotels.length > 0 ? hotels.map((hotel) => (
                         <CommandItem
                           key={hotel?.id || Math.random()}
                           value={`${hotel?.name || 'Unknown Hotel'}`}
