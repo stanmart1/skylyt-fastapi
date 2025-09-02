@@ -80,7 +80,7 @@ def update_role_permissions(
     }
 
 
-@router.get("/")
+@router.get("")
 def get_all_roles(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -103,7 +103,7 @@ def get_all_roles(
     }
 
 
-@router.post("/")
+@router.post("")
 def create_role(
     role_data: Dict[str, str],
     current_user: User = Depends(get_current_user),

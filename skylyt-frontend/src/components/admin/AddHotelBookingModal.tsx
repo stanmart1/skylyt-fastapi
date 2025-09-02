@@ -5,9 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Hotel, Users, Calendar } from 'lucide-react';
+import { Check, ChevronsUpDown, Hotel, Users, Calendar, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +30,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
   const [hotelSearchOpen, setHotelSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [hotelSearch, setHotelSearch] = useState('');
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -51,6 +52,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
       setHotelsReady(false);
       setSelectedUser(null);
       setSelectedHotel(null);
+      setUserSearch('');
+      setHotelSearch('');
       // Then fetch data
       fetchUsers();
       fetchHotels();
@@ -178,6 +181,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
   const handleClose = () => {
     setSelectedUser(null);
     setSelectedHotel(null);
+    setUserSearch('');
+    setHotelSearch('');
     setFormData({
       firstName: '',
       lastName: '',
@@ -226,9 +231,51 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <div className="p-4 text-center text-sm text-gray-600">
-                  {loadingUsers ? "Loading users..." : "Select a user"}
-                </div>
+                {loadingUsers ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
+                ) : (
+                  <div className="p-2">
+                    <div className="flex items-center border-b px-3 pb-2">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Search users..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        className="border-0 p-0 focus-visible:ring-0"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto mt-2">
+                      {users && users.length > 0 ? (
+                        users
+                          .filter(user => 
+                            user && (
+                              (user.first_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+                              (user.last_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+                              (user.email || '').toLowerCase().includes(userSearch.toLowerCase())
+                            )
+                          )
+                          .map((user) => (
+                            <div
+                              key={user?.id || Math.random()}
+                              className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() => handleUserSelect(user)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <span className="text-sm">
+                                {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
+                              </span>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">No users available</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
           </div>
@@ -249,9 +296,47 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <div className="p-4 text-center text-sm text-gray-600">
-                  {loadingHotels ? "Loading hotels..." : "Select a hotel"}
-                </div>
+                {loadingHotels ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading hotels...</div>
+                ) : (
+                  <div className="p-2">
+                    <div className="flex items-center border-b px-3 pb-2">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Search hotels..."
+                        value={hotelSearch}
+                        onChange={(e) => setHotelSearch(e.target.value)}
+                        className="border-0 p-0 focus-visible:ring-0"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto mt-2">
+                      {hotels && hotels.length > 0 ? (
+                        hotels
+                          .filter(hotel => 
+                            hotel && (hotel.name || '').toLowerCase().includes(hotelSearch.toLowerCase())
+                          )
+                          .map((hotel) => (
+                            <div
+                              key={hotel?.id || Math.random()}
+                              className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() => handleHotelSelect(hotel)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedHotel?.id === hotel?.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <span className="text-sm">
+                                {hotel?.name || 'Unknown Hotel'} - ₦{(hotel?.price_per_night || 0).toLocaleString()}/night
+                              </span>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">No hotels available</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
           </div>

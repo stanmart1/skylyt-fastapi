@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Car, Users, Calendar } from 'lucide-react';
+import { Check, ChevronsUpDown, Car, Users, Calendar, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +29,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
   const [carSearchOpen, setCarSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedCar, setSelectedCar] = useState(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [carSearch, setCarSearch] = useState('');
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -175,6 +176,8 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
   const handleClose = () => {
     setSelectedUser(null);
     setSelectedCar(null);
+    setUserSearch('');
+    setCarSearch('');
     setFormData({
       firstName: '',
       lastName: '',
@@ -222,9 +225,51 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <div className="p-4 text-center text-sm text-gray-600">
-                  {loadingUsers ? "Loading users..." : "Select a user"}
-                </div>
+                {loadingUsers ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
+                ) : (
+                  <div className="p-2">
+                    <div className="flex items-center border-b px-3 pb-2">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Search users..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        className="border-0 p-0 focus-visible:ring-0"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto mt-2">
+                      {users && users.length > 0 ? (
+                        users
+                          .filter(user => 
+                            user && (
+                              (user.first_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+                              (user.last_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+                              (user.email || '').toLowerCase().includes(userSearch.toLowerCase())
+                            )
+                          )
+                          .map((user) => (
+                            <div
+                              key={user?.id || Math.random()}
+                              className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() => handleUserSelect(user)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <span className="text-sm">
+                                {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
+                              </span>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">No users available</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
           </div>
@@ -245,9 +290,47 @@ const AddCarBookingModal = ({ isOpen, onClose, onSuccess }: AddCarBookingModalPr
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <div className="p-4 text-center text-sm text-gray-600">
-                  {loadingCars ? "Loading cars..." : "Select a car"}
-                </div>
+                {loadingCars ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading cars...</div>
+                ) : (
+                  <div className="p-2">
+                    <div className="flex items-center border-b px-3 pb-2">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Search cars..."
+                        value={carSearch}
+                        onChange={(e) => setCarSearch(e.target.value)}
+                        className="border-0 p-0 focus-visible:ring-0"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto mt-2">
+                      {cars && cars.length > 0 ? (
+                        cars
+                          .filter(car => 
+                            car && (car.name || '').toLowerCase().includes(carSearch.toLowerCase())
+                          )
+                          .map((car) => (
+                            <div
+                              key={car?.id || Math.random()}
+                              className="flex items-center px-2 py-2 cursor-pointer hover:bg-gray-100 rounded"
+                              onClick={() => handleCarSelect(car)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedCar?.id === car?.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <span className="text-sm">
+                                {car?.name || 'Unknown Car'} - ₦{(car?.price || 0).toLocaleString()}/day
+                              </span>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="p-2 text-sm text-gray-500">No cars available</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
           </div>
