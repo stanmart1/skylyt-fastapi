@@ -42,14 +42,14 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
 
   useEffect(() => {
     if (isOpen) {
-      fetchUsers();
-      fetchHotels();
-    } else {
-      // Reset state when modal closes
+      // Reset state first
       setUsers([]);
       setHotels([]);
       setSelectedUser(null);
       setSelectedHotel(null);
+      // Then fetch data
+      fetchUsers();
+      fetchHotels();
     }
   }, [isOpen]);
 
@@ -57,7 +57,9 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     setLoadingUsers(true);
     try {
       const data = await apiService.getUsers();
-      setUsers(Array.isArray(data) ? data : []);
+      // Handle the nested response structure from /rbac/users
+      const usersList = data?.users || data || [];
+      setUsers(Array.isArray(usersList) ? usersList : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       setUsers([]);
@@ -187,6 +189,12 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Loading State */}
+          {(loadingUsers || loadingHotels) && (
+            <div className="text-center py-4">
+              <div className="text-sm text-gray-600">Loading data...</div>
+            </div>
+          )}
           {/* User Selection */}
           <div className="space-y-2">
             <Label>Select User *</Label>
@@ -203,26 +211,33 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search users..." />
-                  <CommandEmpty>{loadingUsers ? 'Loading users...' : 'No users found.'}</CommandEmpty>
-                  <CommandGroup className="max-h-48 overflow-y-auto">
-                    {Array.isArray(users) && users.map((user) => (
-                      <CommandItem
-                        key={user?.id || Math.random()}
-                        onSelect={() => handleUserSelect(user)}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+                {loadingUsers ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading users...</div>
+                ) : (
+                  <Command>
+                    <CommandInput placeholder="Search users..." />
+                    <CommandEmpty>No users found.</CommandEmpty>
+                    <CommandGroup className="max-h-48 overflow-y-auto">
+                      {Array.isArray(users) && users.length > 0 ? users.map((user) => (
+                        <CommandItem
+                          key={user?.id || Math.random()}
+                          value={`${user?.first_name || ''} ${user?.last_name || ''} ${user?.email || ''}`}
+                          onSelect={() => handleUserSelect(user)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
+                        </CommandItem>
+                      )) : (
+                        <div className="p-2 text-sm text-gray-500">No users available</div>
+                      )}
+                    </CommandGroup>
+                  </Command>
+                )}
               </PopoverContent>
             </Popover>
           </div>
@@ -243,26 +258,33 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search hotels..." />
-                  <CommandEmpty>{loadingHotels ? 'Loading hotels...' : 'No hotels found.'}</CommandEmpty>
-                  <CommandGroup className="max-h-48 overflow-y-auto">
-                    {Array.isArray(hotels) && hotels.map((hotel) => (
-                      <CommandItem
-                        key={hotel?.id || Math.random()}
-                        onSelect={() => handleHotelSelect(hotel)}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedHotel?.id === hotel?.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {hotel?.name || 'Unknown Hotel'} - ₦{(hotel?.price_per_night || 0).toLocaleString()}/night
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+                {loadingHotels ? (
+                  <div className="p-4 text-center text-sm text-gray-600">Loading hotels...</div>
+                ) : (
+                  <Command>
+                    <CommandInput placeholder="Search hotels..." />
+                    <CommandEmpty>No hotels found.</CommandEmpty>
+                    <CommandGroup className="max-h-48 overflow-y-auto">
+                      {Array.isArray(hotels) && hotels.length > 0 ? hotels.map((hotel) => (
+                        <CommandItem
+                          key={hotel?.id || Math.random()}
+                          value={`${hotel?.name || 'Unknown Hotel'}`}
+                          onSelect={() => handleHotelSelect(hotel)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedHotel?.id === hotel?.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {hotel?.name || 'Unknown Hotel'} - ₦{(hotel?.price_per_night || 0).toLocaleString()}/night
+                        </CommandItem>
+                      )) : (
+                        <div className="p-2 text-sm text-gray-500">No hotels available</div>
+                      )}
+                    </CommandGroup>
+                  </Command>
+                )}
               </PopoverContent>
             </Popover>
           </div>
