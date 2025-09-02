@@ -47,6 +47,7 @@ import { CarFleetStats } from '@/components/admin/CarFleetStats';
 import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
 import { ModuleManagement } from '@/components/admin/ModuleManagement';
+import { FooterManagement } from '@/components/admin/FooterManagement';
 import { useFeatures } from '@/contexts/FeaturesContext';
 
 interface AdminStats {
@@ -574,6 +575,14 @@ const AdminDashboard = () => {
                           Module Management
                         </Button>
                       )}
+                      <Button
+                        variant={activeSettingsTab === 'footer' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('footer'); setSidebarOpen(false); }}
+                      >
+                        Footer
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -860,6 +869,14 @@ const AdminDashboard = () => {
                       Module Management
                     </Button>
                   )}
+                  <Button
+                    variant={activeSettingsTab === 'footer' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start text-sm"
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('footer'); }}
+                  >
+                    Footer
+                  </Button>
                 </div>
               )}
             </div>
@@ -1416,6 +1433,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'notifications' && 'Notification Settings'}
                   {activeSettingsTab === 'security' && 'Security Settings'}
                   {activeSettingsTab === 'modules' && 'Module Management'}
+                  {activeSettingsTab === 'footer' && 'Footer Management'}
                   {!activeSettingsTab && 'Admin Settings'}
                 </h1>
                 <p className="text-gray-600">
@@ -1426,6 +1444,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
                   {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
                   {activeSettingsTab === 'modules' && 'Manage system modules and features'}
+                  {activeSettingsTab === 'footer' && 'Manage company information and contact details in footer'}
                   {!activeSettingsTab && 'Configure system settings and preferences'}
                 </p>
               </div>
@@ -1437,6 +1456,7 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
                 {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
                 {activeSettingsTab === 'modules' && hasPermission('dashboard.view_modules') && <ModuleManagement />}
+                {activeSettingsTab === 'footer' && <FooterManagement />}
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>

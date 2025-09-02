@@ -1,8 +1,34 @@
-
 import { Link } from 'react-router-dom';
 import { Car, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { apiService } from '@/services/api';
 
 const Footer = () => {
+  const [footerSettings, setFooterSettings] = useState({
+    company_name: 'Skylyt Luxury',
+    company_description: 'Your perfect journey awaits. Rent premium cars and book luxurious hotels with confidence.',
+    twitter_url: '',
+    instagram_url: '',
+    linkedin_url: '',
+    contact_address: '123 Business Ave, Suite 100\nNew York, NY 10001',
+    contact_phone: '+1 (555) 123-4567',
+    contact_email: 'support@skylytluxury.com'
+  });
+
+  useEffect(() => {
+    const fetchFooterSettings = async () => {
+      try {
+        const data = await apiService.request('/footer-settings');
+        setFooterSettings(data);
+      } catch (error) {
+        console.error('Failed to fetch footer settings:', error);
+        // Keep default settings if API fails
+      }
+    };
+    
+    fetchFooterSettings();
+  }, []);
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8 sm:py-12">
@@ -13,15 +39,27 @@ const Footer = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
                 <Car className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold">Skylyt Luxury</span>
+              <span className="text-xl font-bold">{footerSettings.company_name}</span>
             </div>
             <p className="text-gray-400 text-sm sm:text-base">
-              Your perfect journey awaits. Rent premium cars and book luxurious hotels with confidence.
+              {footerSettings.company_description}
             </p>
             <div className="flex space-x-4">
-              <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-              <Instagram className="h-5 w-5 text-gray-400 hover:text-pink-500 cursor-pointer transition-colors" />
-              <Linkedin className="h-5 w-5 text-gray-400 hover:text-blue-600 cursor-pointer transition-colors" />
+              {footerSettings.twitter_url && (
+                <a href={footerSettings.twitter_url} target="_blank" rel="noopener noreferrer">
+                  <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
+                </a>
+              )}
+              {footerSettings.instagram_url && (
+                <a href={footerSettings.instagram_url} target="_blank" rel="noopener noreferrer">
+                  <Instagram className="h-5 w-5 text-gray-400 hover:text-pink-500 cursor-pointer transition-colors" />
+                </a>
+              )}
+              {footerSettings.linkedin_url && (
+                <a href={footerSettings.linkedin_url} target="_blank" rel="noopener noreferrer">
+                  <Linkedin className="h-5 w-5 text-gray-400 hover:text-blue-600 cursor-pointer transition-colors" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -51,16 +89,21 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400 text-sm sm:text-base leading-relaxed">
-                  123 Business Ave, Suite 100<br />New York, NY 10001
+                  {footerSettings.contact_address.split('\n').map((line, index) => (
+                    <span key={index}>
+                      {line}
+                      {index < footerSettings.contact_address.split('\n').length - 1 && <br />}
+                    </span>
+                  ))}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                <span className="text-gray-400 text-sm sm:text-base">+1 (555) 123-4567</span>
+                <span className="text-gray-400 text-sm sm:text-base">{footerSettings.contact_phone}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                <span className="text-gray-400 text-sm sm:text-base break-all">support@skylytluxury.com</span>
+                <span className="text-gray-400 text-sm sm:text-base break-all">{footerSettings.contact_email}</span>
               </div>
             </div>
           </div>

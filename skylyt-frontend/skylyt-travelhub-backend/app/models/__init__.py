@@ -15,6 +15,7 @@ from .state import State
 from .city import City
 from .hotel_image import HotelImage
 from .driver import Driver
+from .footer_settings import FooterSettings
 
 __all__ = [
     "Base",
@@ -34,5 +35,6 @@ __all__ = [
     "State",
     "City",
     "HotelImage",
-    "Driver"
+    "Driver",
+    "FooterSettings"
 ]

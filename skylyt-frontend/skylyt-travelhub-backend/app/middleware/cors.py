@@ -19,6 +19,7 @@ def setup_cors(app):
         "https://skylyt.com",
         "https://www.skylyt.com",
         "https://app.skylyt.com",
+        "https://skylyt.scaleitpro.com",
     ]
     
     # Combine origins based on environment

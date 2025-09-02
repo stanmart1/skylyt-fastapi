@@ -1,7 +1,37 @@
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { useState, useEffect } from 'react';
+import { apiService } from '@/services/api';
 
 const PrivacyPolicy = () => {
+  const [contactInfo, setContactInfo] = useState({
+    contact_email: '',
+    contact_phone: '',
+    contact_address: ''
+  });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const data = await apiService.request('/footer-settings');
+        setContactInfo({
+          contact_email: data.contact_email || 'privacy@skylytluxury.com',
+          contact_phone: data.contact_phone || '+1 (555) 123-4567',
+          contact_address: data.contact_address ? data.contact_address.replace('\n', ', ') : '123 Business Ave, Suite 100, New York, NY 10001'
+        });
+      } catch (error) {
+        console.error('Failed to fetch contact info:', error);
+        setContactInfo({
+          contact_email: 'privacy@skylytluxury.com',
+          contact_phone: '+1 (555) 123-4567',
+          contact_address: '123 Business Ave, Suite 100, New York, NY 10001'
+        });
+      }
+    };
+    
+    fetchContactInfo();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -131,9 +161,9 @@ const PrivacyPolicy = () => {
               <div className="text-gray-700 leading-relaxed">
                 <p>If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
                 <p className="mt-4">
-                  <strong>Email:</strong> privacy@skylytluxury.com<br />
-                  <strong>Phone:</strong> +1 (555) 123-4567<br />
-                  <strong>Address:</strong> 123 Business Ave, Suite 100, New York, NY 10001
+                  <strong>Email:</strong> {contactInfo.contact_email}<br />
+                  <strong>Phone:</strong> {contactInfo.contact_phone}<br />
+                  <strong>Address:</strong> {contactInfo.contact_address}
                 </p>
               </div>
             </section>

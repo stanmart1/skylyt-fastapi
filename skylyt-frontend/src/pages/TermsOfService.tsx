@@ -1,7 +1,34 @@
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { useState, useEffect } from 'react';
+import { apiService } from '@/services/api';
 
 const TermsOfService = () => {
+  const [contactInfo, setContactInfo] = useState({
+    contact_email: '',
+    contact_phone: ''
+  });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const data = await apiService.request('/footer-settings');
+        setContactInfo({
+          contact_email: data.contact_email || 'support@skylytluxury.com',
+          contact_phone: data.contact_phone || '+1 (555) 123-4567'
+        });
+      } catch (error) {
+        console.error('Failed to fetch contact info:', error);
+        setContactInfo({
+          contact_email: 'support@skylytluxury.com',
+          contact_phone: '+1 (555) 123-4567'
+        });
+      }
+    };
+    
+    fetchContactInfo();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -91,9 +118,9 @@ const TermsOfService = () => {
               <p className="text-gray-700 leading-relaxed">
                 If you have any questions about these Terms of Service, please contact us at:
                 <br />
-                Email: support@skylytluxury.com
+                Email: {contactInfo.contact_email}
                 <br />
-                Phone: +1 (555) 123-4567
+                Phone: {contactInfo.contact_phone}
               </p>
             </section>
           </div>
