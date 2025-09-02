@@ -190,6 +190,7 @@ const FeaturedHotels = () => {
                             <PriceDisplay 
                               amount={hotel.price} 
                               currency={hotel.currency}
+                              isNGNStored={false}
                               className="text-2xl md:text-3xl font-bold text-teal-600"
                             />
                             <span className="text-gray-600 text-sm">/night</span>

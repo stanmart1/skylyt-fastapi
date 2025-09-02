@@ -191,8 +191,8 @@ const FeaturedCars = () => {
                           <div>
                             <PriceDisplay 
                               amount={car.price} 
-                              currency="NGN"
-                              isNGNStored={true}
+                              currency={car.currency}
+                              isNGNStored={false}
                               className="text-2xl md:text-3xl font-bold text-blue-600"
                             />
                             <span className="text-gray-600 text-sm">/day</span>
