@@ -18,7 +18,12 @@ import {
   TrendingUp,
   DollarSign,
   Clock,
-  Star
+  Star,
+  Bell,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,6 +59,9 @@ const Dashboard = () => {
     total_favorites: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [userNotifications, setUserNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const handleLogout = () => {
     logout();
@@ -105,6 +113,50 @@ const Dashboard = () => {
     }
   };
 
+  const fetchUserNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const response = await apiService.request('/notifications');
+      setUserNotifications(response || []);
+      setUnreadCount(response?.filter(n => !n.is_read).length || 0);
+    } catch (error) {
+      console.error('Failed to load user notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  const handleMarkNotificationAsRead = async (notificationId) => {
+    try {
+      await apiService.request(`/notifications/${notificationId}/read`, {
+        method: 'PUT'
+      });
+      await fetchUserNotifications();
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const handleMarkAllNotificationsAsRead = async () => {
+    try {
+      await apiService.request('/notifications/mark-all-read', {
+        method: 'PUT'
+      });
+      await fetchUserNotifications();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'success': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'warning': return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
+      default: return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
   // Load user notification preferences and stats on mount
   useEffect(() => {
     const loadNotifications = async () => {
@@ -130,6 +182,7 @@ const Dashboard = () => {
     if (user) {
       loadNotifications();
       loadUserStats();
+      fetchUserNotifications();
     }
   }, [user]);
 
@@ -182,6 +235,19 @@ const Dashboard = () => {
                   >
                     <Heart className="h-4 w-4 mr-2" />
                     Favorites
+                  </Button>
+                  <Button
+                    variant={activeTab === 'notifications' ? 'default' : 'ghost'}
+                    className="w-full justify-start"
+                    onClick={() => setActiveTab('notifications')}
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    Notifications
+                    {unreadCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                        {unreadCount}
+                      </span>
+                    )}
                   </Button>
                   <Button
                     variant={activeTab === 'settings' ? 'default' : 'ghost'}
@@ -336,6 +402,92 @@ const Dashboard = () => {
                   <p className="text-gray-600">Your saved hotels and cars</p>
                 </div>
                 <FavoritesManager />
+              </div>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Notifications</h1>
+                  <p className="text-gray-600">View and manage your notifications</p>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Bell className="h-5 w-5" />
+                        Your Notifications
+                        {unreadCount > 0 && (
+                          <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                            {unreadCount} unread
+                          </span>
+                        )}
+                      </span>
+                      {unreadCount > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleMarkAllNotificationsAsRead}
+                        >
+                          Mark All Read
+                        </Button>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {notificationsLoading ? (
+                      <div className="space-y-3">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="animate-pulse h-16 bg-gray-200 rounded" />
+                        ))}
+                      </div>
+                    ) : userNotifications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">No notifications yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {userNotifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                              notification.is_read 
+                                ? 'bg-gray-50 border-gray-200' 
+                                : 'bg-blue-50 border-blue-200'
+                            }`}
+                            onClick={() => !notification.is_read && handleMarkNotificationAsRead(notification.id)}
+                          >
+                            <div className="flex items-start gap-3">
+                              {getNotificationIcon(notification.type)}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className={`text-sm font-medium ${
+                                    notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                                  }`}>
+                                    {notification.title}
+                                  </h4>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(notification.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className={`text-sm mt-1 ${
+                                  notification.is_read ? 'text-gray-600' : 'text-gray-800'
+                                }`}>
+                                  {notification.message}
+                                </p>
+                              </div>
+                              {!notification.is_read && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
 
