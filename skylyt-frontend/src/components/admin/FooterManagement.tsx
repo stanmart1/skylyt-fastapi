@@ -85,30 +85,18 @@ export const FooterManagement = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Footer Management</h1>
-            <p className="text-gray-600">Manage company information and contact details</p>
-          </div>
-        </div>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4" />
-          <div className="h-10 bg-gray-200 rounded" />
-          <div className="h-4 bg-gray-200 rounded w-1/4" />
-          <div className="h-20 bg-gray-200 rounded" />
-        </div>
+      <div className="animate-pulse space-y-4">
+        <div className="h-4 bg-gray-200 rounded w-1/4" />
+        <div className="h-10 bg-gray-200 rounded" />
+        <div className="h-4 bg-gray-200 rounded w-1/4" />
+        <div className="h-20 bg-gray-200 rounded" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Footer Management</h1>
-          <p className="text-gray-600">Manage company information and contact details</p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
           <Save className="h-4 w-4" />
           {saving ? 'Saving...' : 'Save Changes'}
