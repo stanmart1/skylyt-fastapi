@@ -10,11 +10,11 @@ class BookingStatus(enum.Enum):
     CANCELLED = "cancelled"
 
 class TripStatus(enum.Enum):
-    PENDING = "pending"
-    EN_ROUTE = "en_route"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    EN_ROUTE = "EN_ROUTE"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class BookingType(enum.Enum):

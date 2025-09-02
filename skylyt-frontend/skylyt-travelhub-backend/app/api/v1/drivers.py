@@ -120,7 +120,7 @@ async def get_driver(
     return driver
 
 
-@router.post("/", response_model=DriverResponse)
+@router.post("", response_model=DriverResponse)
 async def create_driver(
     driver_data: DriverCreate,
     current_user = Depends(get_current_user),
@@ -251,7 +251,7 @@ async def get_driver_bookings(
             "booking_reference": booking.booking_reference,
             "booking_type": booking.booking_type,
             "status": booking.status,
-            "trip_status": booking.trip_status.value if booking.trip_status else "pending",
+            "trip_status": booking.trip_status.value if booking.trip_status else "PENDING",
             "customer_name": booking.customer_name,
             "customer_email": booking.customer_email,
             "customer_phone": booking.customer_phone,

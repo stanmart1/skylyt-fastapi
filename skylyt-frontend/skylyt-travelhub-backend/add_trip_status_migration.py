@@ -27,13 +27,13 @@ def run_migration():
                 # Add trip_status column
                 conn.execute(text("""
                     ALTER TABLE bookings 
-                    ADD COLUMN trip_status VARCHAR(20) DEFAULT 'pending'
+                    ADD COLUMN trip_status VARCHAR(20) DEFAULT 'PENDING'
                 """))
                 
                 # Update existing car bookings to have trip_status
                 conn.execute(text("""
                     UPDATE bookings 
-                    SET trip_status = 'pending' 
+                    SET trip_status = 'PENDING' 
                     WHERE booking_type = 'car' AND driver_id IS NOT NULL
                 """))
                 
