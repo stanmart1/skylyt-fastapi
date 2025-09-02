@@ -158,7 +158,7 @@ class ApiService {
     });
   }
 
-  async createAdminBooking(bookingData: Partial<Booking> & { user_id: number }): Promise<Booking> {
+  async createAdminBooking(bookingData: any): Promise<any> {
     return this.request('/admin/bookings', {
       method: 'POST',
       body: JSON.stringify(bookingData),

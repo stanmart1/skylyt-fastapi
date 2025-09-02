@@ -4,17 +4,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Car, Edit, Trash2, Eye, User, Calendar, MapPin, CreditCard, Phone, Mail } from 'lucide-react';
+import { Car, Edit, Trash2, Eye, User, Calendar, MapPin, CreditCard, Phone, Mail, Plus } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import AddCarBookingModal from './AddCarBookingModal';
 
 const CarBookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
@@ -116,10 +118,18 @@ const CarBookingManagement = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Car className="h-5 w-5" />
-          Car Rentals ({bookings.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Car className="h-5 w-5" />
+            Car Rentals ({bookings.length})
+          </CardTitle>
+          {hasPermission('bookings.create') && (
+            <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Car Booking
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {bookings.length === 0 ? (
@@ -388,6 +398,13 @@ const CarBookingManagement = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Car Booking Modal */}
+      <AddCarBookingModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchCarBookings}
+      />
     </Card>
   );
 };

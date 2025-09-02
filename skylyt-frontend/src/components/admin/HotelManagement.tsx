@@ -152,9 +152,25 @@ export const HotelManagement: React.FC = () => {
   const fetchStats = async () => {
     try {
       const data = await apiService.request('/admin/hotels/stats');
-      setStats(data || stats);
+      setStats({
+        total_hotels: data.totalHotels || 0,
+        total_rooms: data.totalRooms || 0,
+        occupied_rooms: data.activeBookings || 0,
+        average_occupancy: data.occupancyRate || 0,
+        revenue_today: data.totalRevenue || 0,
+        average_rating: 4.5 // Default rating since not provided by API
+      });
     } catch (error) {
       console.error('Failed to fetch hotel stats:', error);
+      // Fallback to default values
+      setStats({
+        total_hotels: 0,
+        total_rooms: 0,
+        occupied_rooms: 0,
+        average_occupancy: 0,
+        revenue_today: 0,
+        average_rating: 0
+      });
     }
   };
 
@@ -267,7 +283,7 @@ export const HotelManagement: React.FC = () => {
         });
       }
       await fetchHotels();
-      await fetchStats(); // Refresh stats after hotel changes
+      await fetchStats();
       setIsModalOpen(false);
       setHotelImageFiles([]);
     } catch (error) {
@@ -284,6 +300,7 @@ export const HotelManagement: React.FC = () => {
     try {
       await apiService.request(`/admin/hotels/${hotelId}/feature`, { method: 'POST' });
       await fetchHotels();
+      await fetchStats();
       toast({
         title: 'Success',
         description: 'Hotel feature status updated',
@@ -303,6 +320,7 @@ export const HotelManagement: React.FC = () => {
     try {
       await apiService.request(`/admin/hotels/${deleteConfirm.hotelId}`, { method: 'DELETE' });
       await fetchHotels();
+      await fetchStats();
       toast({
         title: 'Success',
         description: 'Hotel deleted successfully',
@@ -320,11 +338,7 @@ export const HotelManagement: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">Hotel Management</h2>
-          <p className="text-sm sm:text-base text-gray-600">Manage your hotel properties and accommodations</p>
-        </div>
+      <div className="flex justify-end">
         {hasPermission('content.manage_hotels') && (
           <Button onClick={handleAddHotel} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />

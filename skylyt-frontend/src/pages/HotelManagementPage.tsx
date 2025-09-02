@@ -402,6 +402,12 @@ const HotelManagementPage = () => {
 
           {activeTab === 'management' && (
             <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Hotel Properties</h2>
+                  <p className="text-sm sm:text-base text-gray-600">Manage your hotel properties and accommodations</p>
+                </div>
+              </div>
               {loading ? (
                 <Card><CardContent className="p-6"><div className="animate-pulse h-64 bg-gray-200 rounded" /></CardContent></Card>
               ) : (
