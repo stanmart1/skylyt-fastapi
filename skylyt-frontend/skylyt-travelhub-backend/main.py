@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, validator
 from typing import List, Optional
 import logging
+import re
 from datetime import datetime, timezone
+from werkzeug.utils import secure_filename
 
 from app.core.config import settings as config_settings
 from app.core.database import engine
@@ -105,16 +107,20 @@ def update_booking_status_helper(booking_id: int, status: str, db: Session) -> d
     if status not in VALID_BOOKING_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
     
-    booking.status = status
-    db.commit()
-    db.refresh(booking)
-    
-    return {
-        "success": True,
-        "message": "Booking status updated successfully", 
-        "booking_id": booking_id, 
-        "status": booking.status
-    }
+    try:
+        booking.status = status
+        db.commit()
+        db.refresh(booking)
+        
+        return {
+            "success": True,
+            "message": "Booking status updated successfully", 
+            "booking_id": booking_id, 
+            "status": booking.status
+        }
+    except Exception as commit_error:
+        db.rollback()
+        raise commit_error
 
 def validate_financial_data(amount: float, currency: str) -> None:
     """Validate financial data"""
@@ -266,7 +272,8 @@ async def serve_image(folder: str, filename: str):
     except (OSError, ValueError):
         raise HTTPException(status_code=400, detail="Invalid path")
     
-    logger.info(f"Serving file: {file_path}")
+    safe_path = re.sub(r'[\r\n]', '', str(file_path))
+    logger.info(f"Serving file: {safe_path}")
     
     if file_path.exists() and file_path.is_file():
         # Determine media type based on file extension
@@ -292,7 +299,8 @@ async def serve_image(folder: str, filename: str):
             }
         )
     else:
-        logger.warning(f"File not found: {file_path}")
+        safe_path = re.sub(r'[\r\n]', '', str(file_path))
+        logger.warning(f"File not found: {safe_path}")
         raise HTTPException(status_code=404, detail="Image not found")
 
 # Additional endpoints for frontend compatibility
@@ -438,14 +446,23 @@ async def bulk_delete_bookings(request: BulkDeleteRequest, current_user = Depend
     from app.models.booking import Booking
     
     try:
+        # Validate booking IDs exist before deletion
+        existing_ids = db.query(Booking.id).filter(Booking.id.in_(request.ids)).all()
+        if not existing_ids:
+            raise HTTPException(status_code=404, detail="No bookings found with provided IDs")
+        
         deleted_count = db.query(Booking).filter(Booking.id.in_(request.ids)).delete(synchronize_session=False)
         db.commit()
         
         return {"message": f"{deleted_count} bookings deleted successfully", "deleted_count": deleted_count}
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Bulk delete failed: {str(e)}")
+        safe_error = re.sub(r'[\r\n]', '', str(e))
+        logger.error(f"Bulk delete failed: {safe_error}")
         raise HTTPException(status_code=500, detail="Failed to delete bookings")
 
 @app.delete("/api/v1/admin/bookings/{booking_id}")
@@ -469,7 +486,8 @@ async def delete_booking(booking_id: int, current_user = Depends(get_current_use
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Failed to delete booking {booking_id}: {e}")
+        from app.utils.security import sanitize_log_input
+        logger.error(f"Failed to delete booking {booking_id}: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete booking")
 
 @app.post("/api/v1/admin/bookings")
@@ -509,7 +527,8 @@ async def create_booking(booking_data: BookingCreateRequest, current_user = Depe
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Failed to create booking: {e}")
+        from app.utils.security import sanitize_log_input
+        logger.error(f"Failed to create booking: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to create booking")
 
 @app.put("/api/v1/admin/bookings/{booking_id}")
@@ -544,7 +563,8 @@ async def update_booking(booking_id: int, booking_data: BookingUpdateRequest, cu
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Failed to update booking {booking_id}: {e}")
+        from app.utils.security import sanitize_log_input
+        logger.error(f"Failed to update booking {booking_id}: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to update booking")
 
 @app.put("/api/v1/admin/bookings/{booking_id}/assign-driver")
@@ -586,7 +606,8 @@ async def assign_driver_to_booking(
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Failed to assign driver to booking {booking_id}: {e}")
+        from app.utils.security import sanitize_log_input
+        logger.error(f"Failed to assign driver to booking {booking_id}: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to assign driver")
 
 @app.post("/api/v1/admin/bookings/{booking_id}/resend-confirmation")
@@ -883,7 +904,8 @@ async def mark_notification_read(notification_id: int, current_user = Depends(ge
     except Exception as e:
         db.rollback()
         logger = logging.getLogger(__name__)
-        logger.error(f"Failed to mark notification as read: {e}")
+        from app.utils.security import sanitize_log_input
+        logger.error(f"Failed to mark notification as read: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to update notification")
 
 @app.post("/api/v1/upload")
@@ -910,15 +932,16 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     if file.size and file.size > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large")
     
-    # Generate secure filename
-    secure_filename = f"{uuid4()}{file_extension}"
+    # Generate secure filename with proper validation
+    original_name = secure_filename(file.filename or 'upload')
+    secure_name = f"{uuid4()}{file_extension}"
     
     # Create upload directory if it doesn't exist
     base_upload_dir = Path("uploads").resolve()
     upload_dir = base_upload_dir / upload_type
     upload_dir.mkdir(parents=True, exist_ok=True)
     
-    file_path = upload_dir / secure_filename
+    file_path = upload_dir / secure_name
     
     # Ensure file path is within upload directory
     try:
@@ -936,7 +959,7 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     except (OSError, IOError) as e:
         raise HTTPException(status_code=500, detail="Failed to save file")
     
-    return {"url": f"/uploads/{upload_type}/{secure_filename}", "filename": secure_filename}
+    return {"url": f"/uploads/{upload_type}/{secure_name}", "filename": secure_name}
 
 @app.options("/{path:path}")
 async def options_handler(path: str):
@@ -999,53 +1022,28 @@ async def get_car_stats(current_user = Depends(get_current_user), db: Session = 
         from sqlalchemy import func, and_
         from datetime import datetime, timedelta
         
-        # Get car statistics
-        total_cars = db.query(Car).count()
-        available_cars = db.query(Car).filter(Car.status == 'available').count()
+        from app.utils.database import execute_optimized_stats_query
         
-        # Get active car bookings
-        active_bookings = db.query(Booking).filter(
-            and_(
-                Booking.booking_type == 'car',
-                Booking.status.in_(['confirmed', 'ongoing'])
-            )
-        ).count()
+        # Get car count in single query
+        car_stats = db.query(
+            func.count(Car.id).label('total'),
+            func.count(Car.id).filter(Car.status == 'available').label('available')
+        ).first()
         
-        # Calculate revenue (last 30 days)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-        sixty_days_ago = datetime.now() - timedelta(days=60)
-        
-        current_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
-            and_(
-                Booking.booking_type == 'car',
-                Payment.status == 'completed',
-                Payment.created_at >= thirty_days_ago
-            )
-        ).scalar() or 0
-        
-        previous_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
-            and_(
-                Booking.booking_type == 'car',
-                Payment.status == 'completed',
-                Payment.created_at >= sixty_days_ago,
-                Payment.created_at < thirty_days_ago
-            )
-        ).scalar() or 0
-        
-        # Calculate revenue change percentage
-        revenue_change = 0
-        if previous_revenue > 0:
-            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+        # Get optimized booking and revenue stats
+        booking_stats = execute_optimized_stats_query(db, 'car')
         
         return {
-            "totalCars": total_cars,
-            "availableCars": available_cars,
-            "activeBookings": active_bookings,
-            "totalRevenue": float(current_revenue),
-            "revenueChange": round(revenue_change, 1)
+            "totalCars": car_stats.total or 0,
+            "availableCars": car_stats.available or 0,
+            "activeBookings": booking_stats['active_bookings'],
+            "totalRevenue": booking_stats['current_revenue'],
+            "revenueChange": booking_stats['revenue_change']
         }
     except Exception as e:
-        # Return default stats if there's an error
+        from app.utils.security import sanitize_log_input
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to fetch car stats: {sanitize_log_input(e)}")
         return {
             "totalCars": 0,
             "availableCars": 0,
@@ -1067,59 +1065,33 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
         from sqlalchemy import func, and_
         from datetime import datetime, timedelta
         
-        # Get hotel statistics
-        total_hotels = db.query(Hotel).count()
-        total_rooms = db.query(func.sum(Hotel.room_count)).scalar() or 0
+        from app.utils.database import execute_optimized_stats_query
         
-        # Get active hotel bookings
-        active_bookings = db.query(Booking).filter(
-            and_(
-                Booking.booking_type == 'hotel',
-                Booking.status.in_(['confirmed', 'ongoing'])
-            )
-        ).count()
+        # Get hotel stats in single query
+        hotel_stats = db.query(
+            func.count(Hotel.id).label('total'),
+            func.sum(Hotel.room_count).label('rooms')
+        ).first()
         
-        # Calculate occupancy rate
-        occupancy_rate = 0
-        if total_rooms > 0:
-            occupancy_rate = round((active_bookings / total_rooms) * 100, 1)
+        # Get optimized booking and revenue stats
+        booking_stats = execute_optimized_stats_query(db, 'hotel')
         
-        # Calculate revenue (last 30 days)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-        sixty_days_ago = datetime.now() - timedelta(days=60)
-        
-        current_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
-            and_(
-                Booking.booking_type == 'hotel',
-                Payment.status == 'completed',
-                Payment.created_at >= thirty_days_ago
-            )
-        ).scalar() or 0
-        
-        previous_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
-            and_(
-                Booking.booking_type == 'hotel',
-                Payment.status == 'completed',
-                Payment.created_at >= sixty_days_ago,
-                Payment.created_at < thirty_days_ago
-            )
-        ).scalar() or 0
-        
-        # Calculate revenue change percentage
-        revenue_change = 0
-        if previous_revenue > 0:
-            revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
+        total_rooms = hotel_stats.rooms or 0
+        active_bookings = booking_stats['active_bookings']
+        occupancy_rate = round((active_bookings / total_rooms) * 100, 1) if total_rooms > 0 else 0
         
         return {
-            "totalHotels": total_hotels,
+            "totalHotels": hotel_stats.total or 0,
             "totalRooms": int(total_rooms),
             "activeBookings": active_bookings,
-            "totalRevenue": float(current_revenue),
-            "revenueChange": round(revenue_change, 1),
+            "totalRevenue": booking_stats['current_revenue'],
+            "revenueChange": booking_stats['revenue_change'],
             "occupancyRate": occupancy_rate
         }
     except Exception as e:
-        # Return default stats if there's an error
+        from app.utils.security import sanitize_log_input
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to fetch hotel stats: {sanitize_log_input(e)}")
         return {
             "totalHotels": 0,
             "totalRooms": 0,
@@ -1208,6 +1180,9 @@ async def create_car(car_data: CarCreateRequest, current_user = Depends(get_curr
         return {"id": new_car.id, "message": "Car created successfully"}
     except Exception as e:
         db.rollback()
+        from app.utils.security import sanitize_log_input
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create car: {sanitize_log_input(e)}")
         raise HTTPException(status_code=500, detail="Failed to create car")
 
 @app.put("/api/v1/admin/cars/{car_id}")
