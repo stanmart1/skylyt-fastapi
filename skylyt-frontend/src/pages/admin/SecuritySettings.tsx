@@ -7,12 +7,36 @@ import { Switch } from '@/components/ui/switch';
 import { Shield, Save } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const SecuritySettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { updateSettings } = useSettings();
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+  
+  const canView = hasPermission('settings.view_security');
+  const canManage = hasPermission('settings.manage_security');
+  
+  if (!canView) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Security Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">You don't have permission to view security settings</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const [securityForm, setSecurityForm] = useState({
     password_min_length: '8',
@@ -112,6 +136,7 @@ export const SecuritySettings = () => {
               type="number"
               value={securityForm.password_min_length}
               onChange={(e) => setSecurityForm({...securityForm, password_min_length: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -122,6 +147,7 @@ export const SecuritySettings = () => {
               type="number"
               value={securityForm.session_timeout}
               onChange={(e) => setSecurityForm({...securityForm, session_timeout: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -132,6 +158,7 @@ export const SecuritySettings = () => {
               type="number"
               value={securityForm.login_attempts_limit}
               onChange={(e) => setSecurityForm({...securityForm, login_attempts_limit: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -140,14 +167,23 @@ export const SecuritySettings = () => {
               id="two_factor_enabled"
               checked={securityForm.two_factor_enabled}
               onCheckedChange={(checked) => setSecurityForm({...securityForm, two_factor_enabled: checked})}
+              disabled={!canManage}
             />
             <Label htmlFor="two_factor_enabled">Enable Two-Factor Authentication</Label>
           </div>
           
-          <Button onClick={saveSecuritySettings} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Security Settings'}
-          </Button>
+          {canManage && (
+            <Button onClick={saveSecuritySettings} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Security Settings'}
+            </Button>
+          )}
+          
+          {!canManage && (
+            <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+              You don't have permission to modify security settings. Contact your administrator for access.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

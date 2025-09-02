@@ -8,12 +8,16 @@ import { Switch } from '@/components/ui/switch';
 import { Globe, Save } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const GeneralSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { updateSettings } = useSettings();
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+  
+  const canManage = hasPermission('settings.manage_general');
 
   const [generalForm, setGeneralForm] = useState({
     site_name: '',
@@ -114,6 +118,7 @@ export const GeneralSettings = () => {
               id="site_name"
               value={generalForm.site_name}
               onChange={(e) => setGeneralForm({...generalForm, site_name: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -124,6 +129,7 @@ export const GeneralSettings = () => {
               value={generalForm.site_description}
               onChange={(e) => setGeneralForm({...generalForm, site_description: e.target.value})}
               rows={3}
+              disabled={!canManage}
             />
           </div>
           
@@ -134,6 +140,7 @@ export const GeneralSettings = () => {
               type="email"
               value={generalForm.contact_email}
               onChange={(e) => setGeneralForm({...generalForm, contact_email: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -143,6 +150,7 @@ export const GeneralSettings = () => {
               id="contact_phone"
               value={generalForm.contact_phone}
               onChange={(e) => setGeneralForm({...generalForm, contact_phone: e.target.value})}
+              disabled={!canManage}
             />
           </div>
           
@@ -151,14 +159,23 @@ export const GeneralSettings = () => {
               id="maintenance_mode"
               checked={generalForm.maintenance_mode}
               onCheckedChange={(checked) => setGeneralForm({...generalForm, maintenance_mode: checked})}
+              disabled={!canManage}
             />
             <Label htmlFor="maintenance_mode">Maintenance Mode</Label>
           </div>
           
-          <Button onClick={saveGeneralSettings} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save General Settings'}
-          </Button>
+          {canManage && (
+            <Button onClick={saveGeneralSettings} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save General Settings'}
+            </Button>
+          )}
+          
+          {!canManage && (
+            <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+              You don't have permission to modify general settings. Contact your administrator for access.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

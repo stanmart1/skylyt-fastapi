@@ -13,6 +13,8 @@ export const BankTransferSettings = () => {
   const [saving, setSaving] = useState(false);
   const { hasPermission } = useAuth();
   const { toast } = useToast();
+  
+  const canManage = hasPermission('settings.manage_bank_transfer');
 
   const [bankTransferForm, setBankTransferForm] = useState({
     bank_name: '',
@@ -92,7 +94,7 @@ export const BankTransferSettings = () => {
     );
   }
 
-  if (!hasPermission('dashboard.view_settings')) {
+  if (!hasPermission('settings.view_bank_transfer')) {
     return (
       <Card>
         <CardHeader>
@@ -104,7 +106,7 @@ export const BankTransferSettings = () => {
         <CardContent>
           <div className="text-center py-8">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Admin access required for settings management</p>
+            <p className="text-gray-600">You don't have permission to view bank transfer settings</p>
           </div>
         </CardContent>
       </Card>
@@ -128,6 +130,7 @@ export const BankTransferSettings = () => {
               value={bankTransferForm.bank_name}
               onChange={(e) => setBankTransferForm({...bankTransferForm, bank_name: e.target.value})}
               placeholder="Enter bank name"
+              disabled={!canManage}
             />
           </div>
           
@@ -138,6 +141,7 @@ export const BankTransferSettings = () => {
               value={bankTransferForm.account_name}
               onChange={(e) => setBankTransferForm({...bankTransferForm, account_name: e.target.value})}
               placeholder="Enter account holder name"
+              disabled={!canManage}
             />
           </div>
           
@@ -148,6 +152,7 @@ export const BankTransferSettings = () => {
               value={bankTransferForm.account_number}
               onChange={(e) => setBankTransferForm({...bankTransferForm, account_number: e.target.value})}
               placeholder="Enter account number"
+              disabled={!canManage}
             />
           </div>
           
@@ -156,14 +161,23 @@ export const BankTransferSettings = () => {
               id="is_primary_account"
               checked={bankTransferForm.is_primary_account}
               onCheckedChange={(checked) => setBankTransferForm({...bankTransferForm, is_primary_account: checked})}
+              disabled={!canManage}
             />
             <Label htmlFor="is_primary_account">Primary Account</Label>
           </div>
           
-          <Button onClick={saveBankTransferSettings} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Bank Transfer Settings'}
-          </Button>
+          {canManage && (
+            <Button onClick={saveBankTransferSettings} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Bank Transfer Settings'}
+            </Button>
+          )}
+          
+          {!canManage && (
+            <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+              You don't have permission to modify bank transfer settings. Contact your administrator for access.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
 import { DollarSign, Edit, Save, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Currency {
   id: number;
@@ -18,10 +19,13 @@ interface Currency {
 
 export const CurrencyRateManagement: React.FC = () => {
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editRate, setEditRate] = useState<string>('');
+  
+  const canManage = hasPermission('settings.manage_currency');
 
   useEffect(() => {
     fetchRates();
@@ -145,7 +149,7 @@ export const CurrencyRateManagement: React.FC = () => {
                           className="w-32"
                         />
                       </div>
-                      <Button size="sm" onClick={() => handleSave(currency.id)}>
+                      <Button size="sm" onClick={() => handleSave(currency.id)} disabled={!canManage}>
                         <Save className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleCancel}>
@@ -157,7 +161,7 @@ export const CurrencyRateManagement: React.FC = () => {
                       size="sm" 
                       variant="outline" 
                       onClick={() => handleEdit(currency)}
-                      disabled={currency.code === 'NGN'}
+                      disabled={currency.code === 'NGN' || !canManage}
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit

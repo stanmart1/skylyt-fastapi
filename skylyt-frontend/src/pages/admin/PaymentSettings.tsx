@@ -13,6 +13,8 @@ export const PaymentSettings = () => {
   const [saving, setSaving] = useState(false);
   const { hasPermission } = useAuth();
   const { toast } = useToast();
+  
+  const canManage = hasPermission('settings.manage_payment_gateway');
 
   const [paymentForm, setPaymentForm] = useState({
     stripe_public_key: '',
@@ -102,7 +104,7 @@ export const PaymentSettings = () => {
     );
   }
 
-  if (!hasPermission('system.manage_settings')) {
+  if (!hasPermission('settings.view_payment_gateway')) {
     return (
       <Card>
         <CardHeader>
@@ -114,7 +116,7 @@ export const PaymentSettings = () => {
         <CardContent>
           <div className="text-center py-8">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Superadmin access required for payment gateway settings</p>
+            <p className="text-gray-600">You don't have permission to view payment gateway settings</p>
           </div>
         </CardContent>
       </Card>
@@ -139,6 +141,7 @@ export const PaymentSettings = () => {
                 id="stripe_public_key"
                 value={paymentForm.stripe_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, stripe_public_key: e.target.value})}
+                disabled={!canManage}
               />
             </div>
             <div>
@@ -149,6 +152,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.stripe_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, stripe_secret_key: e.target.value})}
                 placeholder="Enter to update"
+                disabled={!canManage}
               />
             </div>
           </div>
@@ -161,6 +165,7 @@ export const PaymentSettings = () => {
                 id="paystack_public_key"
                 value={paymentForm.paystack_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, paystack_public_key: e.target.value})}
+                disabled={!canManage}
               />
             </div>
             <div>
@@ -171,6 +176,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.paystack_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, paystack_secret_key: e.target.value})}
                 placeholder="Enter to update"
+                disabled={!canManage}
               />
             </div>
           </div>
@@ -183,6 +189,7 @@ export const PaymentSettings = () => {
                 id="flutterwave_public_key"
                 value={paymentForm.flutterwave_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, flutterwave_public_key: e.target.value})}
+                disabled={!canManage}
               />
             </div>
             <div>
@@ -193,6 +200,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.flutterwave_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, flutterwave_secret_key: e.target.value})}
                 placeholder="Enter to update"
+                disabled={!canManage}
               />
             </div>
           </div>
@@ -205,6 +213,7 @@ export const PaymentSettings = () => {
                 id="paypal_client_id"
                 value={paymentForm.paypal_client_id}
                 onChange={(e) => setPaymentForm({...paymentForm, paypal_client_id: e.target.value})}
+                disabled={!canManage}
               />
             </div>
             <div>
@@ -215,6 +224,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.paypal_client_secret}
                 onChange={(e) => setPaymentForm({...paymentForm, paypal_client_secret: e.target.value})}
                 placeholder="Enter to update"
+                disabled={!canManage}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -222,15 +232,24 @@ export const PaymentSettings = () => {
                 id="paypal_sandbox"
                 checked={paymentForm.paypal_sandbox}
                 onCheckedChange={(checked) => setPaymentForm({...paymentForm, paypal_sandbox: checked})}
+                disabled={!canManage}
               />
               <Label htmlFor="paypal_sandbox">Sandbox Mode</Label>
             </div>
           </div>
 
-          <Button onClick={savePaymentSettings} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Payment Settings'}
-          </Button>
+          {canManage && (
+            <Button onClick={savePaymentSettings} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Payment Settings'}
+            </Button>
+          )}
+          
+          {!canManage && (
+            <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+              You don't have permission to modify payment gateway settings. Contact your administrator for access.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

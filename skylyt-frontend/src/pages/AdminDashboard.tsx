@@ -86,6 +86,9 @@ const AdminDashboard = () => {
   const [isAddRoleModalOpen, setIsAddRoleModalOpen] = useState(false);
   const [newRoleForm, setNewRoleForm] = useState({ name: '', description: '' });
   const [savingNewRole, setSavingNewRole] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!hasRole('admin') && !hasRole('superadmin')) {
@@ -231,6 +234,50 @@ const AdminDashboard = () => {
       });
     } finally {
       setSavingNewRole(false);
+    }
+  };
+
+  const toggleDeleteMode = () => {
+    setDeleteMode(!deleteMode);
+    setSelectedRoles([]);
+  };
+
+  const toggleRoleSelection = (roleName) => {
+    if (roleName === 'superadmin') return;
+    setSelectedRoles(prev => 
+      prev.includes(roleName) 
+        ? prev.filter(name => name !== roleName)
+        : [...prev, roleName]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedRoles.length === 0) return;
+    
+    setDeleting(true);
+    try {
+      for (const roleName of selectedRoles) {
+        await apiService.request(`/admin/roles/${roleName}`, { method: 'DELETE' });
+      }
+      
+      toast({
+        title: 'Success',
+        description: `${selectedRoles.length} role(s) deleted successfully!`,
+        variant: 'success'
+      });
+      
+      await fetchRoles();
+      setDeleteMode(false);
+      setSelectedRoles([]);
+    } catch (error) {
+      console.error('Failed to delete roles:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete some roles. Please try again.',
+        variant: 'error'
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -454,54 +501,66 @@ const AdminDashboard = () => {
                   </Button>
                   {settingsDropdownOpen && (
                     <div className="ml-6 space-y-1">
-                      <Button
-                        variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); setSidebarOpen(false); }}
-                      >
-                        General
-                      </Button>
-                      <Button
-                        variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); setSidebarOpen(false); }}
-                      >
-                        Payment Gateway
-                      </Button>
-                      <Button
-                        variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); setSidebarOpen(false); }}
-                      >
-                        Bank Transfer
-                      </Button>
-                      <Button
-                        variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); setSidebarOpen(false); }}
-                      >
-                        Currency
-                      </Button>
-                      <Button
-                        variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); setSidebarOpen(false); }}
-                      >
-                        Notifications
-                      </Button>
-                      <Button
-                        variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); setSidebarOpen(false); }}
-                      >
-                        Security
-                      </Button>
+                      {hasPermission('settings.view_general') && (
+                        <Button
+                          variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); setSidebarOpen(false); }}
+                        >
+                          General
+                        </Button>
+                      )}
+                      {hasPermission('settings.view_payment_gateway') && (
+                        <Button
+                          variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); setSidebarOpen(false); }}
+                        >
+                          Payment Gateway
+                        </Button>
+                      )}
+                      {hasPermission('settings.view_bank_transfer') && (
+                        <Button
+                          variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); setSidebarOpen(false); }}
+                        >
+                          Bank Transfer
+                        </Button>
+                      )}
+                      {hasPermission('settings.view_currency') && (
+                        <Button
+                          variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); setSidebarOpen(false); }}
+                        >
+                          Currency
+                        </Button>
+                      )}
+                      {hasPermission('settings.view_notification_config') && (
+                        <Button
+                          variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); setSidebarOpen(false); }}
+                        >
+                          Notifications
+                        </Button>
+                      )}
+                      {hasPermission('settings.view_security') && (
+                        <Button
+                          variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); setSidebarOpen(false); }}
+                        >
+                          Security
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -718,54 +777,66 @@ const AdminDashboard = () => {
               </Button>
               {settingsDropdownOpen && (
                 <div className="ml-6 space-y-1">
-                  <Button
-                    variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); }}
-                  >
-                    General
-                  </Button>
-                  <Button
-                    variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); }}
-                  >
-                    Payment Gateway
-                  </Button>
-                  <Button
-                    variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); }}
-                  >
-                    Bank Transfer
-                  </Button>
-                  <Button
-                    variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); }}
-                  >
-                    Currency
-                  </Button>
-                  <Button
-                    variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); }}
-                  >
-                    Notifications
-                  </Button>
-                  <Button
-                    variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); }}
-                  >
-                    Security
-                  </Button>
+                  {hasPermission('settings.view_general') && (
+                    <Button
+                      variant={activeSettingsTab === 'general' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('general'); }}
+                    >
+                      General
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_payment_gateway') && (
+                    <Button
+                      variant={activeSettingsTab === 'payment' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('payment'); }}
+                    >
+                      Payment Gateway
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_bank_transfer') && (
+                    <Button
+                      variant={activeSettingsTab === 'bank-transfer' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('bank-transfer'); }}
+                    >
+                      Bank Transfer
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_currency') && (
+                    <Button
+                      variant={activeSettingsTab === 'currency' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('currency'); }}
+                    >
+                      Currency
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_notification_config') && (
+                    <Button
+                      variant={activeSettingsTab === 'notifications' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('notifications'); }}
+                    >
+                      Notifications
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_security') && (
+                    <Button
+                      variant={activeSettingsTab === 'security' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); }}
+                    >
+                      Security
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -1111,10 +1182,34 @@ const AdminDashboard = () => {
                   <p className="text-gray-600">Manage user roles and permissions</p>
                 </div>
                 {hasRole('superadmin') && (
-                  <Button onClick={handleAddNewRole}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Role
-                  </Button>
+                  <div className="flex gap-2">
+                    {!deleteMode ? (
+                      <>
+                        <Button variant="outline" onClick={toggleDeleteMode}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Roles
+                        </Button>
+                        <Button onClick={handleAddNewRole}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add New Role
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          variant="destructive" 
+                          onClick={handleDeleteSelected}
+                          disabled={selectedRoles.length === 0 || deleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deleting ? 'Deleting...' : `Delete Selected (${selectedRoles.length})`}
+                        </Button>
+                        <Button variant="outline" onClick={toggleDeleteMode}>
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
               
@@ -1129,15 +1224,25 @@ const AdminDashboard = () => {
                   const colorScheme = colors[index % colors.length];
                   
                   return (
-                    <Card key={role.name} className={`border-2 ${colorScheme.bg} relative`}>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className={`absolute top-2 right-2 h-8 w-8 p-0 ${colorScheme.hover}`}
-                        onClick={() => handleRoleSettings(role.name, role.name.charAt(0).toUpperCase() + role.name.slice(1))}
-                      >
-                        <Settings className={`h-4 w-4 ${colorScheme.iconColor}`} />
-                      </Button>
+                    <Card key={role.name} className={`border-2 ${colorScheme.bg} relative ${deleteMode && selectedRoles.includes(role.name) ? 'ring-2 ring-red-500' : ''}`}>
+                      {deleteMode && role.name !== 'superadmin' && (
+                        <input
+                          type="checkbox"
+                          checked={selectedRoles.includes(role.name)}
+                          onChange={() => toggleRoleSelection(role.name)}
+                          className="absolute top-2 left-2 w-4 h-4 text-red-600 z-10"
+                        />
+                      )}
+                      {!deleteMode && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={`absolute top-2 right-2 h-8 w-8 p-0 ${colorScheme.hover}`}
+                          onClick={() => handleRoleSettings(role.name, role.name.charAt(0).toUpperCase() + role.name.slice(1))}
+                        >
+                          <Settings className={`h-4 w-4 ${colorScheme.iconColor}`} />
+                        </Button>
+                      )}
                       <CardContent className="p-6">
                         <div className="flex items-center space-x-3 mb-3">
                           <div className={`w-10 h-10 ${colorScheme.icon} rounded-lg flex items-center justify-center`}>
@@ -1300,12 +1405,12 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <ErrorBoundary>
-                {activeSettingsTab === 'general' && <GeneralSettings />}
-                {activeSettingsTab === 'payment' && <PaymentSettings />}
-                {activeSettingsTab === 'bank-transfer' && <BankTransferSettings />}
-                {activeSettingsTab === 'currency' && <CurrencySettings />}
-                {activeSettingsTab === 'notifications' && <NotificationSettings />}
-                {activeSettingsTab === 'security' && <SecuritySettings />}
+                {activeSettingsTab === 'general' && hasPermission('settings.view_general') && <GeneralSettings />}
+                {activeSettingsTab === 'payment' && hasPermission('settings.view_payment_gateway') && <PaymentSettings />}
+                {activeSettingsTab === 'bank-transfer' && hasPermission('settings.view_bank_transfer') && <BankTransferSettings />}
+                {activeSettingsTab === 'currency' && hasPermission('settings.view_currency') && <CurrencySettings />}
+                {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
+                {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>

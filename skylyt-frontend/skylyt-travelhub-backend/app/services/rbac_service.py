@@ -174,6 +174,20 @@ class RBACService:
             ("notifications.update", "notifications", "update", "Edit notification templates"),
             ("notifications.send", "notifications", "send", "Send notifications to users"),
             ("notifications.manage_settings", "notifications", "manage_settings", "Configure notification settings"),
+            
+            # Settings Management - Fine-grained permissions
+            ("settings.view_general", "settings", "view_general", "View general system settings"),
+            ("settings.manage_general", "settings", "manage_general", "Manage general system settings"),
+            ("settings.view_payment_gateway", "settings", "view_payment_gateway", "View payment gateway settings"),
+            ("settings.manage_payment_gateway", "settings", "manage_payment_gateway", "Manage payment gateway configurations"),
+            ("settings.view_bank_transfer", "settings", "view_bank_transfer", "View bank transfer settings"),
+            ("settings.manage_bank_transfer", "settings", "manage_bank_transfer", "Manage bank transfer configurations"),
+            ("settings.view_currency", "settings", "view_currency", "View currency settings and rates"),
+            ("settings.manage_currency", "settings", "manage_currency", "Manage currency rates and settings"),
+            ("settings.view_notification_config", "settings", "view_notification_config", "View notification configuration settings"),
+            ("settings.manage_notification_config", "settings", "manage_notification_config", "Manage notification configuration settings"),
+            ("settings.view_security", "settings", "view_security", "View security and authentication settings"),
+            ("settings.manage_security", "settings", "manage_security", "Manage security and authentication settings"),
         ]
         
         for name, resource, action, description in permissions:
@@ -224,13 +238,18 @@ class RBACService:
                 # Ticket management
                 "tickets.create", "tickets.read", "tickets.update", "tickets.assign", "tickets.close",
                 # Notification management
-                "notifications.create", "notifications.read", "notifications.update", "notifications.send", "notifications.manage_settings"
+                "notifications.create", "notifications.read", "notifications.update", "notifications.send", "notifications.manage_settings",
+                # Full settings management
+                "settings.view_general", "settings.manage_general", "settings.view_payment_gateway", "settings.manage_payment_gateway",
+                "settings.view_bank_transfer", "settings.manage_bank_transfer", "settings.view_currency", "settings.manage_currency",
+                "settings.view_notification_config", "settings.manage_notification_config", "settings.view_security", "settings.manage_security"
             ],
             "admin": [
                 # Limited dashboard access
                 "dashboard.view_analytics", "dashboard.view_users", "dashboard.view_bookings",
                 "dashboard.view_payments", "dashboard.view_cars", "dashboard.view_hotels",
                 "dashboard.view_reviews", "dashboard.view_support", "dashboard.view_notifications",
+                "dashboard.view_settings",
                 # User management (no delete)
                 "users.read", "users.update", "users.view_activity",
                 # Booking management
@@ -248,17 +267,26 @@ class RBACService:
                 # Ticket management
                 "tickets.read", "tickets.update", "tickets.close",
                 # Notification management
-                "notifications.read", "notifications.send"
+                "notifications.read", "notifications.send",
+                # Limited settings access (view only for sensitive settings)
+                "settings.view_general", "settings.manage_general",
+                "settings.view_bank_transfer", "settings.manage_bank_transfer",
+                "settings.view_currency", "settings.manage_currency",
+                "settings.view_notification_config"
             ],
             "accountant": [
                 # Financial dashboard access
                 "dashboard.view_analytics", "dashboard.view_bookings", "dashboard.view_payments",
+                "dashboard.view_settings",
                 # Booking viewing
                 "bookings.read", "bookings.export",
                 # Full payment management
                 "payments.read", "payments.update", "payments.refund", "payments.verify", "payments.export",
                 # Financial analytics
-                "analytics.view_dashboard", "analytics.view_revenue", "analytics.export_data"
+                "analytics.view_dashboard", "analytics.view_revenue", "analytics.export_data",
+                # Financial settings access
+                "settings.view_bank_transfer", "settings.manage_bank_transfer",
+                "settings.view_currency", "settings.manage_currency"
             ],
             "customer": [
                 # Basic booking permissions
