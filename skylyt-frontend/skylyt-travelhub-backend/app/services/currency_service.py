@@ -9,7 +9,13 @@ class CurrencyService:
     
     @staticmethod
     def convert_currency(amount: float, from_currency: str, to_currency: str, db: Session) -> float:
-        """Convert amount between currencies through NGN base currency"""
+        """Convert amount between currencies through NGN base currency
+        
+        Exchange rate logic:
+        - rate_to_ngn represents: 1 foreign currency = X NGN
+        - From foreign to NGN: multiply by rate_to_ngn
+        - From NGN to foreign: divide by rate_to_ngn
+        """
         if from_currency == to_currency:
             return round(float(amount), 2)
         
@@ -23,6 +29,7 @@ class CurrencyService:
             ).first()
             if not from_rate:
                 raise ValueError(f"Currency {from_currency} not found or inactive")
+            # Foreign to NGN: multiply by rate (1 USD = 1600 NGN, so 5 USD = 5 * 1600 NGN)
             amount_decimal = amount_decimal * from_rate.rate_to_ngn
         
         # Convert from NGN to target currency
@@ -33,6 +40,7 @@ class CurrencyService:
             ).first()
             if not to_rate:
                 raise ValueError(f"Currency {to_currency} not found or inactive")
+            # NGN to foreign: divide by rate (8000 NGN = 8000 / 1600 USD = 5 USD)
             amount_decimal = amount_decimal / to_rate.rate_to_ngn
         
         return float(amount_decimal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))

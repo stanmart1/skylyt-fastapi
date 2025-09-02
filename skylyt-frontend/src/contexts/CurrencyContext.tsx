@@ -114,19 +114,25 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
     if (fromCurrency === currency) return safeAmount;
     
-    // Convert through NGN base currency
+    // Convert through NGN base currency using admin-configured exchange rates
+    // rate_to_ngn means: 1 unit of foreign currency = X NGN
     let amountInNGN = safeAmount;
+    
+    // Step 1: Convert from source currency to NGN
     if (fromCurrency !== 'NGN') {
-      const fromRate = exchangeRates[fromCurrency] || 1;
-      amountInNGN = safeAmount * fromRate;
+      const fromRate = exchangeRates[fromCurrency];
+      if (!fromRate || fromRate === 0) return safeAmount;
+      amountInNGN = safeAmount * fromRate; // Foreign to NGN: multiply by rate
     }
     
+    // Step 2: Convert from NGN to target currency
     if (currency === 'NGN') {
       return Math.round(amountInNGN * 100) / 100;
     }
     
-    const toRate = exchangeRates[currency] || 1;
-    return Math.round((amountInNGN / toRate) * 100) / 100;
+    const toRate = exchangeRates[currency];
+    if (!toRate || toRate === 0) return amountInNGN;
+    return Math.round((amountInNGN / toRate) * 100) / 100; // NGN to Foreign: divide by rate
   };
 
   const formatPrice = (amount: number, curr: string = currency): string => {
