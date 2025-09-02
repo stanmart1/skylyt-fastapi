@@ -224,6 +224,19 @@ async def redoc_html():
         redoc_js_url="/static/redoc.standalone.js",
     )
 
+# CSP middleware for docs pages
+@app.middleware("http")
+async def docs_csp_middleware(request, call_next):
+    response = await call_next(request)
+    if request.url.path in ["/docs", "/redoc"]:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self' blob: data:; "
+            "script-src 'self' 'unsafe-inline' blob:; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com;"
+        )
+    return response
+
 # CORS - Add explicit CORS middleware
 app.add_middleware(
     CORSMiddleware,
