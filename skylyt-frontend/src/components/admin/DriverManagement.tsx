@@ -579,7 +579,7 @@ export const DriverManagement: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="license_number">License Number *</Label>
+                <Label htmlFor="license_number">Driver's License Number *</Label>
                 <Input
                   id="license_number"
                   value={driverForm.license_number}

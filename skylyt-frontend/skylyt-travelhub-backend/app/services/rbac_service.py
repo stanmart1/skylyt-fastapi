@@ -175,6 +175,14 @@ class RBACService:
             ("notifications.send", "notifications", "send", "Send notifications to users"),
             ("notifications.manage_settings", "notifications", "manage_settings", "Configure notification settings"),
             
+            # Driver Permissions
+            ("driver.view_assigned_trips", "driver", "view_assigned_trips", "View only assigned bookings and trips"),
+            ("driver.update_trip_status", "driver", "update_trip_status", "Update trip status (Pending → En Route → In Progress → Completed → Cancelled)"),
+            ("driver.view_customer_contact", "driver", "view_customer_contact", "View customer contact details for assigned trips only"),
+            ("driver.view_trip_details", "driver", "view_trip_details", "Access pickup and drop-off details for assigned trips"),
+            ("driver.receive_notifications", "driver", "receive_notifications", "Receive trip assignment notifications via app/email/SMS"),
+            ("driver.view_dashboard", "driver", "view_dashboard", "Access driver dashboard interface"),
+            
             # Settings Management - Fine-grained permissions
             ("settings.view_general", "settings", "view_general", "View general system settings"),
             ("settings.manage_general", "settings", "manage_general", "Manage general system settings"),
@@ -200,6 +208,7 @@ class RBACService:
             ("superadmin", "Super Administrator with all permissions"),
             ("admin", "Administrator with management permissions"),
             ("accountant", "Accountant with financial permissions"),
+            ("driver", "Driver with trip management permissions"),
             ("customer", "Customer with basic permissions"),
         ]
         
@@ -287,6 +296,16 @@ class RBACService:
                 # Financial settings access
                 "settings.view_bank_transfer", "settings.manage_bank_transfer",
                 "settings.view_currency", "settings.manage_currency"
+            ],
+            "driver": [
+                # Driver dashboard access
+                "driver.view_dashboard",
+                # Trip management
+                "driver.view_assigned_trips", "driver.update_trip_status", "driver.view_trip_details",
+                # Customer interaction
+                "driver.view_customer_contact", "driver.receive_notifications",
+                # Limited booking access (only assigned trips)
+                "bookings.read"
             ],
             "customer": [
                 # Basic booking permissions
