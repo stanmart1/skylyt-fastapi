@@ -25,6 +25,7 @@ interface CarDetails {
   description?: string;
   features?: string[];
   image_url?: string;
+  images?: string[];
   location?: string;
   rating?: number;
   available: boolean;
@@ -37,6 +38,7 @@ const CarDetail = () => {
   const [car, setCar] = useState<CarDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -46,6 +48,11 @@ const CarDetail = () => {
       setLoading(false);
     }
   }, [id, currency]);
+
+  useEffect(() => {
+    // Reset selected image when car changes
+    setSelectedImageIndex(0);
+  }, [car]);
 
   const fetchCarDetails = async (carId: string) => {
     try {
@@ -115,29 +122,55 @@ const CarDetail = () => {
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Car Image */}
+          {/* Car Images */}
           <div className="relative">
-            {car.image_url ? (
-              <img
-                src={car.image_url}
-                alt={car.name}
-                className="w-full h-96 object-cover rounded-lg shadow-lg"
-              />
-            ) : (
-              <div className="w-full h-96 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
-                <Car className="h-16 w-16 text-gray-400" />
-              </div>
-            )}
-            <div className="absolute top-4 left-4">
-              <Badge className="bg-blue-600 text-white">
-                {car.category}
-              </Badge>
-            </div>
-            {!car.available && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
-                <Badge variant="destructive" className="text-lg px-4 py-2">
-                  Not Available
+            {/* Main Image */}
+            <div className="relative mb-4">
+              {(car.images && car.images.length > 0) || car.image_url ? (
+                <img
+                  src={(car.images && car.images.length > 0) ? car.images[selectedImageIndex] : car.image_url}
+                  alt={car.name}
+                  className="w-full h-96 object-cover rounded-lg shadow-lg"
+                />
+              ) : (
+                <div className="w-full h-96 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
+                  <Car className="h-16 w-16 text-gray-400" />
+                </div>
+              )}
+              <div className="absolute top-4 left-4">
+                <Badge className="bg-blue-600 text-white">
+                  {car.category}
                 </Badge>
+              </div>
+              {!car.available && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                  <Badge variant="destructive" className="text-lg px-4 py-2">
+                    Not Available
+                  </Badge>
+                </div>
+              )}
+            </div>
+            
+            {/* Image Thumbnails */}
+            {car.images && car.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {car.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-shrink-0 w-20 h-16 rounded-md overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index 
+                        ? 'border-blue-600 opacity-100' 
+                        : 'border-gray-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${car.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
