@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, Star, CheckCircle, XCircle, Clock, Search, Filter, MapPin, Navigation } from 'lucide-react';
+import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, Star, CheckCircle, XCircle, Clock, Search, Filter, MapPin, Navigation, Eye, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
@@ -63,6 +63,10 @@ export const DriverManagement: React.FC = () => {
   const [driverTrips, setDriverTrips] = useState<Trip[]>([]);
   const [tripsLoading, setTripsLoading] = useState(false);
   const [showTrips, setShowTrips] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [selectedDrivers, setSelectedDrivers] = useState<Set<number>>(new Set());
+  const [viewDetailsDriver, setViewDetailsDriver] = useState<Driver | null>(null);
+  const [showDriverDetails, setShowDriverDetails] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     is_active: '',
@@ -221,6 +225,46 @@ export const DriverManagement: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(
+        Array.from(selectedDrivers).map(driverId =>
+          apiService.request(`/drivers/${driverId}`, { method: 'DELETE' })
+        )
+      );
+      await fetchDrivers();
+      setSelectedDrivers(new Set());
+      setDeleteMode(false);
+      toast({
+        title: 'Success',
+        description: `${selectedDrivers.size} driver(s) deleted successfully`,
+        variant: 'success'
+      });
+    } catch (error: any) {
+      console.error('Failed to delete drivers:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete selected drivers',
+        variant: 'error'
+      });
+    }
+  };
+
+  const toggleDriverSelection = (driverId: number) => {
+    const newSelected = new Set(selectedDrivers);
+    if (newSelected.has(driverId)) {
+      newSelected.delete(driverId);
+    } else {
+      newSelected.add(driverId);
+    }
+    setSelectedDrivers(newSelected);
+  };
+
+  const handleViewDetails = (driver: Driver) => {
+    setViewDetailsDriver(driver);
+    setShowDriverDetails(true);
+  };
+
   const handleToggleAvailability = async (driverId: number, isAvailable: boolean) => {
     try {
       await apiService.request(`/drivers/${driverId}/availability`, {
@@ -340,11 +384,44 @@ export const DriverManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button onClick={handleAddDriver}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Driver
-        </Button>
+      <div className="flex justify-end gap-2">
+        {deleteMode ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteMode(false);
+                setSelectedDrivers(new Set());
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            {selectedDrivers.size > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Selected ({selectedDrivers.size})
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteMode(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Driver
+            </Button>
+            <Button onClick={handleAddDriver}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Driver
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -422,8 +499,18 @@ export const DriverManagement: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {drivers.map((driver) => (
-                <div key={driver.id} className="border rounded-lg p-4">
+                <div key={driver.id} className={`border rounded-lg p-4 ${deleteMode ? 'hover:bg-gray-50' : ''}`}>
                   <div className="flex items-start justify-between">
+                    {deleteMode && (
+                      <div className="flex items-center mr-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedDrivers.has(driver.id)}
+                          onChange={() => toggleDriverSelection(driver.id)}
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-lg">{driver.name}</h3>
@@ -438,7 +525,7 @@ export const DriverManagement: React.FC = () => {
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4" />
                           <span>{driver.email}</span>
@@ -449,84 +536,83 @@ export const DriverManagement: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          <span>License: {driver.license_number}</span>
+                          <span>Driver's License: {driver.license_number}</span>
                         </div>
-                        {driver.employee_id && (
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>ID: {driver.employee_id}</span>
-                          </div>
-                        )}
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
                           <span>{driver.total_trips} trips</span>
                         </div>
-                        {driver.hire_date && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Hired: {new Date(driver.hire_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                     
-                    <div className="flex flex-col gap-2 ml-4">
-                      {hasPermission('content.manage_drivers') && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditDriver(driver)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleAvailability(driver.id, driver.is_available)}
-                            className={driver.is_available ? 'text-yellow-600' : 'text-green-600'}
-                          >
-                            {driver.is_available ? (
-                              <>
-                                <Clock className="h-4 w-4 mr-1" />
-                                Set Busy
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Set Available
-                              </>
-                            )}
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewTrips(driver)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            <Navigation className="h-4 w-4 mr-1" />
-                            View Trips
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeleteConfirm({
-                              open: true,
-                              driverId: driver.id,
-                              driverName: driver.name
-                            })}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    {!deleteMode && (
+                      <div className="flex flex-col gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(driver)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                        {hasPermission('content.manage_drivers') && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditDriver(driver)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleAvailability(driver.id, driver.is_available)}
+                              className={driver.is_available ? 'text-yellow-600' : 'text-green-600'}
+                            >
+                              {driver.is_available ? (
+                                <>
+                                  <Clock className="h-4 w-4 mr-1" />
+                                  Set Busy
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Set Available
+                                </>
+                              )}
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewTrips(driver)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Navigation className="h-4 w-4 mr-1" />
+                              View Trips
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDeleteConfirm({
+                                open: true,
+                                driverId: driver.id,
+                                driverName: driver.name
+                              })}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -807,6 +893,100 @@ export const DriverManagement: React.FC = () => {
               ))}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Driver Details Modal */}
+      <Dialog open={showDriverDetails} onOpenChange={setShowDriverDetails}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Driver Details - {viewDetailsDriver?.name}</DialogTitle>
+            <DialogDescription>
+              Complete information about this driver
+            </DialogDescription>
+          </DialogHeader>
+          
+          {viewDetailsDriver && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Badge className={`${getStatusColor(viewDetailsDriver.is_active, viewDetailsDriver.is_available)}`}>
+                  {getStatusText(viewDetailsDriver.is_active, viewDetailsDriver.is_available)}
+                </Badge>
+                {viewDetailsDriver.rating > 0 && (
+                  <div className="flex items-center gap-1">
+                    {renderStars(Math.round(viewDetailsDriver.rating))}
+                    <span className="text-sm text-gray-600">({viewDetailsDriver.rating.toFixed(1)})</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900">Personal Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Name:</span> {viewDetailsDriver.name}</div>
+                    <div><span className="font-medium">Email:</span> {viewDetailsDriver.email}</div>
+                    <div><span className="font-medium">Phone:</span> {viewDetailsDriver.phone}</div>
+                    {viewDetailsDriver.address && (
+                      <div><span className="font-medium">Address:</span> {viewDetailsDriver.address}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900">License Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Driver's License:</span> {viewDetailsDriver.license_number}</div>
+                    {viewDetailsDriver.license_class && (
+                      <div><span className="font-medium">License Class:</span> {viewDetailsDriver.license_class}</div>
+                    )}
+                    {viewDetailsDriver.license_expiry && (
+                      <div><span className="font-medium">License Expiry:</span> {new Date(viewDetailsDriver.license_expiry).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900">Employment Details</h4>
+                  <div className="space-y-2 text-sm">
+                    {viewDetailsDriver.employee_id && (
+                      <div><span className="font-medium">Employee ID:</span> {viewDetailsDriver.employee_id}</div>
+                    )}
+                    {viewDetailsDriver.hire_date && (
+                      <div><span className="font-medium">Hire Date:</span> {new Date(viewDetailsDriver.hire_date).toLocaleDateString()}</div>
+                    )}
+                    <div><span className="font-medium">Total Trips:</span> {viewDetailsDriver.total_trips}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900">Emergency Contact</h4>
+                  <div className="space-y-2 text-sm">
+                    {viewDetailsDriver.emergency_contact && (
+                      <div><span className="font-medium">Contact Name:</span> {viewDetailsDriver.emergency_contact}</div>
+                    )}
+                    {viewDetailsDriver.emergency_phone && (
+                      <div><span className="font-medium">Contact Phone:</span> {viewDetailsDriver.emergency_phone}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {viewDetailsDriver.notes && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-gray-900">Notes</h4>
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{viewDetailsDriver.notes}</p>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500">
+                Created: {new Date(viewDetailsDriver.created_at).toLocaleString()}
+                {viewDetailsDriver.updated_at && (
+                  <span> • Updated: {new Date(viewDetailsDriver.updated_at).toLocaleString()}</span>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

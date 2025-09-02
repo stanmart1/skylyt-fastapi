@@ -88,7 +88,12 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
 
         <div className="space-y-6">
           {/* Status and Basic Info */}
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between p-4 rounded-lg border-l-4 ${
+            booking.status === 'confirmed' ? 'bg-green-50 border-green-500' :
+            booking.status === 'pending' ? 'bg-yellow-50 border-yellow-500' :
+            booking.status === 'cancelled' ? 'bg-red-50 border-red-500' :
+            'bg-gray-50 border-gray-500'
+          }`}>
             <Badge className={getStatusColor(booking.status)}>
               {booking.status.toUpperCase()}
             </Badge>
@@ -101,9 +106,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Booking Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-l-4 border-blue-500">
+              <CardHeader className="bg-blue-50">
+                <CardTitle className="flex items-center gap-2 text-blue-700">
                   <Calendar className="h-4 w-4" />
                   Booking Information
                 </CardTitle>
@@ -155,9 +160,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
             </Card>
 
             {/* Customer Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-l-4 border-purple-500">
+              <CardHeader className="bg-purple-50">
+                <CardTitle className="flex items-center gap-2 text-purple-700">
                   <User className="h-4 w-4" />
                   Customer Information
                 </CardTitle>
@@ -189,9 +194,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
 
           {/* Special Requests */}
           {booking.special_requests && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Special Requests</CardTitle>
+            <Card className="border-l-4 border-orange-500">
+              <CardHeader className="bg-orange-50">
+                <CardTitle className="text-orange-700">Special Requests</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700">{booking.special_requests}</p>
@@ -201,9 +206,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
 
           {/* Service Details */}
           {serviceDetails && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Details</CardTitle>
+            <Card className="border-l-4 border-green-500">
+              <CardHeader className="bg-green-50">
+                <CardTitle className="text-green-700">Service Details</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -271,9 +276,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
 
           {/* Booking Data Details */}
           {booking.booking_data && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Booking Details</CardTitle>
+            <Card className="border-l-4 border-indigo-500">
+              <CardHeader className="bg-indigo-50">
+                <CardTitle className="text-indigo-700">Booking Details</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -295,9 +300,9 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
           )}
 
           {/* Timestamps */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Timeline</CardTitle>
+          <Card className="border-l-4 border-gray-500">
+            <CardHeader className="bg-gray-50">
+              <CardTitle className="text-gray-700">Timeline</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
