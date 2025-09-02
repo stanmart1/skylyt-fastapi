@@ -36,7 +36,8 @@ import CarManagement from "./pages/CarManagement";
 
 import StateDestinationPage from "./pages/StateDestinationPage";
 import CityHotelsPage from "./pages/CityHotelsPage";
-
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 import NotFound from "./pages/NotFound";
 
@@ -135,7 +136,8 @@ const PageTransitionWrapper = () => {
 
                 <Route path="/destinations/:stateSlug" element={<StateDestinationPage />} />
                 <Route path="/destinations/:stateSlug/:citySlug" element={<CityHotelsPage />} />
-
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

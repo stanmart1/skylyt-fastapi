@@ -29,9 +29,6 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Support</h3>
             <div className="space-y-2">
-              <Link to="/help" className="block text-gray-400 hover:text-white transition-colors text-sm sm:text-base">
-                Help Center
-              </Link>
               <Link to="/contact" className="block text-gray-400 hover:text-white transition-colors text-sm sm:text-base">
                 Contact Us
               </Link>
