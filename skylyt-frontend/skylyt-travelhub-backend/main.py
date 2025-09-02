@@ -229,9 +229,19 @@ async def redoc_html():
 async def docs_csp_middleware(request, call_next):
     response = await call_next(request)
     if request.url.path in ["/docs", "/redoc"]:
+        # Remove ALL existing CSP headers
+        headers_to_remove = []
+        for header_name in response.headers:
+            if "content-security-policy" in header_name.lower():
+                headers_to_remove.append(header_name)
+        for header in headers_to_remove:
+            del response.headers[header]
+        
+        # Set permissive CSP for docs
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self' blob: data:; "
-            "script-src 'self' 'unsafe-inline' blob:; "
+            "default-src 'self' blob: data: https://fastapi.tiangolo.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; "
+            "script-src-elem 'self' 'unsafe-inline' blob:; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: https://fastapi.tiangolo.com;"
         )
