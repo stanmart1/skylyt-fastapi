@@ -9,6 +9,20 @@ from app.models.hotel import Hotel
 router = APIRouter(prefix="/destinations", tags=["destinations"])
 
 
+@router.get("/")
+def get_all_destinations(
+    featured_only: bool = Query(False),
+    db: Session = Depends(get_db)
+):
+    """Get all destinations (states)"""
+    query = db.query(State)
+    if featured_only:
+        query = query.filter(State.is_featured == 1)
+    
+    states = query.order_by(State.popularity_score.desc()).all()
+    return {"states": states}
+
+
 @router.get("/states")
 def get_states(
     featured_only: bool = Query(False),

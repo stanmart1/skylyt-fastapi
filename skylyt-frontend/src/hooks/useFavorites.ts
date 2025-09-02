@@ -86,7 +86,7 @@ export const useFavorites = () => {
 
   useEffect(() => {
     // Only fetch favorites if user might be authenticated
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       fetchFavorites();
     }

@@ -131,7 +131,7 @@ const FeaturedCars = () => {
           </Button>
           
           {/* Carousel Container */}
-          <div className="overflow-hidden mx-4 md:mx-12">
+          <div className="overflow-hidden mx-0 md:mx-12">
             <div 
               className="flex transition-transform duration-500 ease-in-out"
               style={{ 
@@ -139,7 +139,7 @@ const FeaturedCars = () => {
               }}
             >
               {cars && cars.map((car) => (
-                <div key={car.id} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2">
+                <div key={car.id} className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-0 md:px-2">
                   <Card 
                     className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white border-0 cursor-pointer"
                     onClick={() => {
