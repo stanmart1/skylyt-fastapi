@@ -104,10 +104,30 @@ export const DriverManagement: React.FC = () => {
     tripId: 0,
     currentStatus: ''
   });
+  const [assignmentModal, setAssignmentModal] = useState<{
+    open: boolean;
+    driver: Driver | null;
+  }>({
+    open: false,
+    driver: null
+  });
+  const [assignableBookings, setAssignableBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingFilters, setBookingFilters] = useState({
+    search: '',
+    dateFrom: '',
+    dateTo: ''
+  });
 
   useEffect(() => {
     fetchDrivers();
   }, [filters]);
+
+  useEffect(() => {
+    if (assignmentModal.open) {
+      fetchAssignableBookings();
+    }
+  }, [bookingFilters]);
 
   const fetchDrivers = async () => {
     try {
@@ -308,6 +328,66 @@ export const DriverManagement: React.FC = () => {
     setSelectedDriver(driver);
     setShowTrips(true);
     await fetchDriverTrips(driver.id);
+  };
+
+  const handleAssignToBooking = async (driver: Driver) => {
+    setAssignmentModal({ open: true, driver });
+    setBookingFilters({ search: '', dateFrom: '', dateTo: '' });
+    await fetchAssignableBookings();
+  };
+
+  const fetchAssignableBookings = async () => {
+    setBookingsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('booking_type', 'car');
+      params.append('status', 'confirmed');
+      if (bookingFilters.search) params.append('search', bookingFilters.search);
+      if (bookingFilters.dateFrom) params.append('start_date', bookingFilters.dateFrom);
+      if (bookingFilters.dateTo) params.append('end_date', bookingFilters.dateTo);
+      
+      const data = await apiService.request(`/admin/bookings?${params.toString()}`);
+      // Filter out bookings that already have drivers assigned
+      const unassignedBookings = (data.bookings || []).filter(booking => !booking.driver_id);
+      setAssignableBookings(unassignedBookings);
+    } catch (error) {
+      console.error('Failed to fetch assignable bookings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch assignable bookings',
+        variant: 'error'
+      });
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
+
+  const handleAssignDriverToBooking = async (bookingId: number) => {
+    if (!assignmentModal.driver) return;
+    
+    try {
+      await apiService.request(`/admin/bookings/${bookingId}/assign-driver`, {
+        method: 'PUT',
+        body: JSON.stringify({ driver_id: assignmentModal.driver.id })
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Driver assigned successfully. Emails sent to driver and customer.',
+        variant: 'success'
+      });
+      
+      setAssignmentModal({ open: false, driver: null });
+      await fetchDrivers();
+      await fetchAssignableBookings();
+    } catch (error: any) {
+      console.error('Failed to assign driver:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.detail || 'Failed to assign driver to booking',
+        variant: 'error'
+      });
+    }
   };
 
   const handleUpdateTripStatus = async (tripId: number, newStatus: string) => {
@@ -594,6 +674,17 @@ export const DriverManagement: React.FC = () => {
                             >
                               <Navigation className="h-4 w-4 mr-1" />
                               View Trips
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAssignToBooking(driver)}
+                              className="text-green-600 hover:text-green-700"
+                              disabled={!driver.is_active || !driver.is_available}
+                            >
+                              <User className="h-4 w-4 mr-1" />
+                              Assign to Booking
                             </Button>
                             
                             <Button
@@ -987,6 +1078,135 @@ export const DriverManagement: React.FC = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Driver Assignment Modal */}
+      <Dialog open={assignmentModal.open} onOpenChange={(open) => setAssignmentModal({ ...assignmentModal, open })}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Assign {assignmentModal.driver?.name} to Car Booking</DialogTitle>
+            <DialogDescription>
+              Select a car booking to assign this driver to. Only confirmed bookings without assigned drivers are shown.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Booking Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Filter Bookings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search bookings..."
+                      value={bookingFilters.search}
+                      onChange={(e) => setBookingFilters({ ...bookingFilters, search: e.target.value })}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div>
+                    <Label>From Date</Label>
+                    <Input
+                      type="date"
+                      value={bookingFilters.dateFrom}
+                      onChange={(e) => setBookingFilters({ ...bookingFilters, dateFrom: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>To Date</Label>
+                    <Input
+                      type="date"
+                      value={bookingFilters.dateTo}
+                      onChange={(e) => setBookingFilters({ ...bookingFilters, dateTo: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" onClick={fetchAssignableBookings}>
+                    Apply Filters
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setBookingFilters({ search: '', dateFrom: '', dateTo: '' });
+                      fetchAssignableBookings();
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Assignable Bookings List */}
+            <div className="space-y-4">
+              {bookingsLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse h-24 bg-gray-200 rounded" />
+                  ))}
+                </div>
+              ) : assignableBookings.length === 0 ? (
+                <div className="text-center py-8">
+                  <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No assignable car bookings found</p>
+                  <p className="text-sm text-gray-500 mt-2">Only confirmed bookings without assigned drivers are shown</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {assignableBookings.map((booking: any) => (
+                    <div key={booking.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h4 className="font-semibold">{booking.booking_reference}</h4>
+                            <Badge className="bg-blue-100 text-blue-800">Car Rental</Badge>
+                            <Badge className="bg-green-100 text-green-800">{booking.status}</Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                              <p className="font-medium text-gray-700">Customer</p>
+                              <p>{booking.customer_name}</p>
+                              <p>{booking.customer_email}</p>
+                              {booking.customer_phone && <p>{booking.customer_phone}</p>}
+                            </div>
+                            
+                            <div>
+                              <p className="font-medium text-gray-700">Booking Details</p>
+                              <p>Car: {booking.car_name}</p>
+                              <p>Start: {new Date(booking.start_date).toLocaleDateString()}</p>
+                              <p>End: {new Date(booking.end_date).toLocaleDateString()}</p>
+                              <p className="font-medium text-green-600">${booking.total_amount} {booking.currency}</p>
+                            </div>
+                          </div>
+                          
+                          {booking.special_requests && (
+                            <div className="mt-3 p-2 bg-yellow-50 rounded">
+                              <p className="text-sm font-medium text-gray-700">Special Requests:</p>
+                              <p className="text-sm text-gray-600">{booking.special_requests}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Button
+                          onClick={() => handleAssignDriverToBooking(booking.id)}
+                          className="ml-4"
+                        >
+                          Assign Driver
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

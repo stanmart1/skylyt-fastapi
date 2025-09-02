@@ -14,18 +14,34 @@ import { SearchResultsSkeleton } from '@/components/LoadingStates';
 import { ServerStatus } from '@/components/ServerStatus';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
+import { useLocation } from 'react-router-dom';
 
 const Hotels = () => {
   const { hotels, totalHotels, isLoading, searchHotels } = useSearch();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currency } = useCurrency();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchParams, setSearchParams] = useState<SearchParams>({});
 
   useEffect(() => {
-    // Load all hotels by default with currency
-    searchHotels({ page: 1, per_page: 50, currency });
-  }, [searchHotels, currency]);
+    // Parse URL search parameters
+    const urlParams = new URLSearchParams(location.search);
+    const params: SearchParams = {
+      page: 1,
+      per_page: 50,
+      currency
+    };
+    
+    // Add search parameters from URL if they exist
+    if (urlParams.get('destination')) params.destination = urlParams.get('destination')!;
+    if (urlParams.get('checkin_date')) params.checkin_date = urlParams.get('checkin_date')!;
+    if (urlParams.get('checkout_date')) params.checkout_date = urlParams.get('checkout_date')!;
+    
+    setSearchParams(params);
+    searchHotels(params);
+  }, [searchHotels, currency, location.search]);
 
   const handleSearch = (params: SearchParams) => {
     setCurrentPage(1);
@@ -88,9 +104,18 @@ const Hotels = () => {
             <div className="flex-1 min-w-0">
               {/* Results Summary */}
               <div className="mb-6 flex justify-between items-center">
-                <p className="text-gray-600">
-                  {isLoading ? 'Searching...' : `${totalHotels} hotels found`}
-                </p>
+                <div>
+                  <p className="text-gray-600">
+                    {isLoading ? 'Searching...' : `${totalHotels} hotels found`}
+                  </p>
+                  {searchParams.destination && (
+                    <p className="text-sm text-blue-600">
+                      Destination: {searchParams.destination}
+                      {searchParams.checkin_date && ` • Check-in: ${searchParams.checkin_date}`}
+                      {searchParams.checkout_date && ` • Check-out: ${searchParams.checkout_date}`}
+                    </p>
+                  )}
+                </div>
                 {totalHotels > 0 && (
                   <Badge variant="secondary">
                     Page {currentPage}

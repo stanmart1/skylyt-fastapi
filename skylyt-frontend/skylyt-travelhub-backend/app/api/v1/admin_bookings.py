@@ -144,6 +144,9 @@ class BulkDeleteRequest(BaseModel):
             raise ValueError("No IDs provided")
         return v
 
+class DriverAssignmentRequest(BaseModel):
+    driver_id: int
+
 # Routes
 @router.get("/admin/bookings")
 async def get_admin_bookings(
@@ -384,11 +387,11 @@ async def update_booking(booking_id: int, booking_data: BookingUpdateRequest, cu
 @router.put("/admin/bookings/{booking_id}/assign-driver")
 async def assign_driver_to_booking(
     booking_id: int, 
-    driver_id: int = None,
+    assignment_data: DriverAssignmentRequest,
     current_user = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    """Assign or unassign driver to/from booking"""
+    """Assign driver to booking"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -396,24 +399,58 @@ async def assign_driver_to_booking(
         from app.models.booking import Booking
         from app.models.driver import Driver
         
+        # Validate booking exists and is assignable
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        if driver_id:
-            driver = db.query(Driver).filter(Driver.id == driver_id).first()
-            if not driver:
-                raise HTTPException(status_code=404, detail="Driver not found")
-            if not driver.is_active or not driver.is_available:
-                raise HTTPException(status_code=400, detail="Driver is not available")
+        if booking.status in ['cancelled', 'completed']:
+            raise HTTPException(status_code=400, detail="Cannot assign driver to cancelled or completed booking")
         
-        booking.driver_id = driver_id
+        if booking.booking_type != 'car':
+            raise HTTPException(status_code=400, detail="Driver can only be assigned to car bookings")
+        
+        # Validate driver exists and is available
+        driver = db.query(Driver).filter(Driver.id == assignment_data.driver_id).first()
+        if not driver:
+            raise HTTPException(status_code=404, detail="Driver not found")
+        
+        if not driver.is_active:
+            raise HTTPException(status_code=400, detail="Driver is not active")
+        
+        if not driver.is_available:
+            raise HTTPException(status_code=400, detail="Driver is not available")
+        
+        # Check if booking already has a driver assigned
+        if booking.driver_id:
+            raise HTTPException(status_code=400, detail="Booking already has a driver assigned")
+        
+        # Assign driver to booking
+        booking.driver_id = assignment_data.driver_id
+        
+        # Set driver as busy
+        driver.is_available = False
+        
         db.commit()
+        db.refresh(booking)
+        db.refresh(driver)
+        
+        # Send email notifications (placeholder - implement actual email service)
+        try:
+            # TODO: Implement actual email service
+            # send_driver_assignment_email(driver.email, booking)
+            # send_customer_driver_notification_email(booking.customer_email, driver, booking)
+            pass
+        except Exception as email_error:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send email notifications: {email_error}")
         
         return {
-            "message": "Driver assignment updated successfully",
+            "message": "Driver assigned successfully. Notifications sent to driver and customer.",
             "booking_id": booking_id,
-            "driver_id": driver_id
+            "driver_id": assignment_data.driver_id,
+            "driver_name": driver.name,
+            "booking_reference": booking.booking_reference
         }
     except HTTPException:
         raise

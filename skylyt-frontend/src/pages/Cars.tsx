@@ -11,17 +11,33 @@ import { SearchParams } from '@/types/api';
 import { ServerStatus } from '@/components/ServerStatus';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
+import { useLocation } from 'react-router-dom';
 
 const Cars = () => {
   const { cars, totalCars, isLoading, searchCars } = useSearch();
   const { currency } = useCurrency();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchParams, setSearchParams] = useState<SearchParams>({});
 
   useEffect(() => {
-    // Initial search with default parameters and currency
-    searchCars({ page: 1, per_page: 20, currency });
-  }, [searchCars, currency]);
+    // Parse URL search parameters
+    const urlParams = new URLSearchParams(location.search);
+    const params: SearchParams = {
+      page: 1,
+      per_page: 20,
+      currency
+    };
+    
+    // Add search parameters from URL if they exist
+    if (urlParams.get('location')) params.location = urlParams.get('location')!;
+    if (urlParams.get('pickup_date')) params.pickup_date = urlParams.get('pickup_date')!;
+    if (urlParams.get('return_date')) params.return_date = urlParams.get('return_date')!;
+    
+    setSearchParams(params);
+    searchCars(params);
+  }, [searchCars, currency, location.search]);
 
   const handleSearch = (params: SearchParams) => {
     setCurrentPage(1);
@@ -66,9 +82,18 @@ const Cars = () => {
           <div className="flex-1 min-w-0">
             {/* Results Summary */}
             <div className="mb-6 flex justify-between items-center">
-              <p className="text-gray-600">
-                {isLoading ? 'Searching...' : `${totalCars} cars found`}
-              </p>
+              <div>
+                <p className="text-gray-600">
+                  {isLoading ? 'Searching...' : `${totalCars} cars found`}
+                </p>
+                {searchParams.location && (
+                  <p className="text-sm text-blue-600">
+                    Location: {searchParams.location}
+                    {searchParams.pickup_date && ` • From: ${searchParams.pickup_date}`}
+                    {searchParams.return_date && ` • To: ${searchParams.return_date}`}
+                  </p>
+                )}
+              </div>
               {totalCars > 0 && (
                 <Badge variant="secondary">
                   Page {currentPage}

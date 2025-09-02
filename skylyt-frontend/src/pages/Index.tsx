@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, Hotel, MapPin, Calendar, Users, Star, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import FeaturedCars from '@/components/FeaturedCars';
 import FeaturedHotels from '@/components/FeaturedHotels';
@@ -15,6 +15,34 @@ import '../styles/hero-animations.css';
 
 const Index = () => {
   const [searchType, setSearchType] = useState('cars');
+  const navigate = useNavigate();
+  const [searchData, setSearchData] = useState({
+    cars: { location: '', pickupDate: '', returnDate: '' },
+    hotels: { destination: '', checkinDate: '', checkoutDate: '' }
+  });
+
+  const handleInputChange = (type: 'cars' | 'hotels', field: string, value: string) => {
+    setSearchData(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [field]: value }
+    }));
+  };
+
+  const handleCarSearch = () => {
+    const params = new URLSearchParams();
+    if (searchData.cars.location) params.set('location', searchData.cars.location);
+    if (searchData.cars.pickupDate) params.set('pickup_date', searchData.cars.pickupDate);
+    if (searchData.cars.returnDate) params.set('return_date', searchData.cars.returnDate);
+    navigate(`/cars?${params.toString()}`);
+  };
+
+  const handleHotelSearch = () => {
+    const params = new URLSearchParams();
+    if (searchData.hotels.destination) params.set('destination', searchData.hotels.destination);
+    if (searchData.hotels.checkinDate) params.set('checkin_date', searchData.hotels.checkinDate);
+    if (searchData.hotels.checkoutDate) params.set('checkout_date', searchData.hotels.checkoutDate);
+    navigate(`/hotels?${params.toString()}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -60,17 +88,35 @@ const Index = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
-                        <Input placeholder="Pick-up location" className="border-0 bg-gray-50" />
+                        <Input 
+                          placeholder="Pick-up location" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.cars.location}
+                          onChange={(e) => handleInputChange('cars', 'location', e.target.value)}
+                        />
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        <Input type="date" className="border-0 bg-gray-50" />
+                        <Input 
+                          type="date" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.cars.pickupDate}
+                          onChange={(e) => handleInputChange('cars', 'pickupDate', e.target.value)}
+                        />
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        <Input type="date" className="border-0 bg-gray-50" />
+                        <Input 
+                          type="date" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.cars.returnDate}
+                          onChange={(e) => handleInputChange('cars', 'returnDate', e.target.value)}
+                        />
                       </div>
-                      <Button className="bg-orange-500 hover:bg-orange-600 text-white search-button">
+                      <Button 
+                        className="bg-orange-500 hover:bg-orange-600 text-white search-button"
+                        onClick={handleCarSearch}
+                      >
                         <Search className="h-4 w-4 mr-2 search-icon" />
                         Search Cars
                       </Button>
@@ -85,17 +131,37 @@ const Index = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
-                        <Input placeholder="Destination" className="border-0 bg-gray-50" />
+                        <Input 
+                          placeholder="Destination" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.hotels.destination}
+                          onChange={(e) => handleInputChange('hotels', 'destination', e.target.value)}
+                        />
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        <Input type="date" placeholder="Check-in" className="border-0 bg-gray-50" />
+                        <Input 
+                          type="date" 
+                          placeholder="Check-in" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.hotels.checkinDate}
+                          onChange={(e) => handleInputChange('hotels', 'checkinDate', e.target.value)}
+                        />
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        <Input type="date" placeholder="Check-out" className="border-0 bg-gray-50" />
+                        <Input 
+                          type="date" 
+                          placeholder="Check-out" 
+                          className="border-0 bg-gray-50" 
+                          value={searchData.hotels.checkoutDate}
+                          onChange={(e) => handleInputChange('hotels', 'checkoutDate', e.target.value)}
+                        />
                       </div>
-                      <Button className="bg-orange-500 hover:bg-orange-600 text-white search-button">
+                      <Button 
+                        className="bg-orange-500 hover:bg-orange-600 text-white search-button"
+                        onClick={handleHotelSearch}
+                      >
                         <Search className="h-4 w-4 mr-2 search-icon" />
                         Search Hotels
                       </Button>
