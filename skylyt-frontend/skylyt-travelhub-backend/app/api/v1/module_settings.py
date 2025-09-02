@@ -17,7 +17,7 @@ async def get_module_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not current_user.has_permission('dashboard.view_modules'):
+    if not current_user.has_permission('dashboard', 'view_modules'):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     car_setting = db.query(Settings).filter(Settings.additional_settings['car_rental_enabled'].astext == 'true').first()
@@ -41,7 +41,7 @@ async def update_module_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not current_user.has_permission('dashboard.view_modules'):
+    if not current_user.has_permission('dashboard', 'view_modules'):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     
     # Get or create settings record
