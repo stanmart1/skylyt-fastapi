@@ -622,10 +622,7 @@ export const HotelManagement: React.FC = () => {
                 className="mt-2" 
               />
             </div>
-            <div>
-              <Label htmlFor="features" className="text-sm font-medium">Features (comma separated)</Label>
-              <Input id="features" value={hotelForm.features} onChange={(e) => setHotelForm({...hotelForm, features: e.target.value})} placeholder="Ocean View, Balcony, Kitchen" className="mt-1" />
-            </div>
+
             <div>
               <Label htmlFor="description" className="text-sm font-medium">Description</Label>
               <Textarea id="description" value={hotelForm.description} onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})} placeholder="Hotel description..." rows={3} className="mt-1" />

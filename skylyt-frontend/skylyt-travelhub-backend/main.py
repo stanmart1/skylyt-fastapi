@@ -29,6 +29,7 @@ from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
+from app.core.openapi import custom_openapi
 
 # Setup logging
 setup_logging()
@@ -156,12 +157,39 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Skylyt Luxury API",
-    description="Travel booking platform API",
+    description="""A comprehensive booking platform API for luxury car rentals and hotel reservations.
+    
+    ## Features
+    * **Authentication** - JWT-based user authentication and authorization
+    * **Hotels** - Search, book, and manage hotel reservations
+    * **Cars** - Browse and rent luxury vehicles
+    * **Bookings** - Complete booking management system
+    * **Payments** - Secure payment processing with multiple gateways
+    * **Admin** - Full administrative dashboard and controls
+    * **Localization** - Multi-currency and location support
+    """,
     version="1.0.0",
-    docs_url="/docs" if config_settings.DEBUG else None,
-    redoc_url="/redoc" if config_settings.DEBUG else None,
+    
+    license_info={
+        "name": "Private",
+    },
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {"name": "Authentication", "description": "User authentication and authorization"},
+        {"name": "Users", "description": "User profile and account management"},
+        {"name": "Hotels", "description": "Hotel search and booking operations"},
+        {"name": "Cars", "description": "Car rental operations"},
+        {"name": "Bookings", "description": "Booking management and history"},
+        {"name": "Payments", "description": "Payment processing and transactions"},
+        {"name": "Admin", "description": "Administrative operations"},
+        {"name": "Health", "description": "System health and monitoring"},
+    ],
     lifespan=lifespan
 )
+
+# Configure custom OpenAPI to exclude database schemas
+app.openapi = lambda: custom_openapi(app)
 
 # CORS - Add explicit CORS middleware
 app.add_middleware(
