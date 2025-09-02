@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, Star, CheckCircle, XCircle, Clock, Search, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, Star, CheckCircle, XCircle, Clock, Search, Filter, MapPin, Navigation } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
@@ -35,6 +35,23 @@ interface Driver {
   updated_at?: string;
 }
 
+interface Trip {
+  id: number;
+  booking_reference: string;
+  booking_type: string;
+  status: string;
+  trip_status: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  start_date: string;
+  end_date: string;
+  pickup_location?: string;
+  dropoff_location?: string;
+  special_requests?: string;
+  created_at: string;
+}
+
 export const DriverManagement: React.FC = () => {
   const { toast } = useToast();
   const { hasPermission } = useAuth();
@@ -42,6 +59,10 @@ export const DriverManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [driverTrips, setDriverTrips] = useState<Trip[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(false);
+  const [showTrips, setShowTrips] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     is_active: '',
@@ -69,6 +90,15 @@ export const DriverManagement: React.FC = () => {
     open: false,
     driverId: 0,
     driverName: ''
+  });
+  const [statusUpdate, setStatusUpdate] = useState<{
+    open: boolean;
+    tripId: number;
+    currentStatus: string;
+  }>({
+    open: false,
+    tripId: 0,
+    currentStatus: ''
   });
 
   useEffect(() => {
@@ -210,6 +240,80 @@ export const DriverManagement: React.FC = () => {
         description: 'Failed to update driver availability',
         variant: 'error'
       });
+    }
+  };
+
+  const fetchDriverTrips = async (driverId: number) => {
+    try {
+      setTripsLoading(true);
+      const data = await apiService.request(`/drivers/${driverId}/bookings`);
+      setDriverTrips(data.bookings || []);
+    } catch (error) {
+      console.error('Failed to fetch driver trips:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch driver trips',
+        variant: 'error'
+      });
+    } finally {
+      setTripsLoading(false);
+    }
+  };
+
+  const handleViewTrips = async (driver: Driver) => {
+    setSelectedDriver(driver);
+    setShowTrips(true);
+    await fetchDriverTrips(driver.id);
+  };
+
+  const handleUpdateTripStatus = async (tripId: number, newStatus: string) => {
+    if (!selectedDriver) return;
+    
+    try {
+      await apiService.request(`/drivers/${selectedDriver.id}/trips/${tripId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ trip_status: newStatus })
+      });
+      
+      // Refresh trips
+      await fetchDriverTrips(selectedDriver.id);
+      
+      toast({
+        title: 'Success',
+        description: 'Trip status updated successfully',
+        variant: 'success'
+      });
+      
+      setStatusUpdate({ open: false, tripId: 0, currentStatus: '' });
+    } catch (error: any) {
+      console.error('Failed to update trip status:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.detail || 'Failed to update trip status',
+        variant: 'error'
+      });
+    }
+  };
+
+  const getTripStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      case 'en_route': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTripStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'en_route': return 'En Route';
+      case 'in_progress': return 'In Progress';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      default: return 'Unknown';
     }
   };
 
@@ -400,6 +504,16 @@ export const DriverManagement: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleViewTrips(driver)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Navigation className="h-4 w-4 mr-1" />
+                            View Trips
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setDeleteConfirm({
                               open: true,
                               driverId: driver.id,
@@ -569,6 +683,128 @@ export const DriverManagement: React.FC = () => {
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Driver Trips Modal */}
+      <Dialog open={showTrips} onOpenChange={setShowTrips}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Trips for {selectedDriver?.name}</DialogTitle>
+            <DialogDescription>
+              View and manage trips assigned to this driver
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {tripsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse h-24 bg-gray-200 rounded" />
+                ))}
+              </div>
+            ) : driverTrips.length === 0 ? (
+              <div className="text-center py-8">
+                <Navigation className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No trips assigned to this driver</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {driverTrips.map((trip) => (
+                  <div key={trip.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold">{trip.booking_reference}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={getTripStatusColor(trip.trip_status)}>
+                            {getTripStatusText(trip.trip_status)}
+                          </Badge>
+                          <Badge variant="outline">{trip.booking_type}</Badge>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setStatusUpdate({
+                          open: true,
+                          tripId: trip.id,
+                          currentStatus: trip.trip_status
+                        })}
+                        disabled={trip.trip_status === 'completed' || trip.trip_status === 'cancelled'}
+                      >
+                        Update Status
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-700">Customer Details</p>
+                        <p>{trip.customer_name}</p>
+                        <p className="text-gray-600">{trip.customer_email}</p>
+                        {trip.customer_phone && <p className="text-gray-600">{trip.customer_phone}</p>}
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-gray-700">Trip Details</p>
+                        <p>Start: {new Date(trip.start_date).toLocaleString()}</p>
+                        <p>End: {new Date(trip.end_date).toLocaleString()}</p>
+                        {trip.pickup_location && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3" />
+                            <span className="text-xs">{trip.pickup_location}</span>
+                          </div>
+                        )}
+                        {trip.dropoff_location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span className="text-xs">→ {trip.dropoff_location}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {trip.special_requests && (
+                      <div className="mt-3 p-2 bg-gray-50 rounded">
+                        <p className="text-sm font-medium text-gray-700">Special Requests:</p>
+                        <p className="text-sm text-gray-600">{trip.special_requests}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trip Status Update Dialog */}
+      <Dialog open={statusUpdate.open} onOpenChange={(open) => setStatusUpdate({ ...statusUpdate, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Trip Status</DialogTitle>
+            <DialogDescription>
+              Select the new status for this trip
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-2">
+              {['pending', 'en_route', 'in_progress', 'completed', 'cancelled'].map((status) => (
+                <Button
+                  key={status}
+                  variant={statusUpdate.currentStatus === status ? 'default' : 'outline'}
+                  className="justify-start"
+                  onClick={() => handleUpdateTripStatus(statusUpdate.tripId, status)}
+                  disabled={statusUpdate.currentStatus === status}
+                >
+                  <Badge className={`${getTripStatusColor(status)} mr-2`}>
+                    {getTripStatusText(status)}
+                  </Badge>
+                  {status === statusUpdate.currentStatus && '(Current)'}
+                </Button>
+              ))}
             </div>
           </div>
         </DialogContent>

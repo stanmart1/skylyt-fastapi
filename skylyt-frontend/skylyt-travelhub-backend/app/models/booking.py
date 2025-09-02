@@ -9,6 +9,13 @@ class BookingStatus(enum.Enum):
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
 
+class TripStatus(enum.Enum):
+    PENDING = "pending"
+    EN_ROUTE = "en_route"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
 
 class BookingType(enum.Enum):
     HOTEL = "hotel"
@@ -31,6 +38,7 @@ class Booking(BaseModel):
     
     # Driver assignment
     driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
+    trip_status = Column(Enum(TripStatus), default=TripStatus.PENDING, nullable=True)
     
     # Booking details
     hotel_name = Column(String(255), nullable=True)

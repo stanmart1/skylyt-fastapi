@@ -7,7 +7,7 @@ from datetime import date, datetime
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.driver import Driver
-from app.models.booking import Booking
+from app.models.booking import Booking, TripStatus
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
@@ -228,21 +228,44 @@ async def get_driver_bookings(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get bookings assigned to a specific driver"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
+    """Get bookings assigned to a specific driver - Restricted Data Access"""
+    # Allow driver to view their own bookings or admin to view any driver's bookings
+    if not (current_user.is_admin() or current_user.is_superadmin() or 
+            (hasattr(current_user, 'driver_id') and current_user.driver_id == driver_id)):
+        raise HTTPException(status_code=403, detail="Access denied")
     
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
     
+    # Only return bookings assigned to this specific driver
     bookings = db.query(Booking).filter(
         Booking.driver_id == driver_id
     ).offset(skip).limit(limit).all()
     
+    # Return only essential customer info for assigned trips
+    booking_data = []
+    for booking in bookings:
+        booking_data.append({
+            "id": booking.id,
+            "booking_reference": booking.booking_reference,
+            "booking_type": booking.booking_type,
+            "status": booking.status,
+            "trip_status": booking.trip_status.value if booking.trip_status else "pending",
+            "customer_name": booking.customer_name,
+            "customer_email": booking.customer_email,
+            "customer_phone": booking.customer_phone,
+            "start_date": booking.start_date,
+            "end_date": booking.end_date,
+            "pickup_location": booking.booking_data.get("pickup_location") if booking.booking_data else None,
+            "dropoff_location": booking.booking_data.get("dropoff_location") if booking.booking_data else None,
+            "special_requests": booking.special_requests,
+            "created_at": booking.created_at
+        })
+    
     return {
         "driver_name": driver.name,
-        "bookings": bookings
+        "bookings": booking_data
     }
 
 
@@ -269,3 +292,130 @@ async def update_driver_availability(
         "driver_id": driver_id,
         "is_available": is_available
     }
+
+class TripStatusUpdate(BaseModel):
+    trip_status: str
+
+@router.put("/{driver_id}/trips/{trip_id}/status")
+async def update_trip_status(
+    driver_id: int,
+    trip_id: int,
+    status_update: TripStatusUpdate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update trip status - 5-stage workflow"""
+    # Allow driver to update their own trips or admin to update any trip
+    if not (current_user.is_admin() or current_user.is_superadmin() or 
+            (hasattr(current_user, 'driver_id') and current_user.driver_id == driver_id)):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Validate trip status
+    valid_statuses = [status.value for status in TripStatus]
+    if status_update.trip_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid trip status. Must be one of: {valid_statuses}")
+    
+    # Get booking assigned to this driver
+    booking = db.query(Booking).filter(
+        Booking.id == trip_id,
+        Booking.driver_id == driver_id
+    ).first()
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Trip not found or not assigned to this driver")
+    
+    # Update trip status
+    booking.trip_status = TripStatus(status_update.trip_status)
+    db.commit()
+    
+    # Send notification about status update
+    await send_trip_notification(
+        booking_id=trip_id,
+        driver_id=driver_id,
+        status=status_update.trip_status,
+        db=db
+    )
+    
+    return {
+        "message": "Trip status updated successfully",
+        "trip_id": trip_id,
+        "new_status": status_update.trip_status
+    }
+
+@router.post("/{driver_id}/trips/{trip_id}/assign")
+async def assign_trip_to_driver(
+    driver_id: int,
+    trip_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Assign trip to driver and send notification"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    driver = db.query(Driver).filter(Driver.id == driver_id).first()
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    booking = db.query(Booking).filter(Booking.id == trip_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    # Assign trip to driver
+    booking.driver_id = driver_id
+    booking.trip_status = TripStatus.PENDING
+    db.commit()
+    
+    # Send trip assignment notification
+    await send_trip_notification(
+        booking_id=trip_id,
+        driver_id=driver_id,
+        status="assigned",
+        db=db
+    )
+    
+    return {
+        "message": "Trip assigned successfully",
+        "trip_id": trip_id,
+        "driver_id": driver_id
+    }
+
+async def send_trip_notification(
+    booking_id: int,
+    driver_id: int,
+    status: str,
+    db: Session
+):
+    """Send real-time notification for trip updates"""
+    try:
+        from app.models.driver import Driver
+        
+        driver = db.query(Driver).filter(Driver.id == driver_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        
+        if not driver or not booking:
+            return
+        
+        # Create notification record (you can extend this to save to database)
+        notification_data = {
+            "driver_id": driver_id,
+            "driver_email": driver.email,
+            "booking_id": booking_id,
+            "booking_reference": booking.booking_reference,
+            "status": status,
+            "customer_name": booking.customer_name,
+            "pickup_location": booking.booking_data.get("pickup_location") if booking.booking_data else None,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Here you would integrate with your notification service
+        # For now, we'll just log it
+        print(f"TRIP NOTIFICATION: {notification_data}")
+        
+        # TODO: Integrate with email service, SMS service, or push notifications
+        # await send_email_notification(notification_data)
+        # await send_sms_notification(notification_data)
+        # await send_push_notification(notification_data)
+        
+    except Exception as e:
+        print(f"Failed to send notification: {e}")

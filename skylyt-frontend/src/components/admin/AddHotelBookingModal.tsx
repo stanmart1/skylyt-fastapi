@@ -400,16 +400,14 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
 
           <div>
             <Label htmlFor="numberOfGuests">Number of Guests</Label>
-            <Select value={formData.numberOfGuests.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, numberOfGuests: parseInt(value) }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[1,2,3,4,5,6,7,8].map(num => (
-                  <SelectItem key={num} value={num.toString()}>{num} Guest{num > 1 ? 's' : ''}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="numberOfGuests"
+              type="number"
+              min="1"
+              value={formData.numberOfGuests}
+              onChange={(e) => setFormData(prev => ({ ...prev, numberOfGuests: parseInt(e.target.value) || 1 }))}
+              placeholder="Enter number of guests"
+            />
           </div>
 
           <div>
