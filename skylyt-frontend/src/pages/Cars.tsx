@@ -194,6 +194,7 @@ const Cars = () => {
                         <PriceDisplay 
                           amount={car.price_per_day || car.price} 
                           currency={car.currency || currency}
+                          isNGNStored={false}
                           className="text-2xl font-bold text-blue-600"
                         />
                         <span className="text-gray-600 text-sm">/day</span>
