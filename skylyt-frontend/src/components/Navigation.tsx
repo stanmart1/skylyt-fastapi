@@ -193,65 +193,63 @@ const Navigation = () => {
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="flex-1 p-4 space-y-4">
-                <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                  <span>Home</span>
-                </Link>
-                {features.car_rental_enabled && (
-                  <Link to="/cars" className="text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+              <div className="flex-1 p-4 space-y-2">
+                <div className="space-y-1">
+                  <Link to="/" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
+                    Home
+                  </Link>
+                  <Link to="/cars" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                     Cars
                   </Link>
-                )}
-                {features.hotel_booking_enabled && (
-                  <Link to="/hotels" className="text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                  <Link to="/hotels" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                     Hotels
                   </Link>
-                )}
-                <Link to="/about" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                  <span>About</span>
-                </Link>
-                <Link to="/contact" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                  <span>Contact</span>
-                </Link>
+                  <Link to="/about" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
+                    About
+                  </Link>
+                  <Link to="/contact" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
+                    Contact
+                  </Link>
+                </div>
                 {isAuthenticated && (
-                  <>
-                    <div className="border-t pt-2 mt-4">
-                      <p className="text-xs text-gray-500 mb-2 px-2">Account</p>
-                      <Link to="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                  <div className="border-t pt-4 mt-4">
+                    <p className="text-xs font-medium text-gray-500 mb-3 px-3">Account</p>
+                    <div className="space-y-1">
+                      <Link to="/dashboard" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                         <User className="h-4 w-4" />
                         <span>Dashboard</span>
                       </Link>
                       {(hasRole('admin') || hasRole('superadmin')) && (
-                        <Link to="/admin" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                        <Link to="/admin" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                           <Settings className="h-4 w-4" />
                           <span>Admin Dashboard</span>
                         </Link>
                       )}
                       {hasRole('driver') && (
-                        <Link to="/driver-dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                        <Link to="/driver-dashboard" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                           <Car className="h-4 w-4" />
                           <span>Driver Dashboard</span>
                         </Link>
                       )}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
-              <div className="p-4 border-t">
+              <div className="p-4 border-t bg-gray-50">
                 {isAuthenticated ? (
-                  <Button onClick={handleLogout} variant="outline" className="w-full flex items-center space-x-1 text-red-600 hover:text-red-700">
+                  <Button onClick={handleLogout} variant="outline" className="w-full flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </Button>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="ghost" className="text-blue-600 w-full">
+                      <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
                         Login
                       </Button>
                     </Link>
                     <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                      <Button className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-full">
+                      <Button className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
                         Register
                       </Button>
                     </Link>
