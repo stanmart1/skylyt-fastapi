@@ -113,7 +113,7 @@ const FeaturedHotels = () => {
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:left-0"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:left-0"
             onClick={prevSlide}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -122,14 +122,14 @@ const FeaturedHotels = () => {
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:right-0"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:right-0"
             onClick={nextSlide}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
           
           {/* Carousel Container */}
-          <div className="overflow-hidden mx-8 md:mx-12">
+          <div className="overflow-hidden mx-4 md:mx-12">
             <div 
               className="flex transition-transform duration-500 ease-in-out"
               style={{ 

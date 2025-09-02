@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { MapPin, Calendar, Users, Search, Filter } from 'lucide-react';
 import { SearchParams } from '@/types/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface AdvancedSearchProps {
   onSearch: (params: SearchParams) => void;
@@ -15,6 +16,7 @@ interface AdvancedSearchProps {
 }
 
 export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
+  const { currency, formatPrice, convertAmount } = useCurrency();
   const [searchParams, setSearchParams] = useState<SearchParams>({
     destination: '',
     check_in: '',
@@ -127,7 +129,7 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
         <div className="space-y-2">
           <Label className="text-sm font-medium">Price Range</Label>
           <div className="text-xs text-gray-600 mb-2">
-            ${searchParams.min_price} - ${searchParams.max_price}
+            {formatPrice(convertAmount(searchParams.min_price || 0, 'NGN'), currency)} - {formatPrice(convertAmount(searchParams.max_price || 1000, 'NGN'), currency)}
           </div>
           <Slider
             value={[searchParams.min_price || 0, searchParams.max_price || 1000]}

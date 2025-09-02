@@ -215,6 +215,7 @@ def get_car_details(car_id: str, db: Session = Depends(get_db)):
         "description": car.description,
         "features": car.features,
         "image_url": car.images[0] if car.images and len(car.images) > 0 else None,
+        "images": car.images or [],
         "location": car.location,
         "rating": car.rating,
         "available": car.is_available

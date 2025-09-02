@@ -10,11 +10,13 @@ import { apiService } from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CityHotelsPage = () => {
   const { stateSlug, citySlug } = useParams();
   const { currency } = useCurrency();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { isAuthenticated } = useAuth();
   const [state, setState] = useState<any>(null);
   const [city, setCity] = useState<any>(null);
   const [hotels, setHotels] = useState([]);
@@ -40,8 +42,7 @@ const CityHotelsPage = () => {
   }, [stateSlug, citySlug, currency]);
 
   const handleFavoriteToggle = async (hotel: any) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!isAuthenticated) {
       window.location.href = '/login';
       return;
     }

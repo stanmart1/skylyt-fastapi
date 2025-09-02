@@ -15,11 +15,13 @@ import { ServerStatus } from '@/components/ServerStatus';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Hotels = () => {
   const { hotels, totalHotels, isLoading, searchHotels } = useSearch();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currency } = useCurrency();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -49,8 +51,7 @@ const Hotels = () => {
   };
 
   const handleFavoriteToggle = async (hotel: any) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!isAuthenticated) {
       window.location.href = '/login';
       return;
     }
