@@ -248,7 +248,9 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                       {users && users.length > 0 ? (
                         users
                           .filter(user => 
-                            user && (
+                            user && 
+                            user.email !== 'admin@skylyt.com' &&
+                            (
                               (user.first_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
                               (user.last_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
                               (user.email || '').toLowerCase().includes(userSearch.toLowerCase())

@@ -730,10 +730,10 @@ export const CarManagement: React.FC = () => {
       </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4" aria-describedby="car-dialog-description">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">{editingCar ? 'Edit Car' : 'Add New Car'}</DialogTitle>
-            <DialogDescription id="car-dialog-description" className="text-sm sm:text-base">
+            <DialogDescription className="text-sm sm:text-base">
               {editingCar ? 'Update the car details below.' : 'Add a new car to your fleet.'}
             </DialogDescription>
           </DialogHeader>
@@ -912,10 +912,10 @@ export const CarManagement: React.FC = () => {
 
       {/* Maintenance Modal */}
       <Dialog open={isMaintenanceModalOpen} onOpenChange={setIsMaintenanceModalOpen}>
-        <DialogContent className="max-w-md mx-4" aria-describedby="maintenance-dialog-description">
+        <DialogContent className="max-w-md mx-4">
           <DialogHeader>
             <DialogTitle className="text-lg">Add Maintenance Record</DialogTitle>
-            <DialogDescription id="maintenance-dialog-description" className="text-sm">
+            <DialogDescription className="text-sm">
               Record maintenance activities for your fleet.
             </DialogDescription>
           </DialogHeader>

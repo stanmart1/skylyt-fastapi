@@ -19,7 +19,8 @@ class OneSignalService {
     url?: string;
   }) {
     if (!this.isConfigured()) {
-      throw new Error('OneSignal is not properly configured');
+      console.warn('OneSignal SDK not loaded - notifications disabled');
+      return { success: false, error: 'OneSignal not configured' };
     }
     
     try {
@@ -53,7 +54,8 @@ class OneSignalService {
 
   async sendToAllUsers(title: string, message: string, url?: string) {
     if (!this.isConfigured()) {
-      throw new Error('OneSignal is not properly configured');
+      console.warn('OneSignal SDK not loaded - notifications disabled');
+      return { success: false, error: 'OneSignal not configured' };
     }
     
     return this.sendNotification({
@@ -66,7 +68,8 @@ class OneSignalService {
 
   async sendToUser(userId: string, title: string, message: string, url?: string) {
     if (!this.isConfigured()) {
-      throw new Error('OneSignal is not properly configured');
+      console.warn('OneSignal SDK not loaded - notifications disabled');
+      return { success: false, error: 'OneSignal not configured' };
     }
     
     if (!userId) {
