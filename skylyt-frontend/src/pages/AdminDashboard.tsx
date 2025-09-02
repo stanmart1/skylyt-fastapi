@@ -46,6 +46,7 @@ import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { CarFleetStats } from '@/components/admin/CarFleetStats';
 import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
+import { ModuleManagement } from '@/components/admin/ModuleManagement';
 
 interface AdminStats {
   totalBookings: number;
@@ -1433,6 +1434,7 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'currency' && hasPermission('settings.view_currency') && <CurrencySettings />}
                 {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
                 {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
+                {activeSettingsTab === 'modules' && hasPermission('dashboard.view_modules') && <ModuleManagement />}
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>
