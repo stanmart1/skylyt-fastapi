@@ -198,6 +198,7 @@ app.add_middleware(
         "http://localhost:8080", 
         "http://127.0.0.1:8080", 
         "https://skylyt.scaleitpro.com",
+        "https://skylytapi.scaleitpro.com",
         "http://localhost:5173",
         "http://localhost:4173",  # Vite dev server
         "http://localhost:3000",   # Alternative dev port
