@@ -39,6 +39,9 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors">
+              Home
+            </Link>
             {features.car_rental_enabled && (
               <Link to="/cars" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
                 <Car className="h-4 w-4" />
@@ -51,6 +54,12 @@ const Navigation = () => {
                 <span>Hotels</span>
               </Link>
             )}
+            <Link to="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
+              About
+            </Link>
+            <Link to="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">
+              Contact
+            </Link>
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -187,6 +196,9 @@ const Navigation = () => {
                 </button>
               </div>
               <div className="flex-1 p-4 space-y-4">
+                <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                  <span>Home</span>
+                </Link>
                 {features.car_rental_enabled && (
                   <Link to="/cars" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
                     <Car className="h-4 w-4" />
@@ -199,6 +211,12 @@ const Navigation = () => {
                     <span>Hotels</span>
                   </Link>
                 )}
+                <Link to="/about" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                  <span>About</span>
+                </Link>
+                <Link to="/contact" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                  <span>Contact</span>
+                </Link>
                 {isAuthenticated && (
                   <>
                     <div className="border-t pt-2 mt-4">

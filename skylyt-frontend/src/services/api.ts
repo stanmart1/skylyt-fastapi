@@ -58,7 +58,32 @@ class ApiService {
             error.detail.replace(/[<>"'&]/g, '') : 'API request failed';
           errorMessage = sanitizedDetail || 'API request failed';
         } catch {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          // Provide more specific error messages based on status codes
+          switch (response.status) {
+            case 401:
+              errorMessage = 'Invalid credentials or session expired';
+              break;
+            case 403:
+              errorMessage = 'Access denied - insufficient permissions';
+              break;
+            case 404:
+              errorMessage = 'Resource not found';
+              break;
+            case 422:
+              errorMessage = 'Invalid data provided';
+              break;
+            case 429:
+              errorMessage = 'Too many requests - please wait before trying again';
+              break;
+            case 500:
+              errorMessage = 'Server error - please try again later';
+              break;
+            case 503:
+              errorMessage = 'Service temporarily unavailable';
+              break;
+            default:
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
         }
         throw new Error(errorMessage);
       }
@@ -79,20 +104,39 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const formData = new URLSearchParams(data);
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData,
-    });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      });
 
-    if (!response.ok) {
-      const error: ApiError = await response.json();
-      throw new Error(error.detail || 'API request failed');
+      if (!response.ok) {
+        let errorMessage = 'Request failed';
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || 'Request failed';
+        } catch {
+          if (response.status === 401) {
+            errorMessage = 'Invalid credentials';
+          } else if (response.status === 422) {
+            errorMessage = 'Invalid login data provided';
+          } else {
+            errorMessage = `Login failed (${response.status})`;
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please check your internet connection.');
+      }
+      throw error;
     }
-
-    return response.json();
   }
 
   // Authentication

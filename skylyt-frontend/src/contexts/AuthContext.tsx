@@ -5,8 +5,8 @@ import { ErrorHandler } from '@/utils/errorHandler';
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: LoginRequest) => Promise<{ success: boolean; redirectTo?: string }>;
-  register: (userData: RegisterRequest) => Promise<boolean>;
+  login: (credentials: LoginRequest) => Promise<{ success: boolean; redirectTo?: string; error?: string }>;
+  register: (userData: RegisterRequest) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginRequest): Promise<{ success: boolean; redirectTo?: string }> => {
+  const login = async (credentials: LoginRequest): Promise<{ success: boolean; redirectTo?: string; error?: string }> => {
     try {
       const response: TokenResponse = await apiService.login(credentials);
       
@@ -74,19 +74,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (response.user.roles.some(role => role.name === 'admin' || role.name === 'superadmin') ? '/admin' : '/dashboard');
       
       return { success: true, redirectTo };
-    } catch (error) {
-      console.error('Login failed:', ErrorHandler.handle(error));
-      return { success: false };
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      
+      let errorMessage = "Login failed. Please try again.";
+      
+      if (error.message) {
+        if (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('Invalid credentials')) {
+          errorMessage = "Invalid email or password. Please check your credentials.";
+        } else if (error.message.includes('404') || error.message.includes('User not found')) {
+          errorMessage = "No account found with this email address.";
+        } else if (error.message.includes('403') || error.message.includes('Account disabled')) {
+          errorMessage = "Your account has been disabled. Please contact support.";
+        } else if (error.message.includes('429') || error.message.includes('Too many')) {
+          errorMessage = "Too many login attempts. Please wait before trying again.";
+        } else if (error.message.includes('network') || error.message.includes('fetch') || error.message.includes('connect')) {
+          errorMessage = "Unable to connect to server. Please check your connection.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Request timed out. Please try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
 
-  const register = async (userData: RegisterRequest): Promise<boolean> => {
+  const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
       await apiService.register(userData);
-      return true;
-    } catch (error) {
-      console.error('Registration failed:', ErrorHandler.handle(error));
-      return false;
+      return { success: true };
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      
+      let errorMessage = "Registration failed. Please try again.";
+      
+      if (error.message) {
+        if (error.message.includes('already exists') || error.message.includes('already registered')) {
+          errorMessage = "An account with this email already exists. Please use a different email or try logging in.";
+        } else if (error.message.includes('invalid email') || error.message.includes('email format')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message.includes('password') && error.message.includes('weak')) {
+          errorMessage = "Password is too weak. Please use a stronger password with at least 8 characters.";
+        } else if (error.message.includes('validation') || error.message.includes('required')) {
+          errorMessage = "Please fill in all required fields correctly.";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = "Unable to connect to server. Please check your connection.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
 

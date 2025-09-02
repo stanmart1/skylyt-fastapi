@@ -38,14 +38,32 @@ const Login = () => {
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid email or password. Please try again.",
+          description: result.error || "Invalid email or password. Please check your credentials and try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "An error occurred during login.";
+      
+      if (error.message) {
+        if (error.message.includes('Invalid credentials') || error.message.includes('Incorrect username or password')) {
+          errorMessage = "Invalid email or password. Please check your credentials.";
+        } else if (error.message.includes('User not found') || error.message.includes('No user found')) {
+          errorMessage = "No account found with this email address. Please check your email or register for a new account.";
+        } else if (error.message.includes('Account disabled') || error.message.includes('inactive')) {
+          errorMessage = "Your account has been disabled. Please contact support for assistance.";
+        } else if (error.message.includes('Too many attempts') || error.message.includes('rate limit')) {
+          errorMessage = "Too many login attempts. Please wait a few minutes before trying again.";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = "Unable to connect to server. Please check your internet connection and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Error",
-        description: "An error occurred during login.",
+        title: "Login Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -109,6 +127,16 @@ const Login = () => {
               <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
                 Forgot password?
               </Link>
+            </div>
+
+            {/* Login Help */}
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+              <p className="font-medium mb-1">Having trouble logging in?</p>
+              <ul className="space-y-1">
+                <li>• Check your email address for typos</li>
+                <li>• Ensure your password is correct (case-sensitive)</li>
+                <li>• Try resetting your password if you've forgotten it</li>
+              </ul>
             </div>
 
             <Button

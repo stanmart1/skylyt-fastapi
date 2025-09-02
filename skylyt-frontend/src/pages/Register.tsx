@@ -29,10 +29,29 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password mismatch",
         description: "Passwords do not match. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (formData.password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your first and last name.",
         variant: "destructive",
       });
       return;
@@ -46,28 +65,27 @@ const Register = () => {
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
-
       };
       
-      const success = await register(registerData);
+      const result = await register(registerData);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Registration successful!",
-          description: "Please log in with your new account.",
+          description: "Your account has been created. Please log in with your new credentials.",
         });
         navigate(`/login${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`);
       } else {
         toast({
           title: "Registration failed",
-          description: "Please check your information and try again.",
+          description: result.error || "Please check your information and try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "An error occurred during registration.",
+        title: "Registration Error",
+        description: error.message || "An error occurred during registration. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -136,10 +154,11 @@ const Register = () => {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a strong password"
+                  placeholder="Create a strong password (min. 8 characters)"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                   required
+                  minLength={8}
                   className="h-10 pr-10"
                 />
                 <button
@@ -150,6 +169,9 @@ const Register = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {formData.password && formData.password.length < 8 && (
+                <p className="text-xs text-red-600">Password must be at least 8 characters long</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -163,6 +185,19 @@ const Register = () => {
                 required
                 className="h-10"
               />
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-xs text-red-600">Passwords do not match</p>
+              )}
+            </div>
+
+            {/* Registration Help */}
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+              <p className="font-medium mb-1">Password Requirements:</p>
+              <ul className="space-y-1">
+                <li>• At least 8 characters long</li>
+                <li>• Use a mix of letters, numbers, and symbols</li>
+                <li>• Avoid common passwords or personal information</li>
+              </ul>
             </div>
 
             <div className="flex items-start space-x-2">
