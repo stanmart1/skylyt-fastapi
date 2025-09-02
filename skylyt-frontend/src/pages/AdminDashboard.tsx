@@ -561,6 +561,16 @@ const AdminDashboard = () => {
                           Security
                         </Button>
                       )}
+                      {hasPermission('dashboard.view_modules') && (
+                        <Button
+                          variant={activeSettingsTab === 'modules' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('modules'); setSidebarOpen(false); }}
+                        >
+                          Module Management
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -835,6 +845,16 @@ const AdminDashboard = () => {
                       onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); }}
                     >
                       Security
+                    </Button>
+                  )}
+                  {hasPermission('dashboard.view_modules') && (
+                    <Button
+                      variant={activeSettingsTab === 'modules' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('modules'); }}
+                    >
+                      Module Management
                     </Button>
                   )}
                 </div>
@@ -1392,6 +1412,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Currency Settings'}
                   {activeSettingsTab === 'notifications' && 'Notification Settings'}
                   {activeSettingsTab === 'security' && 'Security Settings'}
+                  {activeSettingsTab === 'modules' && 'Module Management'}
                   {!activeSettingsTab && 'Admin Settings'}
                 </h1>
                 <p className="text-gray-600">
@@ -1401,6 +1422,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Manage currency rates and exchange settings'}
                   {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
                   {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
+                  {activeSettingsTab === 'modules' && 'Manage system modules and features'}
                   {!activeSettingsTab && 'Configure system settings and preferences'}
                 </p>
               </div>
