@@ -32,10 +32,12 @@ import { BookingHistory } from '@/components/booking/BookingHistory';
 import { FavoritesManager } from '@/components/favorites/FavoritesManager';
 import { apiService } from '@/services/api';
 import PriceDisplay from '@/components/PriceDisplay';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const { user, logout } = useAuth();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState({
     email: true,
     sms: false
@@ -65,8 +67,11 @@ const Dashboard = () => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const handleLogout = () => {
+    toast({
+      title: "Logging out...",
+      description: "You are being signed out of your account.",
+    });
     logout();
-    window.location.href = '/';
   };
 
   const handleNotificationChange = (type: 'email' | 'sms', checked: boolean) => {
@@ -81,10 +86,17 @@ const Dashboard = () => {
         method: 'PUT',
         body: JSON.stringify(notifications)
       });
-      alert('Settings saved successfully!');
+      toast({
+        title: "Settings saved!",
+        description: "Your notification preferences have been updated.",
+      });
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      toast({
+        title: "Failed to save settings",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -92,7 +104,11 @@ const Dashboard = () => {
 
   const handlePasswordChange = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match');
+      toast({
+        title: "Password mismatch",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -103,12 +119,19 @@ const Dashboard = () => {
         new_password: passwordForm.newPassword
       });
       
-      alert('Password changed successfully');
+      toast({
+        title: "Password changed!",
+        description: "Your password has been updated successfully.",
+      });
       setPasswordModalOpen(false);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       console.error('Failed to change password:', error);
-      alert('Failed to change password. Please check your current password.');
+      toast({
+        title: "Failed to change password",
+        description: "Please check your current password and try again.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }

@@ -134,7 +134,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     apiService.clearToken();
     localStorage.removeItem('access_token');
-    window.location.href = '/';
+    
+    // Show logout toast before redirect
+    const event = new CustomEvent('show-toast', {
+      detail: {
+        title: "Logged out successfully",
+        description: "You have been signed out of your account.",
+      }
+    });
+    window.dispatchEvent(event);
+    
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1000);
   };
 
   const hasPermission = (permission: string): boolean => {
