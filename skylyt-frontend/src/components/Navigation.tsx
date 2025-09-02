@@ -43,15 +43,13 @@ const Navigation = () => {
               Home
             </Link>
             {features.car_rental_enabled && (
-              <Link to="/cars" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
-                <Car className="h-4 w-4" />
-                <span>Cars</span>
+              <Link to="/cars" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Cars
               </Link>
             )}
             {features.hotel_booking_enabled && (
-              <Link to="/hotels" className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors">
-                <Hotel className="h-4 w-4" />
-                <span>Hotels</span>
+              <Link to="/hotels" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Hotels
               </Link>
             )}
             <Link to="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
@@ -200,15 +198,13 @@ const Navigation = () => {
                   <span>Home</span>
                 </Link>
                 {features.car_rental_enabled && (
-                  <Link to="/cars" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                    <Car className="h-4 w-4" />
-                    <span>Cars</span>
+                  <Link to="/cars" className="text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                    Cars
                   </Link>
                 )}
                 {features.hotel_booking_enabled && (
-                  <Link to="/hotels" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
-                    <Hotel className="h-4 w-4" />
-                    <span>Hotels</span>
+                  <Link to="/hotels" className="text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                    Hotels
                   </Link>
                 )}
                 <Link to="/about" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>

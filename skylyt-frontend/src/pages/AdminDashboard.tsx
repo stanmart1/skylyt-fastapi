@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 
-import { Car, Hotel, Users, DollarSign, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell, ChevronDown, ChevronRight } from 'lucide-react';
+import { Car, Hotel, Users, DollarSign, Settings, LogOut, Shield, CreditCard, BarChart3, Calendar, User, MessageSquare, Ticket, Bell, ChevronDown, ChevronRight, FileText, Mail, Info } from 'lucide-react';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EnhancedBookingManagement } from '@/components/admin/EnhancedBookingManagement';
 import HotelBookingManagement from '@/components/admin/HotelBookingManagement';
@@ -48,6 +48,8 @@ import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
 import { DriverManagement } from '@/components/admin/DriverManagement';
 import { ModuleManagement } from '@/components/admin/ModuleManagement';
 import { FooterManagement } from '@/components/admin/FooterManagement';
+import { ContactManagement } from '@/components/admin/ContactManagement';
+import { AboutManagement } from '@/components/admin/AboutManagement';
 import { useFeatures } from '@/contexts/FeaturesContext';
 
 interface AdminStats {
@@ -479,17 +481,30 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
-              {/* Notifications moved to Settings tab */}
-              {/* {hasPermission('dashboard.view_notifications') && (
-                <Button
-                  variant={activeTab === 'notifications' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => { setActiveTab('notifications'); setSidebarOpen(false); }}
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notifications
-                </Button>
-              )} */}
+              <Button
+                variant={activeTab === 'footer' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('footer'); setSidebarOpen(false); }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Footer
+              </Button>
+              <Button
+                variant={activeTab === 'contact' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('contact'); setSidebarOpen(false); }}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Page
+              </Button>
+              <Button
+                variant={activeTab === 'about' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => { setActiveTab('about'); setSidebarOpen(false); }}
+              >
+                <Info className="h-4 w-4 mr-2" />
+                About Page
+              </Button>
               {hasPermission('dashboard.view_settings') && (
                 <div className="space-y-1">
                   <Button
@@ -575,14 +590,7 @@ const AdminDashboard = () => {
                           Module Management
                         </Button>
                       )}
-                      <Button
-                        variant={activeSettingsTab === 'footer' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-full justify-start text-sm"
-                        onClick={() => { setActiveTab('settings'); setActiveSettingsTab('footer'); setSidebarOpen(false); }}
-                      >
-                        Footer
-                      </Button>
+
                     </div>
                   )}
                 </div>
@@ -773,17 +781,30 @@ const AdminDashboard = () => {
               )}
             </div>
           )}
-          {/* Notifications moved to Settings tab */}
-          {/* {hasPermission('dashboard.view_notifications') && (
-            <Button
-              variant={activeTab === 'notifications' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('notifications')}
-            >
-              <Bell className="h-4 w-4 mr-2" />
-              Notifications
-            </Button>
-          )} */}
+          <Button
+            variant={activeTab === 'footer' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('footer')}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Footer
+          </Button>
+          <Button
+            variant={activeTab === 'contact' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('contact')}
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Contact Page
+          </Button>
+          <Button
+            variant={activeTab === 'about' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => setActiveTab('about')}
+          >
+            <Info className="h-4 w-4 mr-2" />
+            About Page
+          </Button>
           {hasPermission('dashboard.view_settings') && (
             <div className="space-y-1">
               <Button
@@ -869,14 +890,7 @@ const AdminDashboard = () => {
                       Module Management
                     </Button>
                   )}
-                  <Button
-                    variant={activeSettingsTab === 'footer' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-start text-sm"
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsTab('footer'); }}
-                  >
-                    Footer
-                  </Button>
+
                 </div>
               )}
             </div>
@@ -1433,7 +1447,6 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'notifications' && 'Notification Settings'}
                   {activeSettingsTab === 'security' && 'Security Settings'}
                   {activeSettingsTab === 'modules' && 'Module Management'}
-                  {activeSettingsTab === 'footer' && 'Footer Management'}
                   {!activeSettingsTab && 'Admin Settings'}
                 </h1>
                 <p className="text-gray-600">
@@ -1444,7 +1457,6 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
                   {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
                   {activeSettingsTab === 'modules' && 'Manage system modules and features'}
-                  {activeSettingsTab === 'footer' && 'Manage company information and contact details in footer'}
                   {!activeSettingsTab && 'Configure system settings and preferences'}
                 </p>
               </div>
@@ -1456,7 +1468,6 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
                 {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
                 {activeSettingsTab === 'modules' && hasPermission('dashboard.view_modules') && <ModuleManagement />}
-                {activeSettingsTab === 'footer' && <FooterManagement />}
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>
             </div>
@@ -1523,6 +1534,42 @@ const AdminDashboard = () => {
                 {activeHotelTab === 'hotels' && <HotelManagement />}
                 {activeHotelTab === 'reviews' && <ReviewManagement />}
                 {!activeHotelTab && <HotelManagement />}
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'footer' && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Footer Management</h1>
+                <p className="text-gray-600">Manage company information and contact details in footer</p>
+              </div>
+              <ErrorBoundary>
+                <FooterManagement />
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'contact' && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Contact Page Management</h1>
+                <p className="text-gray-600">Manage contact page content and information</p>
+              </div>
+              <ErrorBoundary>
+                <ContactManagement />
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'about' && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">About Page Management</h1>
+                <p className="text-gray-600">Manage about page content and company information</p>
+              </div>
+              <ErrorBoundary>
+                <AboutManagement />
               </ErrorBoundary>
             </div>
           )}
