@@ -253,7 +253,7 @@ const DriverDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Driver Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back, {driverProfile?.name}</p>
@@ -362,7 +362,7 @@ const DriverDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Navigation className="h-5 w-5" />
+                  <Car className="h-5 w-5" />
                   My Trips
                 </CardTitle>
               </CardHeader>
