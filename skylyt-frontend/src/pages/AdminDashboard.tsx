@@ -773,7 +773,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-700">
-                    <PriceDisplay amount={stats.totalRevenue} currency={currency} />
+                    <PriceDisplay amount={stats.totalRevenue} currency="NGN" isNGNStored={true} />
                   </div>
                   <p className={`text-xs ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {stats.revenueChange >= 0 ? '+' : ''}{stats.revenueChange}% from last month

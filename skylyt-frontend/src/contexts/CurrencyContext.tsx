@@ -85,11 +85,10 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSupportedCurrencies(response.supported_currencies);
       setCurrencySymbols(response.currency_symbols);
       
-      // Set currency from localStorage or detected location
+      // Set currency from localStorage or default to NGN
       const savedCurrency = localStorage.getItem('preferred_currency');
-      const detectedCurrency = response.location.currency;
       
-      setCurrencyState(savedCurrency || detectedCurrency);
+      setCurrencyState(savedCurrency || 'NGN');
     } catch (error) {
       console.error('Failed to detect location:', error);
     } finally {

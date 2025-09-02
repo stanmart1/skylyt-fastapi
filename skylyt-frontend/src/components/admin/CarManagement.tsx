@@ -506,7 +506,7 @@ export const CarManagement: React.FC = () => {
               <div className="mb-2 sm:mb-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Revenue</p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">
-                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today} currency={currency} />}
+                  {loading ? '...' : <PriceDisplay amount={stats.revenue_today} currency="NGN" isNGNStored={true} />}
                 </p>
               </div>
               <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 self-end sm:self-auto" />
@@ -587,7 +587,7 @@ export const CarManagement: React.FC = () => {
                     <p className="text-xs text-gray-500 mb-2 truncate">{car.plate_number || 'No plate number'}</p>
                     <p className="text-base sm:text-lg font-bold text-blue-600 mb-3">
                       <PriceDisplay 
-                        amount={car.price_per_day || car.price || 0} 
+                        amount={car.price_per_day || 0} 
                         currency="NGN" 
                         isNGNStored={true}
                       />/day
@@ -671,7 +671,7 @@ export const CarManagement: React.FC = () => {
                       </div>
                       <div className="flex sm:flex-col sm:text-right items-center sm:items-end gap-2">
                         <p className="font-semibold text-sm sm:text-base">
-                          <PriceDisplay amount={record.cost} currency={currency} />
+                          <PriceDisplay amount={record.cost} currency="NGN" isNGNStored={true} />
                         </p>
                         <Badge className={`${record.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} text-xs`}>
                           {record.status}
@@ -716,7 +716,7 @@ export const CarManagement: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Today</span>
-                    <span><PriceDisplay amount={stats.revenue_today} currency={currency} /></span>
+                    <span><PriceDisplay amount={stats.revenue_today} currency="NGN" isNGNStored={true} /></span>
                   </div>
                   <div className="flex justify-between">
                     <span>Utilization Rate</span>

@@ -21,8 +21,10 @@ interface AddHotelBookingModalProps {
 const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingModalProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [hotels, setHotels] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingHotels, setLoadingHotels] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<any[]>([]);
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [hotelSearchOpen, setHotelSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -42,28 +44,43 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     if (isOpen) {
       fetchUsers();
       fetchHotels();
+    } else {
+      // Reset state when modal closes
+      setUsers([]);
+      setHotels([]);
+      setSelectedUser(null);
+      setSelectedHotel(null);
     }
   }, [isOpen]);
 
   const fetchUsers = async () => {
+    setLoadingUsers(true);
     try {
       const data = await apiService.getUsers();
-      setUsers(data || []);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
   const fetchHotels = async () => {
+    setLoadingHotels(true);
     try {
       const data = await apiService.searchHotels({ limit: 100 });
-      setHotels(data.hotels || []);
+      setHotels(Array.isArray(data?.hotels) ? data.hotels : []);
     } catch (error) {
       console.error('Failed to fetch hotels:', error);
+      setHotels([]);
+    } finally {
+      setLoadingHotels(false);
     }
   };
 
   const handleUserSelect = (user) => {
+    if (!user) return;
     setSelectedUser(user);
     setFormData(prev => ({
       ...prev,
@@ -75,6 +92,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
   };
 
   const handleHotelSelect = (hotel) => {
+    if (!hotel) return;
     setSelectedHotel(hotel);
     setHotelSearchOpen(false);
   };
@@ -122,7 +140,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
         user_id: selectedUser.id
       };
 
-      await apiService.createAdminBooking(bookingPayload);
+      await apiService.createBooking(bookingPayload);
       
       toast({
         title: "Success",
@@ -180,27 +198,27 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                   aria-expanded={userSearchOpen}
                   className="w-full justify-between"
                 >
-                  {selectedUser ? `${selectedUser.first_name} ${selectedUser.last_name} (${selectedUser.email})` : "Search users..."}
+                  {selectedUser ? `${selectedUser.first_name || ''} ${selectedUser.last_name || ''} (${selectedUser.email || ''})` : "Search users..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput placeholder="Search users..." />
-                  <CommandEmpty>No users found.</CommandEmpty>
+                  <CommandEmpty>{loadingUsers ? 'Loading users...' : 'No users found.'}</CommandEmpty>
                   <CommandGroup className="max-h-48 overflow-y-auto">
-                    {users.map((user) => (
+                    {Array.isArray(users) && users.map((user) => (
                       <CommandItem
-                        key={user.id}
+                        key={user?.id || Math.random()}
                         onSelect={() => handleUserSelect(user)}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedUser?.id === user.id ? "opacity-100" : "opacity-0"
+                            selectedUser?.id === user?.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {user.first_name} {user.last_name} ({user.email})
+                        {user?.first_name || ''} {user?.last_name || ''} ({user?.email || ''})
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -220,27 +238,27 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
                   aria-expanded={hotelSearchOpen}
                   className="w-full justify-between"
                 >
-                  {selectedHotel ? `${selectedHotel.name} - ₦${selectedHotel.price_per_night}/night` : "Search hotels..."}
+                  {selectedHotel ? `${selectedHotel.name || 'Unknown Hotel'} - ₦${(selectedHotel.price_per_night || 0).toLocaleString()}/night` : "Search hotels..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput placeholder="Search hotels..." />
-                  <CommandEmpty>No hotels found.</CommandEmpty>
+                  <CommandEmpty>{loadingHotels ? 'Loading hotels...' : 'No hotels found.'}</CommandEmpty>
                   <CommandGroup className="max-h-48 overflow-y-auto">
-                    {hotels.map((hotel) => (
+                    {Array.isArray(hotels) && hotels.map((hotel) => (
                       <CommandItem
-                        key={hotel.id}
+                        key={hotel?.id || Math.random()}
                         onSelect={() => handleHotelSelect(hotel)}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedHotel?.id === hotel.id ? "opacity-100" : "opacity-0"
+                            selectedHotel?.id === hotel?.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {hotel.name} - ₦{hotel.price_per_night}/night
+                        {hotel?.name || 'Unknown Hotel'} - ₦{(hotel?.price_per_night || 0).toLocaleString()}/night
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -329,21 +347,21 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
           </div>
 
           {/* Price Summary */}
-          {selectedHotel && formData.checkInDate && formData.checkOutDate && (
+          {selectedHotel && formData.checkInDate && formData.checkOutDate && calculateTotal() > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold mb-2">Booking Summary</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>Hotel:</span>
-                  <span>{selectedHotel.name}</span>
+                  <span>{selectedHotel.name || 'Unknown Hotel'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Price per night:</span>
-                  <span>₦{selectedHotel.price_per_night?.toLocaleString()}</span>
+                  <span>₦{(selectedHotel.price_per_night || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg border-t pt-2">
                   <span>Total:</span>
-                  <span>₦{calculateTotal().toLocaleString()}</span>
+                  <span>₦{Math.round(calculateTotal()).toLocaleString()}</span>
                 </div>
               </div>
             </div>
