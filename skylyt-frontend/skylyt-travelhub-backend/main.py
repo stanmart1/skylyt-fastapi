@@ -28,7 +28,7 @@ from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies
-from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats
+from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 
 # Setup logging
 setup_logging()
@@ -235,6 +235,7 @@ app.include_router(admin_notifications.router, prefix="/api/v1", tags=["Admin No
 app.include_router(currency_rates.router, prefix="/api/v1", tags=["Currency Rates"])
 app.include_router(currencies.router, prefix="/api/v1", tags=["Currencies"])
 app.include_router(drivers.router, prefix="/api/v1", tags=["Drivers"])
+app.include_router(driver.router, prefix="/api/v1", tags=["Driver Dashboard"])
 app.include_router(admin_bookings.router, prefix="/api/v1", tags=["Admin Bookings"])
 app.include_router(admin_payments.router, prefix="/api/v1", tags=["Admin Payments"])
 app.include_router(admin_stats.router, prefix="/api/v1", tags=["Admin Stats"])

@@ -109,6 +109,14 @@ const Navigation = () => {
                             </Button>
                           </Link>
                         )}
+                        {hasRole('driver') && (
+                          <Link to="/driver-dashboard">
+                            <Button variant="ghost" className="w-full justify-start">
+                              <Car className="h-4 w-4 mr-2" />
+                              Driver Dashboard
+                            </Button>
+                          </Link>
+                        )}
                         <Link to="/dashboard">
                           <Button variant="ghost" className="w-full justify-start">
                             <User className="h-4 w-4 mr-2" />
@@ -193,6 +201,12 @@ const Navigation = () => {
                         <Link to="/admin" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
                           <Settings className="h-4 w-4" />
                           <span>Admin Dashboard</span>
+                        </Link>
+                      )}
+                      {hasRole('driver') && (
+                        <Link to="/driver-dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 py-2" onClick={() => setIsMenuOpen(false)}>
+                          <Car className="h-4 w-4" />
+                          <span>Driver Dashboard</span>
                         </Link>
                       )}
                     </div>

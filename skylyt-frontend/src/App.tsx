@@ -19,6 +19,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import DriverDashboard from "./pages/DriverDashboard";
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import CarBookingsPage from "./pages/CarBookingsPage";
 import Cars from "./pages/Cars";
@@ -85,6 +86,11 @@ const PageTransitionWrapper = () => {
                 <Route path="/admin" element={
                   <ProtectedRoute requireAdmin>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/driver-dashboard" element={
+                  <ProtectedRoute requireRole="driver">
+                    <DriverDashboard />
                   </ProtectedRoute>
                 } />
                 <Route path="/cars" element={<Cars />} />
