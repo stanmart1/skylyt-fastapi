@@ -173,8 +173,8 @@ app = FastAPI(
     license_info={
         "name": "Private",
     },
-    docs_url=None,
-    redoc_url=None,
+    docs_url="/docs",
+    redoc_url="/redoc",
     openapi_tags=[
         {"name": "Authentication", "description": "User authentication and authorization"},
         {"name": "Users", "description": "User profile and account management"},
@@ -191,61 +191,21 @@ app = FastAPI(
 # Configure custom OpenAPI to exclude database schemas
 app.openapi = lambda: custom_openapi(app)
 
-# Configure local Swagger UI assets to avoid CSP issues
-from fastapi.openapi.docs import (
-    get_redoc_html,
-    get_swagger_ui_html,
-    get_swagger_ui_oauth2_redirect_html,
-)
-from fastapi.staticfiles import StaticFiles
-
-# Serve static files for Swagger UI
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
-    return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - Swagger UI",
-        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-        swagger_js_url="/static/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui.css",
-    )
-
-@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
-async def swagger_ui_redirect():
-    return get_swagger_ui_oauth2_redirect_html()
-
-@app.get("/redoc", include_in_schema=False)
-async def redoc_html():
-    return get_redoc_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - ReDoc",
-        redoc_js_url="/static/redoc.standalone.js",
-    )
-
-# CSP middleware for docs pages
+# Remove CSP completely for docs pages
 @app.middleware("http")
-async def docs_csp_middleware(request, call_next):
+async def remove_csp_for_docs(request, call_next):
     response = await call_next(request)
-    if request.url.path in ["/docs", "/redoc"]:
-        # Remove ALL existing CSP headers
+    if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+        # Remove ALL CSP headers completely
         headers_to_remove = []
-        for header_name in response.headers:
+        for header_name in list(response.headers.keys()):
             if "content-security-policy" in header_name.lower():
                 headers_to_remove.append(header_name)
         for header in headers_to_remove:
-            del response.headers[header]
-        
-        # Set permissive CSP for docs
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self' blob: data: https://fastapi.tiangolo.com; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; "
-            "script-src-elem 'self' 'unsafe-inline' blob:; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https://fastapi.tiangolo.com;"
-        )
+            response.headers.pop(header, None)
     return response
+
+
 
 # CORS - Add explicit CORS middleware
 app.add_middleware(
