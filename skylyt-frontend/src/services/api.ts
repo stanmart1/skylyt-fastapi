@@ -411,20 +411,7 @@ class ApiService {
     formData.append('payment_reference', paymentReference);
     formData.append('file', file);
     
-    const response = await fetch(`${this.baseURL}/payments/upload-proof`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
-      throw new Error(error.detail || 'Upload failed');
-    }
-
-    return response.json();
+    return this.upload('/payments/upload-proof', formData);
   }
 
   // Get Payment Proof
