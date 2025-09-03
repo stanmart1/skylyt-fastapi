@@ -109,7 +109,7 @@ class PaymentService:
                 payment_method=PaymentMethod.BANK_TRANSFER,
                 amount=booking.total_amount,
                 currency=booking.currency,
-                status=PaymentStatus.PENDING,
+                status=PaymentStatus.PENDING.value,
                 proof_of_payment_url=proof_file_url,
                 payment_reference=payment_reference,
                 customer_name=f"{user.first_name} {user.last_name}" if user else booking.customer_name,
@@ -140,7 +140,7 @@ class PaymentService:
             payment_method=getattr(PaymentMethod, payment_method.upper()),
             amount=booking.total_amount,
             currency=booking.currency,
-            status=PaymentStatus.PENDING,
+            status=PaymentStatus.PENDING.value,
             customer_name=f"{user.first_name} {user.last_name}" if user else booking.customer_name,
             customer_email=user.email if user else booking.customer_email
         )

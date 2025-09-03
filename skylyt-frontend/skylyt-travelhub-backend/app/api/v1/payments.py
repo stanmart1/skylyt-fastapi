@@ -489,7 +489,7 @@ def complete_payment(
             raise HTTPException(status_code=404, detail="Payment not found")
         
         # Update payment status to processing (awaiting verification)
-        payment.status = PaymentStatus.PROCESSING
+        payment.status = PaymentStatus.PROCESSING.value
         
         # Update booking status
         booking.status = "payment_pending"

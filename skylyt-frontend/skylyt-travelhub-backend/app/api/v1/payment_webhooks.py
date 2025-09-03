@@ -37,7 +37,7 @@ async def payment_webhook(
             payment = db.query(Payment).filter(Payment.transaction_id == transaction_id).first()
             
             if payment:
-                payment.status = PaymentStatus.COMPLETED
+                payment.status = PaymentStatus.COMPLETED.value.value
                 
                 # Update booking status
                 from app.models.booking import Booking
@@ -83,7 +83,7 @@ async def verify_gateway_payment(
             
             payment = db.query(Payment).filter(Payment.transaction_id == transaction_id).first()
             if payment:
-                payment.status = PaymentStatus.COMPLETED
+                payment.status = PaymentStatus.COMPLETED.value
                 
                 # Update booking status
                 from app.models.booking import Booking

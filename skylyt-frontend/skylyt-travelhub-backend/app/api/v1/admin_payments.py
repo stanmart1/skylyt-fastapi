@@ -112,7 +112,7 @@ async def verify_payment(payment_id: int, current_user = Depends(get_current_use
         payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
-        payment.status = PaymentStatus.COMPLETED
+        payment.status = PaymentStatus.COMPLETED.value
         db.commit()
         return {"message": "Payment verified", "payment_id": payment_id, "status": "completed"}
     except ImportError:
@@ -149,7 +149,7 @@ async def process_refund(payment_id: int, refund_data: RefundRequest, current_us
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        payment.status = PaymentStatus.REFUNDED
+        payment.status = PaymentStatus.REFUNDED.value
         db.commit()
         return {"message": "Refund processed successfully"}
     except Exception as e:
