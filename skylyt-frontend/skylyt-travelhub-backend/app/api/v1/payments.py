@@ -16,7 +16,7 @@ from app.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["payments"])
+router = APIRouter(prefix="/payments", tags=["payments"])
 email_service = EmailService()
 
 def get_payment_service() -> PaymentService:
