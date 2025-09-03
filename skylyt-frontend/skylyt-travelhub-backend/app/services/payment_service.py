@@ -123,6 +123,10 @@ class PaymentService:
             db.commit()
             db.refresh(payment)
             
+            # Queue payment verification task
+            from app.tasks.payment_tasks import process_payment_verification
+            process_payment_verification.delay(payment.id)
+            
             return {
                 "payment_id": payment.id,
                 "status": "pending",

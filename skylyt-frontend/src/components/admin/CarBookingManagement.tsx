@@ -85,13 +85,30 @@ const CarBookingManagement = () => {
   };
 
   const handleDeleteBooking = async (bookingId) => {
-    if (!confirm('Are you sure you want to delete this car booking?')) return;
+    if (!confirm('Are you sure you want to delete this car booking? This action cannot be undone.')) return;
     
     try {
       await apiService.request(`/admin/bookings/${bookingId}`, { method: 'DELETE' });
       fetchCarBookings();
+      // Show success message
+      const event = new CustomEvent('show-toast', {
+        detail: {
+          title: "Booking deleted successfully",
+          description: "The booking has been permanently removed.",
+        }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error('Failed to delete booking:', error);
+      // Show error message
+      const event = new CustomEvent('show-toast', {
+        detail: {
+          title: "Failed to delete booking",
+          description: error.message || "The booking could not be deleted. It may have associated payments or other dependencies.",
+          variant: "destructive"
+        }
+      });
+      window.dispatchEvent(event);
     }
   };
 
@@ -148,7 +165,11 @@ const CarBookingManagement = () => {
                       <h3 className="font-semibold">#{booking.booking_reference}</h3>
                       <p className="text-sm text-gray-600">{booking.car_name}</p>
                       <p className="text-sm text-gray-600">
-                        ${booking.total_amount} {booking.currency}
+                        <PriceDisplay 
+                          amount={booking.total_amount} 
+                          currency={booking.currency}
+                          isNGNStored={true}
+                        />
                       </p>
                       <p className="text-sm text-gray-600">
                         Renter: {booking.customer_name}
@@ -345,7 +366,11 @@ const CarBookingManagement = () => {
                   <div>
                     <label className="text-sm font-medium text-gray-600">Total Amount</label>
                     <p className="font-medium text-lg">
-                      <PriceDisplay amount={bookingDetails.total_amount || 0} currency={bookingDetails.currency || currency} />
+                      <PriceDisplay 
+                        amount={bookingDetails.total_amount || 0} 
+                        currency={bookingDetails.currency || currency}
+                        isNGNStored={true}
+                      />
                     </p>
                   </div>
                   <div>

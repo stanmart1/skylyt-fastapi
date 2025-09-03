@@ -83,13 +83,23 @@ app = FastAPI(
     description="""A comprehensive booking platform API for luxury car rentals and hotel reservations.
     
     ## Features
-    * **Authentication** - JWT-based user authentication and authorization
-    * **Hotels** - Search, book, and manage hotel reservations
-    * **Cars** - Browse and rent luxury vehicles
-    * **Bookings** - Complete booking management system
-    * **Payments** - Secure payment processing with multiple gateways
-    * **Admin** - Full administrative dashboard and controls
-    * **Localization** - Multi-currency and location support
+    * **Authentication** - JWT-based user authentication and authorization with role-based access control
+    * **Hotels** - Search, filter, and book hotel accommodations with real-time availability
+    * **Cars** - Browse and rent luxury vehicles with fleet management capabilities
+    * **Bookings** - Complete booking lifecycle management with status tracking
+    * **Payments** - Secure multi-gateway payment processing (Stripe, Flutterwave, Paystack, PayPal)
+    * **Admin** - Comprehensive administrative dashboard with analytics and reporting
+    * **Localization** - Multi-currency support with real-time exchange rates
+    * **Background Jobs** - Asynchronous processing for emails, payments, and maintenance tasks
+    
+    ## Authentication
+    Most endpoints require authentication using JWT Bearer tokens. Obtain a token by calling the `/auth/login` endpoint.
+    
+    ## Rate Limiting
+    API endpoints are rate-limited to ensure fair usage. Check response headers for rate limit information.
+    
+    ## Error Handling
+    The API uses standard HTTP status codes and returns detailed error messages in JSON format.
     """,
     version="1.0.0",
     
@@ -99,14 +109,16 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
-        {"name": "Authentication", "description": "User authentication and authorization"},
-        {"name": "Users", "description": "User profile and account management"},
-        {"name": "Hotels", "description": "Hotel search and booking operations"},
-        {"name": "Cars", "description": "Car rental operations"},
-        {"name": "Bookings", "description": "Booking management and history"},
-        {"name": "Payments", "description": "Payment processing and transactions"},
-        {"name": "Admin", "description": "Administrative operations"},
-        {"name": "Health", "description": "System health and monitoring"},
+        {"name": "Authentication", "description": "User authentication, registration, and password management"},
+        {"name": "Users", "description": "User profile management and account settings"},
+        {"name": "Hotels", "description": "Hotel search, filtering, and booking operations"},
+        {"name": "Cars", "description": "Car rental search, booking, and fleet management"},
+        {"name": "Bookings", "description": "Booking lifecycle management and history tracking"},
+        {"name": "Payments", "description": "Multi-gateway payment processing and transaction management"},
+        {"name": "Admin", "description": "Administrative operations, analytics, and system management"},
+        {"name": "Health", "description": "System health monitoring and diagnostics"},
+        {"name": "Currencies", "description": "Currency management and exchange rate operations"},
+        {"name": "Notifications", "description": "User notification management and preferences"},
     ],
     lifespan=lifespan
 )

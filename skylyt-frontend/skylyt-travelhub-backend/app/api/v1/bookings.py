@@ -46,29 +46,28 @@ def create_booking(
         db.commit()
         db.refresh(booking)
         
-        # Send confirmation email immediately after booking creation
+        # Send confirmation email via background task
         try:
             customer_email = guest_data.get('guest_email', '') if not current_user else current_user.email
             customer_name = guest_data.get('guest_name', '') if not current_user else f"{current_user.first_name} {current_user.last_name}"
             
-            email_service.send_booking_confirmation(
-                customer_email,
-                {
-                    "user_name": customer_name,
-                    "booking_reference": booking.booking_reference,
-                    "booking_type": booking.booking_type,
-                    "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
-                    "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
-                    "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
-                    "check_in_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
-                    "check_out_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
-                    "guests": booking.booking_data.get("guests", 1),
-                    "total_amount": float(booking.total_amount),
-                    "currency": booking.currency
-                }
-            )
+            from app.tasks.email_tasks import send_booking_confirmation_email
+            send_booking_confirmation_email.delay({
+                "user_email": customer_email,
+                "user_name": customer_name,
+                "booking_reference": booking.booking_reference,
+                "booking_type": booking.booking_type,
+                "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
+                "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
+                "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
+                "check_in_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
+                "check_out_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
+                "guests": booking.booking_data.get("guests", 1),
+                "total_amount": float(booking.total_amount),
+                "currency": booking.currency
+            })
         except Exception as e:
-            print(f"Email sending failed: {e}")  # Don't fail booking if email fails
+            print(f"Email task queuing failed: {e}")  # Don't fail booking if email task fails
         
         return {
             "id": booking.id,

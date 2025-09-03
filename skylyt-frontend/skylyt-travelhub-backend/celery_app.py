@@ -9,7 +9,8 @@ celery_app = Celery(
     include=[
         "app.tasks.email_tasks",
         "app.tasks.booking_tasks", 
-        "app.tasks.cleanup_tasks"
+        "app.tasks.cleanup_tasks",
+        "app.tasks.payment_tasks"
     ]
 )
 
@@ -36,6 +37,10 @@ celery_app.conf.beat_schedule = {
     "send-booking-reminders": {
         "task": "app.tasks.booking_tasks.send_booking_reminders", 
         "schedule": 3600.0,  # Every hour
+    },
+    "check-pending-payments": {
+        "task": "app.tasks.payment_tasks.check_pending_payments",
+        "schedule": 600.0,  # Every 10 minutes
     },
     "daily-cleanup": {
         "task": "app.tasks.cleanup_tasks.run_daily_cleanup",

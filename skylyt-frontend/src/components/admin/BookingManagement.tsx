@@ -10,6 +10,7 @@ import { Calendar, Car, Hotel, User, Edit, Trash2, Trash } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Booking } from '@/types/api';
+import PriceDisplay from '@/components/PriceDisplay';
 
 const BookingManagement = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -250,7 +251,11 @@ const BookingManagement = () => {
                           </p>
                         )}
                         <p className="text-sm text-gray-600">
-                          Amount: ${booking.total_amount} {booking.currency}
+                          Amount: <PriceDisplay 
+                            amount={booking.total_amount} 
+                            currency={booking.currency}
+                            isNGNStored={true}
+                          />
                         </p>
                       </div>
                     </div>
@@ -355,7 +360,13 @@ const BookingManagement = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-600">Total Amount</Label>
-                <p className="text-sm font-bold">₦{editingBooking?.total_amount} {editingBooking?.currency}</p>
+                <p className="text-sm font-bold">
+                  <PriceDisplay 
+                    amount={editingBooking?.total_amount || 0} 
+                    currency={editingBooking?.currency}
+                    isNGNStored={true}
+                  />
+                </p>
               </div>
             </div>
 

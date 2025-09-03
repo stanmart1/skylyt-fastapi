@@ -171,10 +171,20 @@ async def delete_booking(booking_id: int, current_user = Depends(get_current_use
     
     try:
         from app.models.booking import Booking
+        from app.models.payment import Payment
+        
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
+        # Check for associated payments
+        payments = db.query(Payment).filter(Payment.booking_id == booking_id).all()
+        
+        # Delete associated payments first (cascade delete)
+        for payment in payments:
+            db.delete(payment)
+        
+        # Now delete the booking
         db.delete(booking)
         db.commit()
         
@@ -185,7 +195,15 @@ async def delete_booking(booking_id: int, current_user = Depends(get_current_use
         db.rollback()
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to delete booking {booking_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete booking")
+        
+        # Provide more specific error messages
+        error_msg = str(e).lower()
+        if "foreign key" in error_msg or "constraint" in error_msg:
+            raise HTTPException(status_code=400, detail="Cannot delete booking: it has associated records (payments, reviews, etc.)")
+        elif "permission" in error_msg or "access" in error_msg:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to delete this booking")
+        else:
+            raise HTTPException(status_code=500, detail="Failed to delete booking")
 
 @router.post("/admin/bookings")
 async def create_booking(booking_data: BookingCreateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
