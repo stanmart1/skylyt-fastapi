@@ -68,7 +68,6 @@ async def lifespan(app: FastAPI):
         db = SessionLocal()
         CurrencyService.seed_default_currencies(db)
     except Exception as e:
-        import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to initialize currencies: {e}")
     finally:
