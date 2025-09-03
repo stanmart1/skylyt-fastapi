@@ -411,16 +411,11 @@ class ApiService {
     formData.append('payment_reference', paymentReference);
     formData.append('file', file);
     
-    const url = `${this.baseURL}/payments/upload-proof`;
-    const headers: HeadersInit = {};
-    
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-    
-    const response = await fetch(url, {
+    const response = await fetch(`${this.baseURL}/payments/upload-proof`, {
       method: 'POST',
-      headers,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
       body: formData,
     });
 
