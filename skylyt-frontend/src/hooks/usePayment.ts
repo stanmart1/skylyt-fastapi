@@ -39,6 +39,32 @@ export const usePayment = () => {
     }
   };
 
+  const initializePayment = async (paymentData: any) => {
+    setIsProcessing(true);
+    try {
+      const result = await apiService.initializePayment(paymentData);
+      setPayment(result);
+      
+      if (result.success) {
+        toast({
+          title: 'Payment Initialized',
+          description: 'Payment has been initialized successfully.',
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      toast({
+        title: 'Payment Failed',
+        description: 'Unable to initialize payment. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getPaymentStatus = async (paymentId: number) => {
     try {
       const result = await apiService.getPayment(paymentId);
@@ -58,6 +84,7 @@ export const usePayment = () => {
     isProcessing,
     payment,
     processPayment,
+    initializePayment,
     getPaymentStatus,
   };
 };

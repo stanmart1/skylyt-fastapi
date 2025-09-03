@@ -127,6 +127,7 @@ interface PaymentContextType {
   refundPayment: (id: number, amount: number, reason: string) => Promise<void>;
   updatePaymentStatus: (id: number, status: string, notes?: string) => Promise<void>;
   exportPayments: () => Promise<void>;
+  initializePayment: (paymentData: any) => Promise<any>;
   setFilters: (filters: PaymentFilters) => void;
   resetFilters: () => void;
   setSelectedPayment: (payment: Payment | null) => void;
@@ -265,6 +266,16 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SELECTED_PAYMENT', payload: payment });
   };
 
+  const initializePayment = async (paymentData: any) => {
+    try {
+      const result = await apiService.initializePayment(paymentData);
+      return result;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize payment' });
+      throw error;
+    }
+  };
+
   return (
     <PaymentContext.Provider
       value={{
@@ -276,6 +287,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         refundPayment,
         updatePaymentStatus,
         exportPayments,
+        initializePayment,
         setFilters,
         resetFilters,
         setSelectedPayment,

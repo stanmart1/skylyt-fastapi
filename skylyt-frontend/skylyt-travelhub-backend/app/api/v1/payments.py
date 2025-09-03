@@ -60,10 +60,30 @@ class PaymentInitRequest(BaseModel):
     booking_id: int
     payment_method: str
     payment_reference: Optional[str] = None
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    gateway: Optional[str] = None
+    transfer_date: Optional[str] = None
+    notes: Optional[str] = None
 
 
 @router.post("/initialize")
 async def initialize_payment(
+    request: PaymentInitRequest,
+    db: Session = Depends(get_db)
+):
+    """Initialize payment with selected method"""
+    return await _process_payment_internal(request, db)
+
+@router.post("/process")
+async def process_payment(
+    request: PaymentInitRequest,
+    db: Session = Depends(get_db)
+):
+    """Process payment (alias for initialize for frontend compatibility)"""
+    return await _process_payment_internal(request, db)
+
+async def _process_payment_internal(
     request: PaymentInitRequest,
     db: Session = Depends(get_db)
 ):

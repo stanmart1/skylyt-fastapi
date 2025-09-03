@@ -30,7 +30,7 @@ export const BankTransferSettings = () => {
   const fetchSettings = async () => {
     try {
       const { apiService } = await import('@/services/api');
-      const data = await apiService.request('/settings/');
+      const data = await apiService.getBankTransferSettings();
       
       setBankTransferForm({
         bank_name: data.bank_name || '',
@@ -54,10 +54,7 @@ export const BankTransferSettings = () => {
     setSaving(true);
     try {
       const { apiService } = await import('@/services/api');
-      await apiService.request('/settings/bank-transfer', {
-        method: 'PUT',
-        body: JSON.stringify(bankTransferForm)
-      });
+      await apiService.updateBankTransferSettings(bankTransferForm);
       
       toast({
         title: "Success",

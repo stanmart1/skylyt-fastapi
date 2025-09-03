@@ -231,6 +231,22 @@ class ApiService {
     });
   }
 
+  async initializePayment(paymentData: { 
+    booking_id: number; 
+    payment_method: string; 
+    payment_reference?: string;
+    amount?: number;
+    currency?: string;
+    gateway?: string;
+    transfer_date?: string;
+    notes?: string;
+  }): Promise<any> {
+    return this.request('/payments/initialize', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
   async getPayment(id: number): Promise<Payment> {
     return this.request(`/payments/${id}`);
   }
@@ -432,6 +448,23 @@ class ApiService {
   // Get Bank Transfer Details
   async getBankTransferDetails(): Promise<any> {
     return this.request('/bank-accounts');
+  }
+
+  // Bank Transfer Settings
+  async getBankTransferSettings(): Promise<any> {
+    return this.request('/settings/');
+  }
+
+  async updateBankTransferSettings(settingsData: {
+    bank_name: string;
+    account_name: string;
+    account_number: string;
+    is_primary_account: boolean;
+  }): Promise<any> {
+    return this.request('/settings/bank-transfer', {
+      method: 'PUT',
+      body: JSON.stringify(settingsData),
+    });
   }
 
 

@@ -34,7 +34,7 @@ export const BankTransferUpload = ({
     account_number: 'Loading...'
   });
   
-  const { isProcessing, processPayment } = usePayment();
+  const { isProcessing, initializePayment } = usePayment();
 
   useEffect(() => {
     const fetchBankDetails = async () => {
@@ -71,29 +71,32 @@ export const BankTransferUpload = ({
     try {
       const { apiService } = await import('@/services/api');
       
-      // First upload the proof file using the existing method
-      const uploadResult = await apiService.uploadPaymentProof(
-        bookingId,
-        transferData.referenceNumber,
-        proofFile
-      );
+      // First initialize the payment
+      const paymentResult = await initializePayment({
+        booking_id: bookingId,
+        payment_method: 'bank_transfer',
+        payment_reference: transferData.referenceNumber,
+        amount,
+        currency,
+        transfer_date: transferData.transferDate,
+        notes: transferData.notes,
+      });
 
-      if (uploadResult.success) {
-        // Then process the payment
-        const result = await processPayment({
-          booking_id: bookingId,
-          gateway: 'bank_transfer',
-          amount,
-          currency,
-          payment_method: 'bank_transfer',
-          reference_number: transferData.referenceNumber,
-          transfer_date: transferData.transferDate,
-          notes: transferData.notes,
-        });
+      if (paymentResult.success) {
+        // Then upload the proof file
+        const uploadResult = await apiService.uploadPaymentProof(
+          bookingId,
+          transferData.referenceNumber,
+          proofFile
+        );
         
-        onSuccess(result);
+        if (uploadResult.success) {
+          onSuccess(paymentResult);
+        } else {
+          onError('Failed to upload proof of payment');
+        }
       } else {
-        onError('Failed to upload proof of payment');
+        onError('Failed to initialize payment');
       }
     } catch (error) {
       onError('Failed to submit bank transfer proof. Please try again.');
