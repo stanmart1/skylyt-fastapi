@@ -5,10 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Car, Hotel, X, Eye } from 'lucide-react';
 import { useBookingHistory } from '@/hooks/useBookingHistory';
 import { format } from 'date-fns';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 import BookingDetailsModal from './BookingDetailsModal';
 
 export const BookingHistory = () => {
   const { bookings, isLoading, cancelBooking } = useBookingHistory();
+  const { currency } = useCurrency();
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
@@ -88,8 +91,12 @@ export const BookingHistory = () => {
                             </div>
                           )}
                           <div className="flex items-center gap-1">
-                            <span className="font-medium">${booking.total_amount}</span>
-                            <span>{booking.currency}</span>
+                            <PriceDisplay 
+                              amount={booking.total_amount} 
+                              currency={booking.currency}
+                              isNGNStored={true}
+                              className="font-medium"
+                            />
                           </div>
                         </div>
                       </div>

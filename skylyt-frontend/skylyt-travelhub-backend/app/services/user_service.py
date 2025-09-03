@@ -41,7 +41,7 @@ class UserService:
     
     @staticmethod
     def get_user_bookings(db: Session, user_id: int) -> List[Booking]:
-        return db.query(Booking).filter(Booking.user_id == user_id).all()
+        return db.query(Booking).filter(Booking.user_id == user_id).distinct().all()
     
     @staticmethod
     def manage_favorites(db: Session, user_id: int, item_type: str, item_id: str, item_data: dict, action: str) -> bool:
