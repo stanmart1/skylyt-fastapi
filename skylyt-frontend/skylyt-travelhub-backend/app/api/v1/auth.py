@@ -80,8 +80,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     session_data = {
         "user_id": user.id,
         "email": user.email,
-        "roles": [role.name for role in user.roles],
-        "last_login": str(user.last_login) if user.last_login else None
+        "roles": [role.name for role in user.roles]
     }
     CacheService.cache_user_session(user.id, session_data)
     
