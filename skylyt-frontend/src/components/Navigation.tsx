@@ -242,7 +242,7 @@ const Navigation = () => {
                     <span>Logout</span>
                   </Button>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-1">
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
                         Login

@@ -30,9 +30,22 @@ def search_cars(
 ):
     """Search cars with filters and caching"""
     from app.services.cache_service import CacheService
-    
     from app.models.car import Car
     from sqlalchemy import desc, asc, and_, or_
+    
+    # Create cache key from search parameters
+    search_params = {
+        'location': location, 'pickup_date': pickup_date, 'return_date': return_date,
+        'category': category, 'transmission': transmission, 'min_price': str(min_price) if min_price else None,
+        'max_price': str(max_price) if max_price else None, 'guests': guests,
+        'amenities': amenities, 'rating': rating, 'sort_by': sort_by,
+        'currency': currency, 'page': page, 'per_page': per_page
+    }
+    
+    # Try to get from cache first
+    cached_result = CacheService.get_cached_car_search(search_params)
+    if cached_result:
+        return cached_result
     
     # Build query with filters
     query = db.query(Car).filter(Car.is_available == True)

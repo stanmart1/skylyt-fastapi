@@ -60,6 +60,20 @@ def search_hotels(
     """Search hotels with filters and caching"""
     from app.services.cache_service import CacheService
     
+    # Create cache key from search parameters
+    search_params = {
+        'destination': destination, 'city': city, 'checkin_date': checkin_date, 'checkout_date': checkout_date,
+        'guests': guests, 'min_price': str(min_price) if min_price else None,
+        'max_price': str(max_price) if max_price else None, 'star_rating': star_rating,
+        'rating': rating, 'amenities': amenities, 'sort_by': sort_by,
+        'currency': currency, 'page': page, 'per_page': per_page
+    }
+    
+    # Try to get from cache first
+    cached_result = CacheService.get_cached_hotel_search(search_params)
+    if cached_result:
+        return cached_result
+    
     try:
         from app.models.hotel import Hotel
         from sqlalchemy import and_, desc, asc
