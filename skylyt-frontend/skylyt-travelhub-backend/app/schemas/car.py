@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, List
 from decimal import Decimal
 from .search import LocationSearch, DateRange, PaginationParams
@@ -39,3 +39,21 @@ class CarResponse(BaseModel):
     supplier: str
     pickup_location: str
     mileage_policy: str
+
+
+class CarCreateRequest(BaseModel):
+    name: str
+    category: str
+    price_per_day: float
+    currency: Optional[str] = "USD"
+    images: Optional[List[str]] = []
+    passengers: Optional[int] = 4
+    transmission: Optional[str] = "automatic"
+    fuel_type: Optional[str] = "petrol"
+    features: Optional[List[str]] = []
+    
+    @validator('price_per_day')
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError("Price must be positive")
+        return v

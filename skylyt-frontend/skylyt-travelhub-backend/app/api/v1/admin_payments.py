@@ -1,37 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional
 import logging
 
 from app.core.dependencies import get_current_user
 from app.core.database import get_db
+from app.utils.serializers import serialize_payment
+from app.schemas.payment import PaymentUpdateRequest, RefundRequest
 
 router = APIRouter()
-
-# Helper Functions
-def serialize_payment(payment) -> dict:
-    """Serialize payment object to dictionary"""
-    return {
-        "id": payment.id,
-        "booking_id": payment.booking_id,
-        "amount": float(payment.amount),
-        "currency": payment.currency,
-        "status": payment.status.value,
-        "payment_method": payment.payment_method.value,
-        "created_at": payment.created_at.isoformat(),
-        "transaction_id": payment.transaction_id,
-        "transfer_reference": payment.transfer_reference
-    }
-
-# Pydantic Models
-class PaymentUpdateRequest(BaseModel):
-    status: Optional[str] = None
-    transaction_id: Optional[str] = None
-
-class RefundRequest(BaseModel):
-    amount: Optional[float] = None
-    reason: Optional[str] = None
+DEFAULT_COMMISSION_RATE = 10.0
 
 # Routes
 @router.get("/admin/payments")
@@ -211,7 +188,6 @@ async def get_payment_commission(payment_id: int, current_user = Depends(get_cur
             raise HTTPException(status_code=404, detail="Payment not found")
         
         # Calculate commission
-        DEFAULT_COMMISSION_RATE = 10.0
         commission_rate = DEFAULT_COMMISSION_RATE
         commission_amount = float(payment.amount) * (commission_rate / 100)
         

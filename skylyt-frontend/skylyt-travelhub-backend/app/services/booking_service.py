@@ -233,6 +233,59 @@ class BookingService:
             "booking_data": booking.booking_data
         }
 
+    def update_booking_status_helper(self, booking_id: int, status: str) -> Dict[str, Any]:
+        """Helper function to update booking status with email notifications"""
+        from app.utils.validators import validate_booking_status
+        
+        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        validate_booking_status(status)
+        
+        old_status = booking.status
+        booking.status = status
+        self.db.commit()
+        
+        # Send email notification for status changes
+        if old_status != status and booking.customer_email:
+            try:
+                if status == "confirmed":
+                    self.email_service.send_booking_confirmation(
+                        booking.customer_email,
+                        {
+                            "user_name": booking.customer_name,
+                            "booking_reference": booking.booking_reference,
+                            "booking_type": booking.booking_type,
+                            "status": "confirmed",
+                            "total_amount": float(booking.total_amount),
+                            "currency": booking.currency
+                        }
+                    )
+                elif status == "completed":
+                    self.email_service.send_booking_completion(
+                        booking.customer_email,
+                        {
+                            "user_name": booking.customer_name,
+                            "booking_reference": booking.booking_reference,
+                            "booking_type": booking.booking_type,
+                            "total_amount": float(booking.total_amount),
+                            "currency": booking.currency
+                        }
+                    )
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to send status update email: {e}")
+        
+        return {
+            "success": True,
+            "message": "Booking status updated successfully", 
+            "booking_id": booking_id, 
+            "status": booking.status
+        }
+
     def _log_booking_history(self, booking_id: int, action: str, user_id: Optional[int]):
         """Log booking history for audit trail"""
         # This would typically insert into a booking_history table

@@ -1,184 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, validator
-from typing import List, Optional
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 import logging
 
 from app.core.dependencies import get_current_user
 from app.core.database import get_db
+from app.schemas.booking import (
+    BookingStatusUpdate, BookingCreateRequest, BookingUpdateRequest, 
+    CancelBookingRequest, BulkDeleteRequest
+)
+from app.utils.serializers import serialize_booking, parse_date_string
+from app.utils.validators import VALID_BOOKING_STATUSES, VALID_CURRENCIES
 
 router = APIRouter()
 
-# Constants
-VALID_BOOKING_STATUSES = ["pending", "confirmed", "cancelled"]
-VALID_CURRENCIES = ["USD", "EUR", "GBP", "NGN", "CAD", "AUD"]
-
-# Helper Functions
-def serialize_booking(booking) -> dict:
-    """Serialize booking object to dictionary"""
-    return {
-        "id": booking.id,
-        "booking_reference": booking.booking_reference,
-        "booking_type": booking.booking_type,
-        "status": booking.status,
-        "customer_name": booking.customer_name,
-        "customer_email": booking.customer_email,
-        "customer_phone": getattr(booking, 'customer_phone', None),
-        "user_id": booking.user_id,
-        "driver_id": getattr(booking, 'driver_id', None),
-        "driver_name": getattr(booking.driver, 'name', None) if hasattr(booking, 'driver') and booking.driver else None,
-        "hotel_name": booking.hotel_name,
-        "car_name": booking.car_name,
-        "car_id": getattr(booking, 'car_id', None),
-        "check_in_date": booking.check_in_date,
-        "check_out_date": booking.check_out_date,
-        "start_date": booking.start_date,
-        "end_date": booking.end_date,
-        "number_of_guests": booking.number_of_guests,
-        "special_requests": booking.special_requests,
-        "total_amount": float(booking.total_amount) if booking.total_amount else 0,
-        "currency": booking.currency,
-        "payment_status": booking.payment_status,
-        "external_booking_id": booking.external_booking_id,
-        "confirmation_number": booking.confirmation_number,
-        "booking_data": booking.booking_data,
-        "created_at": booking.created_at.isoformat() if booking.created_at else None,
-        "updated_at": booking.updated_at.isoformat() if booking.updated_at else None
-    }
-
-def parse_date_string(date_str: str) -> datetime.date:
-    """Parse ISO date string to date object"""
-    try:
-        return datetime.fromisoformat(date_str).date()
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid date format: {date_str}")
-
-def update_booking_status_helper(booking_id: int, status: str, db: Session) -> dict:
-    """Helper function to update booking status"""
-    from app.models.booking import Booking
-    from app.services.email_service import EmailService
-    
-    booking = db.query(Booking).filter(Booking.id == booking_id).first()
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    
-    if status not in VALID_BOOKING_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
-    
-    old_status = booking.status
-    booking.status = status
-    db.commit()
-    db.refresh(booking)
-    
-    # Send email notification for status changes
-    if old_status != status and booking.customer_email:
-        try:
-            email_service = EmailService()
-            if status == "confirmed":
-                email_service.send_booking_confirmation(
-                    booking.customer_email,
-                    {
-                        "user_name": booking.customer_name,
-                        "booking_reference": booking.booking_reference,
-                        "booking_type": booking.booking_type,
-                        "status": "confirmed",
-                        "total_amount": float(booking.total_amount),
-                        "currency": booking.currency
-                    }
-                )
-            elif status == "completed":
-                email_service.send_booking_completion(
-                    booking.customer_email,
-                    {
-                        "user_name": booking.customer_name,
-                        "booking_reference": booking.booking_reference,
-                        "booking_type": booking.booking_type,
-                        "total_amount": float(booking.total_amount),
-                        "currency": booking.currency
-                    }
-                )
-        except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to send status update email: {e}")
-    
-    return {
-        "success": True,
-        "message": "Booking status updated successfully", 
-        "booking_id": booking_id, 
-        "status": booking.status
-    }
-
-# Pydantic Models
-class BookingStatusUpdate(BaseModel):
-    status: str
-    
-    @validator('status')
-    def validate_status(cls, v):
-        if v not in VALID_BOOKING_STATUSES:
-            raise ValueError(f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
-        return v
-
-class BookingCreateRequest(BaseModel):
-    user_id: int
-    booking_type: str
-    status: Optional[str] = "pending"
-    hotel_name: Optional[str] = None
-    car_name: Optional[str] = None
-    total_amount: float
-    currency: Optional[str] = "USD"
-    booking_data: Optional[dict] = None
-    
-    @validator('total_amount')
-    def validate_amount(cls, v):
-        if v <= 0:
-            raise ValueError("Amount must be positive")
-        return v
-    
-    @validator('currency')
-    def validate_currency(cls, v):
-        if v not in VALID_CURRENCIES:
-            raise ValueError(f"Invalid currency. Must be one of: {', '.join(VALID_CURRENCIES)}")
-        return v
-
-class BookingUpdateRequest(BaseModel):
-    status: Optional[str] = None
-    customer_name: Optional[str] = None
-    customer_email: Optional[str] = None
-    special_requests: Optional[str] = None
-    booking_type: Optional[str] = None
-    hotel_name: Optional[str] = None
-    car_name: Optional[str] = None
-    total_amount: Optional[float] = None
-    currency: Optional[str] = None
-    driver_id: Optional[int] = None
-    
-    @validator('total_amount')
-    def validate_amount(cls, v):
-        if v is not None and v <= 0:
-            raise ValueError("Amount must be positive")
-        return v
-    
-    @validator('currency')
-    def validate_currency(cls, v):
-        if v is not None and v not in VALID_CURRENCIES:
-            raise ValueError(f"Invalid currency. Must be one of: {', '.join(VALID_CURRENCIES)}")
-        return v
-
-class CancelBookingRequest(BaseModel):
-    reason: Optional[str] = "Cancelled by admin"
-
-class BulkDeleteRequest(BaseModel):
-    ids: List[int]
-    
-    @validator('ids')
-    def validate_ids(cls, v):
-        if not v:
-            raise ValueError("No IDs provided")
-        return v
-
 class DriverAssignmentRequest(BaseModel):
     driver_id: int
+
+# Remove duplicate helper functions - using imports instead
 
 # Routes
 @router.get("/admin/bookings")
@@ -274,7 +115,9 @@ async def update_booking_status_api(booking_id: int, status_update: BookingStatu
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        return update_booking_status_helper(booking_id, status_update.status, db)
+        from app.services.booking_service import BookingService
+        booking_service = BookingService(db)
+        return booking_service.update_booking_status_helper(booking_id, status_update.status)
     except HTTPException:
         raise
     except Exception as e:
@@ -290,7 +133,9 @@ async def update_booking_status(booking_id: int, status_update: BookingStatusUpd
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        return update_booking_status_helper(booking_id, status_update.status, db)
+        from app.services.booking_service import BookingService
+        booking_service = BookingService(db)
+        return booking_service.update_booking_status_helper(booking_id, status_update.status)
     except HTTPException:
         raise
     except Exception as e:

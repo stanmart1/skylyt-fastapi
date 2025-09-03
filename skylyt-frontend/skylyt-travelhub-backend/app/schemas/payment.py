@@ -35,3 +35,13 @@ class PaymentRefund(BaseModel):
 class WebhookData(BaseModel):
     event_type: str
     data: Dict[str, Any]
+
+
+class PaymentUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    transaction_id: Optional[str] = None
+
+
+class RefundRequest(BaseModel):
+    amount: Optional[float] = None
+    reason: Optional[str] = None
