@@ -27,7 +27,24 @@ def search_cars(
     limit: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
 ):
-    """Search cars with filters"""
+    """Search cars with filters and caching"""
+    from app.services.cache_service import CacheService
+    
+    # Create cache key from search parameters
+    search_params = {
+        'pickup_city': pickup_city, 'pickup_country': pickup_country, 'dropoff_city': dropoff_city,
+        'pickup_date': pickup_date, 'dropoff_date': dropoff_date, 'driver_age': driver_age,
+        'car_type': car_type, 'transmission': transmission, 
+        'min_price': str(min_price) if min_price else None,
+        'max_price': str(max_price) if max_price else None, 'currency': currency,
+        'page': page, 'limit': limit
+    }
+    
+    # Try to get from cache first
+    cached_result = CacheService.get_cached_car_search(search_params)
+    if cached_result:
+        return cached_result
+    
     from app.models.car import Car
     
     # Simple query for all available cars
@@ -75,7 +92,12 @@ def search_cars(
             "features": car.features or []
         })
     
-    return {"cars": cars_data, "total": total}
+    result = {"cars": cars_data, "total": total}
+    
+    # Cache the result for 5 minutes
+    CacheService.cache_car_search(search_params, result, ttl=300)
+    
+    return result
 
 @router.get("/")
 def get_all_cars(

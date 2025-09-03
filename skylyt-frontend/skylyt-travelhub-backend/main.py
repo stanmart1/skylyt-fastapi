@@ -30,6 +30,7 @@ from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
+from app.core.redis import RedisService
 
 # Setup logging
 setup_logging()
@@ -49,6 +50,14 @@ from app.utils.validators import validate_financial_data, VALID_BOOKING_STATUSES
 async def lifespan(app: FastAPI):
     # Startup
     Base.metadata.create_all(bind=engine)
+    
+    # Initialize Dragonfly connection
+    try:
+        RedisService.get_client()
+        logging.info("Dragonfly initialized successfully")
+    except Exception as e:
+        logging.warning(f"Dragonfly initialization failed: {e}")
+    
     await cache_warmer.warm_static_data()
     
     # Initialize default currencies

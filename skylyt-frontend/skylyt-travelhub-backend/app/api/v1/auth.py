@@ -57,9 +57,10 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """User login"""
+    """User login with session caching"""
     import logging
     from app.utils.sanitize import sanitize_for_logging
+    from app.services.cache_service import CacheService
     
     logger = logging.getLogger(__name__)
     logger.info("Login attempt initiated")
@@ -74,6 +75,15 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     logger.info("User authenticated successfully")
     access_token = AuthService.create_access_token(user)
+    
+    # Cache user session data
+    session_data = {
+        "user_id": user.id,
+        "email": user.email,
+        "roles": [role.name for role in user.roles],
+        "last_login": str(user.last_login) if user.last_login else None
+    }
+    CacheService.cache_user_session(user.id, session_data)
     
     # Determine redirect path based on user roles
     redirect_path = "/dashboard"  # default for regular users
@@ -114,8 +124,13 @@ def refresh_token(current_user = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout():
-    """User logout"""
+def logout(current_user = Depends(get_current_user)):
+    """User logout with session cleanup"""
+    from app.services.cache_service import CacheService
+    
+    # Clear user session from cache
+    CacheService.invalidate_user_session(current_user.id)
+    
     return {"message": "Successfully logged out"}
 
 

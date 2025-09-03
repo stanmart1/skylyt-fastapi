@@ -55,7 +55,22 @@ def search_hotels(
     limit: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
 ):
-    """Search hotels with filters"""
+    """Search hotels with filters and caching"""
+    from app.services.cache_service import CacheService
+    
+    # Create cache key from search parameters
+    search_params = {
+        'city': city, 'country': country, 'check_in': check_in, 'check_out': check_out,
+        'guests': guests, 'rooms': rooms, 'min_price': str(min_price) if min_price else None,
+        'max_price': str(max_price) if max_price else None, 'star_rating': star_rating,
+        'currency': currency, 'page': page, 'limit': limit
+    }
+    
+    # Try to get from cache first
+    cached_result = CacheService.get_cached_hotel_search(search_params)
+    if cached_result:
+        return cached_result
+    
     try:
         from app.models.hotel import Hotel
         from sqlalchemy import and_
@@ -115,7 +130,12 @@ def search_hotels(
                 "is_available": getattr(hotel, 'is_available', True)
             })
         
-        return {"hotels": hotel_list, "total": total}
+        result = {"hotels": hotel_list, "total": total}
+        
+        # Cache the result for 5 minutes
+        CacheService.cache_hotel_search(search_params, result, ttl=300)
+        
+        return result
     except Exception as e:
         print(f"Error searching hotels: {e}")
         return {"hotels": [], "total": 0}
