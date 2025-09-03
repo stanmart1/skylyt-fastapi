@@ -496,6 +496,23 @@ def complete_payment(
         
         db.commit()
         
+        # Send payment completion notification email
+        try:
+            email_service.send_payment_confirmation(
+                booking.customer_email,
+                {
+                    "user_name": booking.customer_name,
+                    "booking_reference": booking.booking_reference,
+                    "payment_method": "Bank Transfer",
+                    "amount": float(booking.total_amount),
+                    "currency": booking.currency,
+                    "transaction_id": payment.payment_reference or "N/A",
+                    "status": "Payment completed - awaiting verification"
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send payment completion email: {e}")
+        
         return {
             "success": True,
             "message": "Payment completed successfully. Awaiting verification.",

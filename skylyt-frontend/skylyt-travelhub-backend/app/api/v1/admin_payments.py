@@ -1,200 +1,130 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import logging
-
 from app.core.dependencies import get_current_user
 from app.core.database import get_db
-from app.utils.serializers import serialize_payment
-from app.schemas.payment import PaymentUpdateRequest, RefundRequest
+from app.services.payment_service import PaymentService
+from app.tasks.email_tasks import send_payment_confirmation_email
+import logging
 
 router = APIRouter()
-DEFAULT_COMMISSION_RATE = 10.0
+logger = logging.getLogger(__name__)
 
-# Routes
-@router.get("/admin/payments")
-async def get_admin_payments(
-    page: int = 1,
-    per_page: int = 20,
-    current_user = Depends(get_current_user), 
+@router.put("/admin/payments/{payment_id}/verify")
+async def verify_payment_admin(
+    payment_id: int,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get paginated payments for admin"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment
-        offset = (page - 1) * per_page
-        payments = db.query(Payment).offset(offset).limit(per_page).all()
-        total = db.query(Payment).count()
-        
-        return {
-            "payments": [serialize_payment(payment) for payment in payments],
-            "total": total,
-            "page": page,
-            "per_page": per_page
-        }
-    except ImportError:
-        return {"payments": [], "total": 0, "page": page, "per_page": per_page}
-
-@router.get("/admin/payments/{payment_id}")
-async def get_admin_payment(payment_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get single payment for admin"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment
-        payment = db.query(Payment).filter(Payment.id == payment_id).first()
-        if not payment:
-            raise HTTPException(status_code=404, detail="Payment not found")
-        
-        return {
-            "id": payment.id,
-            "booking_id": payment.booking_id,
-            "amount": float(payment.amount),
-            "currency": payment.currency,
-            "status": payment.status.value,
-            "payment_method": payment.payment_method.value,
-            "created_at": payment.created_at.isoformat(),
-            "transaction_id": payment.transaction_id,
-            "transfer_reference": payment.transfer_reference,
-            "gateway_response": payment.gateway_response
-        }
-    except ImportError:
-        raise HTTPException(status_code=404, detail="Payment not found")
-
-@router.put("/admin/payments/{payment_id}")
-async def update_payment(payment_id: int, payment_data: PaymentUpdateRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Update payment details (admin)"""
+    """Admin verify payment and send confirmation email"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
         from app.models.payment import Payment, PaymentStatus
+        from app.models.booking import Booking
+        
         payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        if payment_data.status:
-            try:
-                # Validate status value before assignment
-                valid_statuses = [status.value for status in PaymentStatus]
-                if payment_data.status in valid_statuses:
-                    payment.status = PaymentStatus(payment_data.status)
-                else:
-                    raise HTTPException(status_code=400, detail="Invalid payment status")
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid payment status")
+        booking = db.query(Booking).filter(Booking.id == payment.booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Associated booking not found")
         
-        if payment_data.transaction_id:
-            payment.transaction_id = payment_data.transaction_id
-        
-        db.commit()
-        db.refresh(payment)
-        
-        return {
-            "id": payment.id,
-            "message": "Payment updated successfully",
-            "status": payment.status.value
-        }
-    except ImportError:
-        raise HTTPException(status_code=404, detail="Payment system not available")
-
-@router.post("/admin/payments/{payment_id}/verify")
-async def verify_payment(payment_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Verify payment for admin"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment, PaymentStatus
-        payment = db.query(Payment).filter(Payment.id == payment_id).first()
-        if not payment:
-            raise HTTPException(status_code=404, detail="Payment not found")
+        # Update payment status to completed
         payment.status = PaymentStatus.COMPLETED.value
-        db.commit()
-        return {"message": "Payment verified", "payment_id": payment_id, "status": "completed"}
-    except ImportError:
-        raise HTTPException(status_code=404, detail="Payment system not available")
-
-@router.delete("/admin/payments/{payment_id}")
-async def delete_payment(payment_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Delete payment (admin only)"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment
-        payment = db.query(Payment).filter(Payment.id == payment_id).first()
-        if not payment:
-            raise HTTPException(status_code=404, detail="Payment not found")
         
-        db.delete(payment)
+        # Update booking status to confirmed
+        booking.status = "confirmed"
+        booking.payment_status = "completed"
+        
         db.commit()
         
-        return {"message": "Payment deleted successfully"}
-    except ImportError:
-        raise HTTPException(status_code=404, detail="Payment system not available")
-
-@router.post("/admin/payments/{payment_id}/refund")
-async def process_refund(payment_id: int, refund_data: RefundRequest, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Process payment refund"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment, PaymentStatus
-        payment = db.query(Payment).filter(Payment.id == payment_id).first()
-        if not payment:
-            raise HTTPException(status_code=404, detail="Payment not found")
+        # Send payment verification confirmation email
+        try:
+            send_payment_confirmation_email.delay({
+                "user_email": booking.customer_email,
+                "user_name": booking.customer_name,
+                "booking_reference": booking.booking_reference,
+                "payment_method": payment.payment_method,
+                "amount": float(payment.amount),
+                "currency": payment.currency,
+                "transaction_id": payment.transaction_id or payment.payment_reference or "N/A",
+                "status": "Payment verified and confirmed"
+            })
+        except Exception as e:
+            logger.warning(f"Failed to send payment verification email: {e}")
         
-        payment.status = PaymentStatus.REFUNDED.value
-        db.commit()
-        return {"message": "Refund processed successfully"}
+        return {
+            "message": "Payment verified successfully",
+            "payment_id": payment_id,
+            "booking_id": booking.id,
+            "status": "completed"
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to process refund")
+        logger.error(f"Failed to verify payment {payment_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify payment")
 
-@router.get("/admin/payments/export")
-async def export_payments(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Export payments to CSV"""
+@router.put("/admin/payments/{payment_id}/reject")
+async def reject_payment_admin(
+    payment_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Admin reject payment and send notification email"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        from app.models.payment import Payment
-        payments = db.query(Payment).all()
+        from app.models.payment import Payment, PaymentStatus
+        from app.models.booking import Booking
         
-        # Create CSV content
-        csv_content = "ID,Booking ID,Amount,Currency,Status,Payment Method,Created At\n"
-        for payment in payments:
-            csv_content += f"{payment.id},{payment.booking_id},{payment.amount},{payment.currency},{payment.status.value},{payment.payment_method.value},{payment.created_at}\n"
-        
-        return {"csv": csv_content}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to export payments")
-
-@router.get("/admin/payments/{payment_id}/commission")
-async def get_payment_commission(payment_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get payment commission details"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    try:
-        from app.models.payment import Payment
         payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        # Calculate commission
-        commission_rate = DEFAULT_COMMISSION_RATE
-        commission_amount = float(payment.amount) * (commission_rate / 100)
+        booking = db.query(Booking).filter(Booking.id == payment.booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Associated booking not found")
+        
+        # Update payment status to failed
+        payment.status = PaymentStatus.FAILED.value
+        
+        # Update booking status back to pending
+        booking.status = "pending"
+        booking.payment_status = "failed"
+        
+        db.commit()
+        
+        # Send payment rejection notification email
+        try:
+            send_payment_confirmation_email.delay({
+                "user_email": booking.customer_email,
+                "user_name": booking.customer_name,
+                "booking_reference": booking.booking_reference,
+                "payment_method": payment.payment_method,
+                "amount": float(payment.amount),
+                "currency": payment.currency,
+                "transaction_id": payment.transaction_id or payment.payment_reference or "N/A",
+                "status": "Payment rejected - please contact support or try again"
+            })
+        except Exception as e:
+            logger.warning(f"Failed to send payment rejection email: {e}")
         
         return {
-            "commission_amount": commission_amount,
-            "commission_rate": commission_rate,
-            "currency": payment.currency
+            "message": "Payment rejected successfully",
+            "payment_id": payment_id,
+            "booking_id": booking.id,
+            "status": "failed"
         }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to get commission details")
+        db.rollback()
+        logger.error(f"Failed to reject payment {payment_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reject payment")

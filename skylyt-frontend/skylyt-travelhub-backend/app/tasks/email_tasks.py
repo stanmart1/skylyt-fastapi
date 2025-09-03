@@ -203,6 +203,62 @@ def send_payment_confirmation_email(self, payment_data: Dict):
             raise self.retry(countdown=60 * (self.request.retries + 1))
         raise
 
+@celery_app.task(bind=True, max_retries=3)
+def send_booking_status_update_email(self, booking_data: Dict):
+    """Send booking status update email"""
+    try:
+        template = template_env.get_template("booking_confirmation.html")
+        html_content = template.render(booking=booking_data)
+        
+        subject = f"Booking Update - {booking_data['booking_reference']}"
+        
+        success = email_service.send_email(
+            to_email=booking_data["user_email"],
+            subject=subject,
+            html_content=html_content
+        )
+        
+        if not success:
+            raise Exception("Failed to send email")
+        
+        return {"status": "sent", "email": booking_data["user_email"]}
+        
+    except Exception as e:
+        logger.error(f"Booking status update email failed: {str(e)}")
+        if self.request.retries < self.max_retries:
+            raise self.retry(countdown=60 * (self.request.retries + 1))
+        raise
+
+@celery_app.task(bind=True, max_retries=3)
+def send_driver_assignment_email(self, driver_data: Dict, booking_data: Dict):
+    """Send driver assignment notification email"""
+    try:
+        template = template_env.get_template("booking_confirmation.html")
+        html_content = template.render(
+            booking=booking_data,
+            driver=driver_data,
+            is_driver_assignment=True
+        )
+        
+        subject = f"New Trip Assignment - {booking_data['booking_reference']}"
+        
+        success = email_service.send_email(
+            to_email=driver_data["email"],
+            subject=subject,
+            html_content=html_content
+        )
+        
+        if not success:
+            raise Exception("Failed to send email")
+        
+        return {"status": "sent", "email": driver_data["email"]}
+        
+    except Exception as e:
+        logger.error(f"Driver assignment email failed: {str(e)}")
+        if self.request.retries < self.max_retries:
+            raise self.retry(countdown=60 * (self.request.retries + 1))
+        raise
+
 @celery_app.task
 def send_bulk_promotional_email(email_list: List[str], template_name: str, context: Dict):
     """Send bulk promotional emails"""
