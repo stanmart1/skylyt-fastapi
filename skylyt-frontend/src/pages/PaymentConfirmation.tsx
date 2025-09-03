@@ -59,7 +59,7 @@ const PaymentConfirmation = () => {
 
             <div className="space-y-3">
               <Button 
-                onClick={() => navigate('/dashboard')} 
+                onClick={() => navigate('/dashboard?tab=bookings')} 
                 className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
               >
                 <FileText className="h-4 w-4 mr-2" />
