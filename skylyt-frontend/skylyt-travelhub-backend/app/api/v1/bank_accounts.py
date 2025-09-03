@@ -8,7 +8,7 @@ router = APIRouter(prefix="/bank-accounts", tags=["bank-accounts"])
 @router.get("")
 def get_bank_accounts(db: Session = Depends(get_db)):
     """Get bank account details for transfers"""
-    settings = db.query(Settings).filter(Settings.is_primary_account == True).first()
+    settings = db.query(Settings).filter(Settings.is_primary_account.is_(True)).first()
     
     if not settings or not settings.bank_name:
         raise HTTPException(status_code=404, detail="Bank account details not configured")

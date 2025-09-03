@@ -40,14 +40,14 @@ export const BankTransferUpload = ({
     const fetchBankDetails = async () => {
       try {
         const { apiService } = await import('@/services/api');
-        const details = await apiService.request('/payments/bank-account-details');
+        const details = await apiService.request('/bank-accounts');
         setBankDetails(details);
       } catch (error) {
         onError('Bank account details not configured. Please contact administrator.');
       }
     };
     fetchBankDetails();
-  }, []);
+  }, [onError]);
 
   const handleInputChange = (field: string, value: string) => {
     setTransferData(prev => ({ ...prev, [field]: value }));
@@ -69,30 +69,36 @@ export const BankTransferUpload = ({
     }
 
     try {
+      // First upload the proof file
       const formData = new FormData();
+      formData.append('file', proofFile);
       formData.append('booking_id', String(bookingId));
-      formData.append('gateway', 'bank_transfer');
-      formData.append('amount', String(amount));
-      formData.append('currency', currency);
-      formData.append('payment_method', 'bank_transfer');
-      formData.append('reference_number', transferData.referenceNumber);
-      formData.append('transfer_date', transferData.transferDate);
-      formData.append('notes', transferData.notes);
-      formData.append('proof_file', proofFile);
+      formData.append('payment_reference', transferData.referenceNumber);
 
-      // Note: This would need a special API endpoint for file uploads
-      const result = await processPayment({
-        booking_id: bookingId,
-        gateway: 'bank_transfer',
-        amount,
-        currency,
-        payment_method: 'bank_transfer',
-        reference_number: transferData.referenceNumber,
-        transfer_date: transferData.transferDate,
-        notes: transferData.notes,
+      const { apiService } = await import('@/services/api');
+      const uploadResult = await apiService.request('/payments/upload-proof', {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header, let browser set it for FormData
       });
-      
-      onSuccess(result);
+
+      if (uploadResult.success) {
+        // Then process the payment
+        const result = await processPayment({
+          booking_id: bookingId,
+          gateway: 'bank_transfer',
+          amount,
+          currency,
+          payment_method: 'bank_transfer',
+          reference_number: transferData.referenceNumber,
+          transfer_date: transferData.transferDate,
+          notes: transferData.notes,
+        });
+        
+        onSuccess(result);
+      } else {
+        onError('Failed to upload proof of payment');
+      }
     } catch (error) {
       onError('Failed to submit bank transfer proof. Please try again.');
     }

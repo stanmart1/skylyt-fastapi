@@ -46,6 +46,30 @@ def create_booking(
         db.commit()
         db.refresh(booking)
         
+        # Send confirmation email immediately after booking creation
+        try:
+            customer_email = guest_data.get('guest_email', '') if not current_user else current_user.email
+            customer_name = guest_data.get('guest_name', '') if not current_user else f"{current_user.first_name} {current_user.last_name}"
+            
+            email_service.send_booking_confirmation(
+                customer_email,
+                {
+                    "user_name": customer_name,
+                    "booking_reference": booking.booking_reference,
+                    "booking_type": booking.booking_type,
+                    "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
+                    "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
+                    "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
+                    "check_in_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
+                    "check_out_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
+                    "guests": booking.booking_data.get("guests", 1),
+                    "total_amount": float(booking.total_amount),
+                    "currency": booking.currency
+                }
+            )
+        except Exception as e:
+            print(f"Email sending failed: {e}")  # Don't fail booking if email fails
+        
         return {
             "id": booking.id,
             "booking_reference": booking.booking_reference,
@@ -58,29 +82,6 @@ def create_booking(
         print(f"Booking creation error: {e}")
         print(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Booking creation failed: {str(e)}")
-    
-    # Send confirmation email using guest email
-    try:
-        email_service.send_booking_confirmation(
-            booking_data.booking_data.get("guest_email"),
-            {
-                "user_name": booking_data.booking_data.get("guest_name"),
-                "booking_reference": booking.booking_reference,
-                "booking_type": booking.booking_type,
-                "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
-                "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
-                "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
-                "check_in_date": booking.start_date.strftime("%B %d, %Y"),
-                "check_out_date": booking.end_date.strftime("%B %d, %Y"),
-                "guests": booking.booking_data.get("guests", 1),
-                "total_amount": float(booking.total_amount),
-                "currency": booking.currency
-            }
-        )
-    except Exception as e:
-        print(f"Email sending failed: {e}")  # Don't fail booking if email fails
-    
-    return booking
 
 
 @router.get("", response_model=List[BookingResponse])

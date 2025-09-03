@@ -93,6 +93,7 @@ class PaymentService:
     
     def initialize_payment(self, db: Session, booking_id: int, payment_method: str, proof_file_url: str = None, payment_reference: str = None) -> Dict[str, Any]:
         from app.models.user import User
+        from app.models.payment import PaymentMethod, PaymentStatus
         
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
@@ -101,40 +102,45 @@ class PaymentService:
         # Get user details for customer snapshot
         user = db.query(User).filter(User.id == booking.user_id).first()
         
-        # For bank transfer, don't need provider
+        # For bank transfer, create payment with pending verification status
         if payment_method == "bank_transfer":
             payment = Payment(
                 booking_id=booking_id,
-                payment_method=payment_method,
+                payment_method=PaymentMethod.BANK_TRANSFER,
                 amount=booking.total_amount,
                 currency=booking.currency,
-                status="processing",
+                status=PaymentStatus.PENDING,
                 proof_of_payment_url=proof_file_url,
                 payment_reference=payment_reference,
                 customer_name=f"{user.first_name} {user.last_name}" if user else booking.customer_name,
                 customer_email=user.email if user else booking.customer_email
             )
             db.add(payment)
+            
+            # Update booking payment status
+            booking.payment_status = "pending_verification"
+            
             db.commit()
             db.refresh(payment)
             
             return {
                 "payment_id": payment.id,
-                "status": "processing",
-                "reference": payment_reference
+                "status": "pending",
+                "reference": payment_reference,
+                "success": True
             }
         
         provider = self.providers.get(payment_method)
         if not provider:
             raise ValueError("Unsupported payment method")
         
-        # Create payment record
+        # Create payment record for other methods
         payment = Payment(
             booking_id=booking_id,
-            payment_method=payment_method,
+            payment_method=getattr(PaymentMethod, payment_method.upper()),
             amount=booking.total_amount,
             currency=booking.currency,
-            status="pending",
+            status=PaymentStatus.PENDING,
             customer_name=f"{user.first_name} {user.last_name}" if user else booking.customer_name,
             customer_email=user.email if user else booking.customer_email
         )
@@ -182,6 +188,8 @@ class PaymentService:
                 query = query.filter(Payment.status == filters['status'])
             if filters.get('provider'):
                 query = query.filter(Payment.payment_method == filters['provider'])
+            if filters.get('booking_type'):
+                query = query.filter(Booking.booking_type == filters['booking_type'])
             if filters.get('date_from'):
                 query = query.filter(Payment.created_at >= filters['date_from'])
             if filters.get('date_to'):
@@ -195,14 +203,42 @@ class PaymentService:
                 query = query.filter(or_(
                     Payment.transfer_reference.ilike(search),
                     Payment.transaction_id.ilike(search),
-                    Booking.guest_name.ilike(search)
+                    Payment.payment_reference.ilike(search),
+                    Booking.customer_name.ilike(search)
                 ))
         
         total = query.count()
         payments = query.offset((page - 1) * per_page).limit(per_page).all()
         
+        # Serialize payments with booking info
+        serialized_payments = []
+        for payment in payments:
+            payment_dict = {
+                "id": payment.id,
+                "booking_id": payment.booking_id,
+                "amount": float(payment.amount),
+                "currency": payment.currency,
+                "status": payment.status.value if hasattr(payment.status, 'value') else payment.status,
+                "payment_method": payment.payment_method.value if hasattr(payment.payment_method, 'value') else payment.payment_method,
+                "payment_reference": payment.payment_reference,
+                "transaction_id": payment.transaction_id,
+                "proof_of_payment_url": payment.proof_of_payment_url,
+                "customer_name": payment.customer_name,
+                "customer_email": payment.customer_email,
+                "created_at": payment.created_at.isoformat() if payment.created_at else None,
+                "updated_at": payment.updated_at.isoformat() if payment.updated_at else None,
+                "booking": {
+                    "booking_reference": payment.booking.booking_reference,
+                    "booking_type": payment.booking.booking_type,
+                    "hotel_name": payment.booking.hotel_name,
+                    "car_name": payment.booking.car_name,
+                    "customer_name": payment.booking.customer_name
+                }
+            }
+            serialized_payments.append(payment_dict)
+        
         return {
-            "payments": payments,
+            "payments": serialized_payments,
             "total": total,
             "page": page,
             "per_page": per_page,
@@ -266,12 +302,23 @@ class PaymentService:
         return refund_data
     
     def update_payment_status(self, db: Session, payment_id: int, status: str, notes: str = None) -> Dict[str, Any]:
+        from app.models.payment import PaymentStatus
+        
         payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not payment:
             raise ValueError("Payment not found")
         
         old_status = payment.status
-        payment.status = status
+        
+        # Convert string status to enum if needed
+        if isinstance(status, str):
+            try:
+                payment.status = PaymentStatus(status)
+            except ValueError:
+                # Fallback for string values
+                payment.status = status
+        else:
+            payment.status = status
         
         if notes:
             if not payment.gateway_response:
@@ -279,13 +326,20 @@ class PaymentService:
             payment.gateway_response["admin_notes"] = notes
         
         # Update booking status based on payment status
-        if status == "completed":
+        if status in ["completed", PaymentStatus.COMPLETED]:
             payment.booking.status = "confirmed"
-        elif status in ["failed", "cancelled", "refunded"]:
+            payment.booking.payment_status = "completed"
+        elif status in ["failed", "cancelled", "refunded", PaymentStatus.FAILED]:
             payment.booking.status = "cancelled"
+            payment.booking.payment_status = "failed"
+        elif status in ["pending", PaymentStatus.PENDING]:
+            payment.booking.payment_status = "pending_verification"
         
         db.commit()
-        return {"old_status": old_status, "new_status": status}
+        return {
+            "old_status": old_status.value if hasattr(old_status, 'value') else old_status,
+            "new_status": payment.status.value if hasattr(payment.status, 'value') else payment.status
+        }
     
     def export_payments(self, db: Session, filters: Dict[str, Any] = None, format: str = "csv") -> str:
         query = db.query(Payment).join(Booking)

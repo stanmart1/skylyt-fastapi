@@ -2,38 +2,81 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Booking Completed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Completed - Skylyt Luxury</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2c5aa0;">Booking Completed!</h1>
-        
-        <p>Dear {{ booking.user_name }},</p>
-        
-        <p>Your booking has been completed successfully! We hope you had a wonderful experience.</p>
-        
-        <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h3>Completed Booking Details</h3>
-            <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
-            {% if booking.hotel_name %}
-            <p><strong>Hotel:</strong> {{ booking.hotel_name }}</p>
-            {% endif %}
-            {% if booking.car_name %}
-            <p><strong>Car:</strong> {{ booking.car_name }}</p>
-            {% endif %}
-            <p><strong>Service Period:</strong> {{ booking.check_in_date }} to {{ booking.check_out_date }}</p>
-            <p><strong>Total Amount:</strong> {{ booking.currency }} {{ booking.total_amount }}</p>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151; background-color: #f8fafc;">
+    <div style="max-width: 600px; margin: 0 auto; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <!-- Header with Gradient -->
+        <div style="background: linear-gradient(to right, #2563eb, #1d4ed8, #0d9488); padding: 40px 30px; text-align: center;">
+            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700; letter-spacing: -0.025em;">🎉 Journey Complete!</h1>
+            <p style="margin: 8px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;">Thank you for traveling with us</p>
         </div>
         
-        <p>Thank you for choosing Skylyt Luxury! We'd love to hear about your experience.</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ frontend_url }}/feedback" style="background: #2c5aa0; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Leave Feedback</a>
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px 0; font-size: 16px;">Dear {{ booking.user_name or user_name }},</p>
+            
+            <p style="margin: 0 0 24px 0; font-size: 16px;">Your booking has been completed successfully! We hope you had an amazing experience with Skylyt Luxury.</p>
+            
+            <!-- Completed Booking Details Card -->
+            <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #10b981;">
+                <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 20px; font-weight: 600;">✨ Completed Booking Details</h3>
+                
+                <div style="display: grid; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #a7f3d0;">
+                        <span style="font-weight: 600; color: #047857;">Booking Reference:</span>
+                        <span style="color: #1e293b; font-weight: 700;">{{ booking.booking_reference or booking_reference }}</span>
+                    </div>
+                    
+                    {% if booking.hotel_name or hotel_name %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #a7f3d0;">
+                        <span style="font-weight: 600; color: #047857;">Hotel:</span>
+                        <span style="color: #1e293b;">{{ booking.hotel_name or hotel_name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if booking.car_name or car_name %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #a7f3d0;">
+                        <span style="font-weight: 600; color: #047857;">Vehicle:</span>
+                        <span style="color: #1e293b;">{{ booking.car_name or car_name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if booking.check_in_date or check_in_date %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #a7f3d0;">
+                        <span style="font-weight: 600; color: #047857;">Service Period:</span>
+                        <span style="color: #1e293b;">{{ booking.check_in_date or check_in_date }} to {{ booking.check_out_date or check_out_date }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; background: white; border-radius: 8px; padding: 16px; margin-top: 8px;">
+                        <span style="font-weight: 700; color: #1e293b; font-size: 18px;">Total Amount:</span>
+                        <span style="color: #10b981; font-weight: 700; font-size: 18px;">{{ booking.currency or currency }} {{ booking.total_amount or total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+                <h4 style="margin: 0 0 12px 0; color: #15803d; font-size: 18px; font-weight: 600;">🚀 We'd Love Your Feedback!</h4>
+                <p style="margin: 0 0 16px 0; color: #166534;">Help us improve by sharing your experience with other travelers.</p>
+                <div style="margin-top: 16px;">
+                    <span style="color: #15803d; font-size: 24px;">⭐⭐⭐⭐⭐</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{ frontend_url }}/feedback" style="background: linear-gradient(to right, #f97316, #ea580c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-right: 12px;">Leave Feedback</a>
+                <a href="{{ frontend_url }}" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0;">Book Again</a>
+            </div>
+            
+            <p style="margin: 24px 0 0 0; font-size: 16px; color: #64748b;">We look forward to serving you again and making your next journey even more memorable!</p>
         </div>
         
-        <p>We look forward to serving you again!</p>
-        
-        <p>Best regards,<br>The Skylyt Team</p>
+        <!-- Footer -->
+        <div style="background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Thank you for choosing us,<br><strong>The Skylyt Luxury Team</strong></p>
+        </div>
     </div>
 </body>
 </html>

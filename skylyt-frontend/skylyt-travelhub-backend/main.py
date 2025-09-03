@@ -100,6 +100,7 @@ def serialize_payment(payment) -> dict:
 def update_booking_status_helper(booking_id: int, status: str, db: Session) -> dict:
     """Helper function to update booking status"""
     from app.models.booking import Booking
+    from app.services.email_service import EmailService
     
     booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
@@ -109,9 +110,41 @@ def update_booking_status_helper(booking_id: int, status: str, db: Session) -> d
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_BOOKING_STATUSES)}")
     
     try:
+        old_status = booking.status
         booking.status = status
         db.commit()
         db.refresh(booking)
+        
+        # Send email notification for status changes
+        if old_status != status and booking.customer_email:
+            try:
+                email_service = EmailService()
+                if status == "confirmed":
+                    email_service.send_booking_confirmation(
+                        booking.customer_email,
+                        {
+                            "user_name": booking.customer_name,
+                            "booking_reference": booking.booking_reference,
+                            "booking_type": booking.booking_type,
+                            "status": "confirmed",
+                            "total_amount": float(booking.total_amount),
+                            "currency": booking.currency
+                        }
+                    )
+                elif status == "completed":
+                    email_service.send_booking_completion(
+                        booking.customer_email,
+                        {
+                            "user_name": booking.customer_name,
+                            "booking_reference": booking.booking_reference,
+                            "booking_type": booking.booking_type,
+                            "total_amount": float(booking.total_amount),
+                            "currency": booking.currency
+                        }
+                    )
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to send status update email: {e}")
         
         return {
             "success": True,
@@ -548,10 +581,17 @@ async def create_booking(booking_data: BookingCreateRequest, current_user = Depe
     
     try:
         from app.models.booking import Booking
+        from app.models.user import User
+        from app.services.email_service import EmailService
         import uuid
         
         # Generate booking reference
         booking_reference = f"BK{uuid.uuid4().hex[:8].upper()}"
+        
+        # Get user details for email
+        user = db.query(User).filter(User.id == booking_data.user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
         
         new_booking = Booking(
             user_id=booking_data.user_id,
@@ -562,12 +602,34 @@ async def create_booking(booking_data: BookingCreateRequest, current_user = Depe
             car_name=booking_data.car_name,
             total_amount=booking_data.total_amount,
             currency=booking_data.currency,
-            booking_data=booking_data.booking_data
+            booking_data=booking_data.booking_data,
+            customer_name=f"{user.first_name} {user.last_name}",
+            customer_email=user.email
         )
         
         db.add(new_booking)
         db.commit()
         db.refresh(new_booking)
+        
+        # Send booking confirmation email
+        try:
+            email_service = EmailService()
+            email_service.send_booking_confirmation(
+                user.email,
+                {
+                    "user_name": f"{user.first_name} {user.last_name}",
+                    "booking_reference": new_booking.booking_reference,
+                    "booking_type": new_booking.booking_type,
+                    "hotel_name": booking_data.hotel_name,
+                    "car_name": booking_data.car_name,
+                    "total_amount": float(booking_data.total_amount),
+                    "currency": booking_data.currency,
+                    "status": booking_data.status
+                }
+            )
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send admin booking confirmation email: {e}")
         
         return {
             "id": new_booking.id,
@@ -847,9 +909,14 @@ async def update_payment(payment_id: int, payment_data: PaymentUpdateRequest, cu
     
     try:
         from app.models.payment import Payment, PaymentStatus
+        from app.models.booking import Booking
+        from app.services.email_service import EmailService
+        
         payment = db.query(Payment).filter(Payment.id == payment_id).first()
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
+        
+        old_status = payment.status.value if payment.status else None
         
         if payment_data.status:
             try:
@@ -867,6 +934,29 @@ async def update_payment(payment_id: int, payment_data: PaymentUpdateRequest, cu
         
         db.commit()
         db.refresh(payment)
+        
+        # Send email notification for payment status changes
+        if old_status != payment.status.value and payment_data.status in ["completed", "failed"]:
+            try:
+                booking = db.query(Booking).filter(Booking.id == payment.booking_id).first()
+                if booking and booking.customer_email:
+                    email_service = EmailService()
+                    if payment_data.status == "completed":
+                        email_service.send_payment_confirmation(
+                            booking.customer_email,
+                            {
+                                "user_name": booking.customer_name,
+                                "booking_reference": booking.booking_reference,
+                                "payment_method": payment.payment_method.value,
+                                "amount": float(payment.amount),
+                                "currency": payment.currency,
+                                "transaction_id": payment.transaction_id or "N/A",
+                                "status": "Payment Confirmed"
+                            }
+                        )
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to send payment status update email: {e}")
         
         return {
             "id": payment.id,

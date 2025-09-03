@@ -1480,7 +1480,7 @@ const AdminDashboard = () => {
               <ErrorBoundary>
                 {activeCarTab === 'overview' && <CarFleetStats />}
                 {activeCarTab === 'bookings' && <CarBookingManagement />}
-                {activeCarTab === 'payments' && <PaymentManagement />}
+                {activeCarTab === 'payments' && <PaymentManagement bookingType="car" />}
                 {activeCarTab === 'fleet' && <CarManagement />}
                 {activeCarTab === 'reviews' && <ReviewManagement />}
                 {activeCarTab === 'drivers' && <DriverManagement />}
@@ -1512,7 +1512,7 @@ const AdminDashboard = () => {
               <ErrorBoundary>
                 {activeHotelTab === 'overview' && <HotelOverviewStats />}
                 {activeHotelTab === 'bookings' && <HotelBookingManagement />}
-                {activeHotelTab === 'payments' && <PaymentManagement />}
+                {activeHotelTab === 'payments' && <PaymentManagement bookingType="hotel" />}
                 {activeHotelTab === 'hotels' && <HotelManagement />}
                 {activeHotelTab === 'reviews' && <ReviewManagement />}
                 {!activeHotelTab && <HotelManagement />}

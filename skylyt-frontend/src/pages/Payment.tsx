@@ -61,12 +61,34 @@ const Payment = () => {
     }
   };
   
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Text copied to clipboard",
-    });
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied!",
+        description: "Text copied to clipboard",
+      });
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast({
+          title: "Copied!",
+          description: "Text copied to clipboard",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Copy Failed",
+          description: "Unable to copy to clipboard",
+          variant: "destructive"
+        });
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const handlePayment = async () => {
@@ -88,7 +110,7 @@ const Payment = () => {
       return;
     }
     
-    console.log('Processing payment for booking ID:', bookingId);
+    // Processing payment for booking
     setLoading(true);
     try {
       if (method === 'bank_transfer' && selectedFile) {
@@ -98,7 +120,7 @@ const Payment = () => {
         formData.append('booking_id', bookingId);
         formData.append('payment_reference', transactionRef);
         
-        console.log('Uploading proof for booking:', bookingId);
+        // Uploading proof for booking
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/upload-proof`, {
           method: 'POST',
           headers: {
@@ -109,7 +131,6 @@ const Payment = () => {
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Upload failed:', errorText);
           throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
         }
         
@@ -137,7 +158,6 @@ const Payment = () => {
       setLoading(false);
       
     } catch (error) {
-      console.error('Payment error:', error);
       setLoading(false);
       setPaymentStatus('failed');
       toast({
@@ -337,7 +357,10 @@ const Payment = () => {
                     <Button 
                       variant="outline" 
                       className="mb-2"
-                      onClick={() => document.getElementById('proof-upload')?.click()}
+                      onClick={() => {
+                        const fileInput = document.getElementById('proof-upload') as HTMLInputElement;
+                        fileInput?.click();
+                      }}
                       type="button"
                     >
                       Choose File

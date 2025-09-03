@@ -18,12 +18,26 @@ interface Payment {
   currency: string;
   status: string;
   payment_method: string;
+  payment_reference?: string;
+  proof_of_payment_url?: string;
+  customer_name?: string;
   created_at: string;
   transaction_id?: string;
   transfer_reference?: string;
+  booking?: {
+    booking_reference: string;
+    booking_type: string;
+    hotel_name?: string;
+    car_name?: string;
+    customer_name: string;
+  };
 }
 
-const PaymentManagement = () => {
+interface PaymentManagementProps {
+  bookingType?: 'hotel' | 'car';
+}
+
+const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -40,7 +54,14 @@ const PaymentManagement = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const data = await apiService.request('/admin/payments');
+      let endpoint = '/payments';
+      if (bookingType === 'hotel') {
+        endpoint = '/payments/hotel-payments';
+      } else if (bookingType === 'car') {
+        endpoint = '/payments/car-payments';
+      }
+      
+      const data = await apiService.request(endpoint);
       setPayments(Array.isArray(data) ? data : Array.isArray(data?.payments) ? data.payments : []);
     } catch (error) {
       console.error('Failed to fetch payments:', error);
@@ -53,7 +74,10 @@ const PaymentManagement = () => {
   const handleVerifyPayment = async (paymentId: number) => {
     try {
       setUpdating(true);
-      await apiService.request(`/admin/payments/${paymentId}/verify`, { method: 'POST' });
+      await apiService.request(`/payments/${paymentId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'completed' })
+      });
       await fetchPayments();
     } catch (error) {
       console.error('Failed to verify payment:', error);
@@ -74,9 +98,9 @@ const PaymentManagement = () => {
     
     try {
       setUpdating(true);
-      await apiService.request(`/admin/payments/${selectedPayment.id}`, {
+      await apiService.request(`/payments/${selectedPayment.id}/status`, {
         method: 'PUT',
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({ status: editForm.status })
       });
       await fetchPayments();
       setEditModalOpen(false);
@@ -174,7 +198,9 @@ const PaymentManagement = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Payment Records
+            {bookingType === 'hotel' ? 'Hotel Payment Records' : 
+             bookingType === 'car' ? 'Car Payment Records' : 
+             'Payment Records'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -201,7 +227,20 @@ const PaymentManagement = () => {
                           Payment #{payment.id}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          Booking: #{payment.booking_id}
+                          Booking: #{payment.booking?.booking_reference || payment.booking_id}
+                        </p>
+                        {payment.booking?.hotel_name && (
+                          <p className="text-sm text-gray-600">
+                            Hotel: {payment.booking.hotel_name}
+                          </p>
+                        )}
+                        {payment.booking?.car_name && (
+                          <p className="text-sm text-gray-600">
+                            Car: {payment.booking.car_name}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600">
+                          Customer: {payment.customer_name || payment.booking?.customer_name}
                         </p>
                         <p className="text-sm text-gray-600">
                           Amount: <PriceDisplay amount={payment.amount} currency={payment.currency} />
@@ -209,14 +248,21 @@ const PaymentManagement = () => {
                         <p className="text-sm text-gray-600">
                           Method: {payment.payment_method.replace('_', ' ')}
                         </p>
+                        {payment.payment_reference && (
+                          <p className="text-sm text-gray-600">
+                            Reference: {payment.payment_reference}
+                          </p>
+                        )}
                         {payment.transaction_id && (
                           <p className="text-sm text-gray-600">
                             Transaction: {payment.transaction_id}
                           </p>
                         )}
-                        {payment.transfer_reference && (
-                          <p className="text-sm text-gray-600">
-                            Reference: {payment.transfer_reference}
+                        {payment.proof_of_payment_url && (
+                          <p className="text-sm text-blue-600">
+                            <a href={`/api/v1/payments/proof/${payment.id}`} target="_blank" rel="noopener noreferrer">
+                              View Proof of Payment
+                            </a>
                           </p>
                         )}
                         <p className="text-xs text-gray-500">
@@ -238,14 +284,15 @@ const PaymentManagement = () => {
                           <Edit className="h-3 w-3" />
                         </Button>
                       )}
-                      {payment.status === 'pending' && hasPermission('payments.verify') && (
+                      {(payment.status === 'pending' || payment.payment_method === 'bank_transfer') && hasPermission('payments.verify') && (
                         <Button
                           size="sm"
                           onClick={() => handleVerifyPayment(payment.id)}
                           disabled={updating}
+                          className="bg-green-600 hover:bg-green-700"
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Verify
+                          {payment.payment_method === 'bank_transfer' ? 'Approve' : 'Verify'}
                         </Button>
                       )}
                       {hasPermission('payments.delete') && (

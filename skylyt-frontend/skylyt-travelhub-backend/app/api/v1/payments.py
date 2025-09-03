@@ -3,15 +3,54 @@ from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 from pydantic import BaseModel
+from pathlib import Path
+import os
+import uuid
+import logging
+from werkzeug.utils import secure_filename
 from app.core.database import get_db
 from app.services.payment_service import PaymentService
 from app.services.payment.gateway_factory import PaymentGatewayFactory
 from app.services.payment_processor import PaymentProcessor
-import os
-import uuid
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/payments", tags=["payments"])
-payment_service = PaymentService()
+def get_payment_service() -> PaymentService:
+    return PaymentService()
+
+# Security constants
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.pdf'}
+ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/jpg', 'application/pdf'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+def validate_upload_file(file: UploadFile) -> str:
+    """Validate uploaded file and return secure filename"""
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+    
+    # Validate MIME type
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid file type. Only JPEG, PNG, and PDF files are allowed."
+        )
+    
+    # Validate file extension
+    file_path = Path(file.filename)
+    extension = file_path.suffix.lower()
+    if extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file extension. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Use secure filename
+    secure_name = secure_filename(file.filename)
+    if not secure_name:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    
+    return secure_name
 
 
 class PaymentInitRequest(BaseModel):
@@ -43,6 +82,23 @@ async def initialize_payment(
         if not result.get('success'):
             raise HTTPException(status_code=400, detail=result.get('error', 'Payment creation failed'))
         
+        # Send payment confirmation email if payment was successful
+        if result.get('success') and result.get('payment_id'):
+            try:
+                email_service.send_payment_confirmation(
+                    booking.customer_email,
+                    {
+                        "user_name": booking.customer_name,
+                        "booking_reference": booking.booking_reference,
+                        "payment_method": request.payment_method,
+                        "amount": float(booking.total_amount),
+                        "currency": booking.currency,
+                        "transaction_id": result.get('transaction_id', 'N/A')
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send payment confirmation email: {e}")
+        
         return result
         
     except HTTPException:
@@ -58,18 +114,17 @@ async def upload_proof_of_payment(
     booking_id: int = Form(...),
     payment_reference: str = Form(...),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    payment_service: PaymentService = Depends(get_payment_service)
 ):
     """Upload proof of payment for bank transfer"""
     try:
-        # Validate file type
-        allowed_types = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
-        if file.content_type not in allowed_types:
-            raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and PDF files are allowed.")
-        
-        # Validate file size (max 10MB)
-        if file.size > 10 * 1024 * 1024:
+        # Validate file size
+        if file.size and file.size > MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+        
+        # Validate and get secure filename
+        secure_name = validate_upload_file(file)
         
         # Validate booking exists first
         from app.models.booking import Booking
@@ -77,27 +132,55 @@ async def upload_proof_of_payment(
         if not booking:
             raise HTTPException(status_code=404, detail=f"Booking with ID {booking_id} not found")
         
-        # Create uploads directory if it doesn't exist
-        upload_dir = "uploads/payment_proofs"
-        os.makedirs(upload_dir, exist_ok=True)
+        # Create secure upload directory
+        upload_dir = Path("uploads/payment_proofs")
+        upload_dir.mkdir(parents=True, exist_ok=True)
         
-        # Generate unique filename
-        file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"
-        file_path = os.path.join(upload_dir, unique_filename)
+        # Generate unique filename with timestamp
+        import time
+        timestamp = int(time.time())
+        file_extension = Path(secure_name).suffix
+        unique_filename = f"{booking_id}_{timestamp}_{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
         
-        # Save file
+        # Ensure file path is within upload directory (prevent path traversal)
+        if not str(file_path.resolve()).startswith(str(upload_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Read and validate file content
         content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File content too large")
+        
+        # Save file securely
         with open(file_path, "wb") as buffer:
             buffer.write(content)
         
         # Initialize payment with proof
         result = payment_service.initialize_payment(
             db, booking_id, "bank_transfer", 
-            proof_file_url=file_path, 
+            proof_file_url=str(file_path), 
             payment_reference=payment_reference
         )
         
+        # Send payment proof upload confirmation email
+        try:
+            email_service.send_payment_confirmation(
+                booking.customer_email,
+                {
+                    "user_name": booking.customer_name,
+                    "booking_reference": booking.booking_reference,
+                    "payment_method": "Bank Transfer",
+                    "amount": float(booking.total_amount),
+                    "currency": booking.currency,
+                    "transaction_id": payment_reference,
+                    "status": "Proof uploaded - pending verification"
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send payment proof confirmation email: {e}")
+        
+        logger.info(f"Payment proof uploaded for booking {booking_id}")
         return {
             "success": True,
             "message": "Proof of payment uploaded successfully",
@@ -109,16 +192,15 @@ async def upload_proof_of_payment(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        import traceback
-        print(f"Upload error: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        logger.error(f"Upload error for booking {booking_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Upload failed")
 
 
 @router.get("/verify/{payment_id}")
 def verify_payment(
     payment_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    payment_service: PaymentService = Depends(get_payment_service)
 ):
     """Verify payment status"""
     try:
@@ -127,6 +209,7 @@ def verify_payment(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        logger.error(f"Payment verification failed for payment {payment_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Payment verification failed")
 
 
@@ -166,17 +249,20 @@ def list_payments(
     per_page: int = Query(20, ge=1, le=100),
     status: Optional[str] = Query(None),
     provider: Optional[str] = Query(None),
+    booking_type: Optional[str] = Query(None),
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     amount_min: Optional[float] = Query(None),
     amount_max: Optional[float] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    payment_service: PaymentService = Depends(get_payment_service)
 ):
     """List payments with filtering and pagination"""
     filters = {
         "status": status,
         "provider": provider,
+        "booking_type": booking_type,
         "date_from": date_from,
         "date_to": date_to,
         "amount_min": amount_min,
@@ -190,7 +276,68 @@ def list_payments(
         result = payment_service.list_payments(db, filters, page, per_page)
         return result
     except Exception as e:
+        logger.error(f"Failed to fetch payments: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch payments")
+
+@router.get("/hotel-payments")
+def list_hotel_payments(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    status: Optional[str] = Query(None),
+    provider: Optional[str] = Query(None),
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    payment_service: PaymentService = Depends(get_payment_service)
+):
+    """List hotel payments only"""
+    filters = {
+        "status": status,
+        "provider": provider,
+        "booking_type": "hotel",
+        "date_from": date_from,
+        "date_to": date_to,
+        "search": search
+    }
+    filters = {k: v for k, v in filters.items() if v is not None}
+    
+    try:
+        result = payment_service.list_payments(db, filters, page, per_page)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to fetch hotel payments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch hotel payments")
+
+@router.get("/car-payments")
+def list_car_payments(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    status: Optional[str] = Query(None),
+    provider: Optional[str] = Query(None),
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    payment_service: PaymentService = Depends(get_payment_service)
+):
+    """List car payments only"""
+    filters = {
+        "status": status,
+        "provider": provider,
+        "booking_type": "car",
+        "date_from": date_from,
+        "date_to": date_to,
+        "search": search
+    }
+    filters = {k: v for k, v in filters.items() if v is not None}
+    
+    try:
+        result = payment_service.list_payments(db, filters, page, per_page)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to fetch car payments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch car payments")
 
 
 @router.get("/stats")
@@ -312,6 +459,31 @@ def get_proof_of_payment(
         raise HTTPException(status_code=404, detail="Proof of payment not found")
     
     try:
-        return FileResponse(payment.proof_of_payment_url)
-    except Exception as e:
+        file_path = Path(payment.proof_of_payment_url)
+        upload_dir = Path("uploads/payment_proofs")
+        
+        # Ensure file path is within upload directory (prevent path traversal)
+        try:
+            file_path.resolve().relative_to(upload_dir.resolve())
+        except ValueError:
+            logger.warning(f"Path traversal attempt detected for payment {payment_id}")
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(
+            path=str(file_path),
+            filename=file_path.name,
+            media_type='application/octet-stream'
+        )
+    except HTTPException:
+        raise
+    except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found")
+    except PermissionError:
+        logger.error(f"Permission denied accessing file for payment {payment_id}")
+        raise HTTPException(status_code=403, detail="Access denied")
+    except Exception as e:
+        logger.error(f"Error retrieving payment proof {payment_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving file")
