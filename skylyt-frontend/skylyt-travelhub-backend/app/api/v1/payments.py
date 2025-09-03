@@ -476,7 +476,7 @@ def complete_payment(
     """Complete payment process for bank transfer"""
     try:
         from app.models.booking import Booking
-        from app.models.payment import Payment
+        from app.models.payment import Payment, PaymentStatus
         
         # Get booking
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
@@ -488,8 +488,8 @@ def complete_payment(
         if not payment:
             raise HTTPException(status_code=404, detail="Payment not found")
         
-        # Update payment status to pending verification
-        payment.status = "pending_verification"
+        # Update payment status to processing (awaiting verification)
+        payment.status = PaymentStatus.PROCESSING
         
         # Update booking status
         booking.status = "payment_pending"
@@ -500,7 +500,7 @@ def complete_payment(
             "success": True,
             "message": "Payment completed successfully. Awaiting verification.",
             "booking_id": booking_id,
-            "payment_status": "pending_verification"
+            "payment_status": "processing"
         }
         
     except HTTPException:
