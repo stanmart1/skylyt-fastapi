@@ -69,18 +69,14 @@ export const BankTransferUpload = ({
     }
 
     try {
-      // First upload the proof file
-      const formData = new FormData();
-      formData.append('file', proofFile);
-      formData.append('booking_id', String(bookingId));
-      formData.append('payment_reference', transferData.referenceNumber);
-
       const { apiService } = await import('@/services/api');
-      const uploadResult = await apiService.request('/payments/upload-proof', {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header, let browser set it for FormData
-      });
+      
+      // First upload the proof file using the existing method
+      const uploadResult = await apiService.uploadPaymentProof(
+        bookingId,
+        transferData.referenceNumber,
+        proofFile
+      );
 
       if (uploadResult.success) {
         // Then process the payment

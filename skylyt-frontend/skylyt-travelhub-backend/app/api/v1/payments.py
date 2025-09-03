@@ -12,10 +12,13 @@ from app.core.database import get_db
 from app.services.payment_service import PaymentService
 from app.services.payment.gateway_factory import PaymentGatewayFactory
 from app.services.payment_processor import PaymentProcessor
+from app.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+email_service = EmailService()
+
 def get_payment_service() -> PaymentService:
     return PaymentService()
 
