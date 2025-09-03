@@ -468,6 +468,48 @@ def export_payments_csv(
         raise HTTPException(status_code=500, detail="Export failed")
 
 
+@router.post("/complete/{booking_id}")
+def complete_payment(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+    """Complete payment process for bank transfer"""
+    try:
+        from app.models.booking import Booking
+        from app.models.payment import Payment
+        
+        # Get booking
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        # Get payment for this booking
+        payment = db.query(Payment).filter(Payment.booking_id == booking_id).first()
+        if not payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        # Update payment status to pending verification
+        payment.status = "pending_verification"
+        
+        # Update booking status
+        booking.status = "payment_pending"
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Payment completed successfully. Awaiting verification.",
+            "booking_id": booking_id,
+            "payment_status": "pending_verification"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to complete payment for booking {booking_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to complete payment")
+
 @router.get("/proof/{payment_id}")
 def get_proof_of_payment(
     payment_id: int,

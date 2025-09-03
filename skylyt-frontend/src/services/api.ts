@@ -411,7 +411,27 @@ class ApiService {
     formData.append('payment_reference', paymentReference);
     formData.append('file', file);
     
-    return this.upload('/payments/upload-proof', formData);
+    try {
+      const response = await fetch(`${this.baseURL}/payments/upload-proof`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please check your connection.');
+      }
+      throw error;
+    }
   }
 
   // Get Payment Proof
@@ -430,6 +450,13 @@ class ApiService {
   // Get Bank Transfer Details
   async getBankTransferDetails(): Promise<any> {
     return this.request('/bank-accounts');
+  }
+
+  // Complete Payment
+  async completePayment(bookingId: number): Promise<any> {
+    return this.request(`/payments/complete/${bookingId}`, {
+      method: 'POST',
+    });
   }
 
   // Bank Transfer Settings

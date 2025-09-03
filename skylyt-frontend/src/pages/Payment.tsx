@@ -25,6 +25,7 @@ const Payment = () => {
   const [transactionRef, setTransactionRef] = useState('');
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [loadingBankDetails, setLoadingBankDetails] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
   
   useEffect(() => {
     // Generate transaction reference
@@ -91,6 +92,69 @@ const Payment = () => {
     }
   };
 
+  const handleUploadProof = async () => {
+    if (!bookingId || !selectedFile) {
+      toast({
+        title: "Upload Required",
+        description: "Please select a file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await apiService.uploadPaymentProof(
+        parseInt(bookingId),
+        transactionRef,
+        selectedFile
+      );
+      
+      setProofUploaded(true);
+      toast({
+        title: "Upload Successful",
+        description: "Proof of payment uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompletePayment = async () => {
+    if (!bookingId) {
+      toast({
+        title: "Error",
+        description: "No booking ID provided",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const result = await apiService.completePayment(parseInt(bookingId));
+      
+      if (result.success) {
+        // Redirect to confirmation page
+        navigate(`/payment-confirmation?bookingId=${bookingId}&status=pending_verification`);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to complete payment",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePayment = async () => {
     if (!bookingId) {
       toast({
@@ -101,52 +165,14 @@ const Payment = () => {
       return;
     }
     
-    if (method === 'bank_transfer' && !selectedFile) {
-      toast({
-        title: "Upload Required",
-        description: "Please upload proof of payment",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Processing payment for booking
     setLoading(true);
     try {
-      if (method === 'bank_transfer' && selectedFile) {
-        // Upload proof of payment for bank transfer
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('booking_id', bookingId);
-        formData.append('payment_reference', transactionRef);
-        
-        // Uploading proof for booking
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payments/upload-proof`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`
-          },
-          body: formData
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-        }
-        
-        setPaymentStatus('pending_verification');
-      } else {
+      if (method !== 'bank_transfer') {
         // Initialize payment for other methods
-        const result = await apiService.request('/payments/initialize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            booking_id: parseInt(bookingId),
-            payment_method: method,
-            payment_reference: transactionRef
-          })
+        const result = await apiService.initializePayment({
+          booking_id: parseInt(bookingId),
+          payment_method: method,
+          payment_reference: transactionRef
         });
         
         // Simulate payment completion for other methods
@@ -154,17 +180,15 @@ const Payment = () => {
           setPaymentStatus('completed');
         }, 2000);
       }
-      
-      setLoading(false);
-      
     } catch (error) {
-      setLoading(false);
       setPaymentStatus('failed');
       toast({
         title: "Payment Failed",
         description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -371,13 +395,31 @@ const Payment = () => {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={handlePayment}
-                  disabled={loading || !selectedFile}
-                  className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
-                >
-                  {loading ? 'Processing...' : 'Complete Payment'}
-                </Button>
+                {!proofUploaded ? (
+                  <Button 
+                    onClick={handleUploadProof}
+                    disabled={loading || !selectedFile}
+                    className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700"
+                  >
+                    {loading ? 'Uploading...' : 'Upload Proof of Payment'}
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="text-green-800 font-medium">Proof of payment uploaded successfully!</span>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={handleCompletePayment}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    >
+                      {loading ? 'Processing...' : 'Complete Payment'}
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               <>

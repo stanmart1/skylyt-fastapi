@@ -29,6 +29,7 @@ import HotelDetail from "./pages/HotelDetail";
 import CarDetail from "./pages/CarDetail";
 import Booking from "./pages/Booking";
 import Payment from "./pages/Payment";
+import PaymentConfirmation from "./pages/PaymentConfirmation";
 import BookingDetails from "./pages/BookingDetails";
 import FleetManagement from "./pages/FleetManagement";
 import HotelManagement from "./pages/HotelManagement";
@@ -106,6 +107,7 @@ const PageTransitionWrapper = () => {
                 <Route path="/car/:id" element={<CarDetail />} />
                 <Route path="/booking" element={<Booking />} />
                 <Route path="/payment" element={<Payment />} />
+                <Route path="/payment-confirmation" element={<PaymentConfirmation />} />
                 <Route path="/booking/:id" element={
                   <ProtectedRoute>
                     <BookingDetails />
