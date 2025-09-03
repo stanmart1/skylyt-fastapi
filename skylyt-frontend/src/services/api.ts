@@ -395,11 +395,25 @@ class ApiService {
     formData.append('payment_reference', paymentReference);
     formData.append('file', file);
     
-    return this.request('/payments/upload-proof', {
+    const url = `${this.baseURL}/payments/upload-proof`;
+    const headers: HeadersInit = {};
+    
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+    
+    const response = await fetch(url, {
       method: 'POST',
+      headers,
       body: formData,
-      headers: {} // Remove Content-Type to let browser set it for FormData
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+      throw new Error(error.detail || 'Upload failed');
+    }
+
+    return response.json();
   }
 
   // Get Payment Proof
