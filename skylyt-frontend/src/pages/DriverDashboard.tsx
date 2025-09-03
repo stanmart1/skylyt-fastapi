@@ -19,7 +19,7 @@ import {
   Phone,
   Mail,
   Edit,
-  Navigation,
+  Navigation as NavigationIcon,
   TrendingUp,
   DollarSign,
   Bell,
