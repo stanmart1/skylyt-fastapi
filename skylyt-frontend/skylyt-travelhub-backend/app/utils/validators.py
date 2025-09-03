@@ -4,7 +4,7 @@ Validation utilities for business logic validation
 from fastapi import HTTPException
 
 # Constants
-VALID_BOOKING_STATUSES = ["pending", "confirmed", "cancelled"]
+VALID_BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "payment_pending"]
 VALID_CURRENCIES = ["USD", "EUR", "GBP", "NGN", "CAD", "AUD"]
 
 

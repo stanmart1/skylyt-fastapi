@@ -18,7 +18,7 @@ class BookingResponse(BaseModel):
     id: int
     user_id: int
     booking_type: BookingType
-    status: BookingStatus
+    status: str
     booking_data: Dict[str, Any]
     total_amount: Decimal
     currency: str
@@ -42,7 +42,7 @@ class BookingUpdate(BaseModel):
 class BookingConfirmation(BaseModel):
     booking_id: int
     confirmation_number: str
-    status: BookingStatus
+    status: str
     total_amount: Decimal
     currency: str
     booking_details: Dict[str, Any]

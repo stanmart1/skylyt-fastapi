@@ -8,6 +8,7 @@ class BookingStatus(enum.Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
+    PAYMENT_PENDING = "payment_pending"
 
 class TripStatus(enum.Enum):
     PENDING = "PENDING"
