@@ -106,7 +106,7 @@ class PaymentService:
         if payment_method == "bank_transfer":
             payment = Payment(
                 booking_id=booking_id,
-                payment_method=PaymentMethod.BANK_TRANSFER,
+                payment_method=PaymentMethod.BANK_TRANSFER.value,
                 amount=booking.total_amount,
                 currency=booking.currency,
                 status=PaymentStatus.PENDING.value,
@@ -141,7 +141,7 @@ class PaymentService:
         # Create payment record for other methods
         payment = Payment(
             booking_id=booking_id,
-            payment_method=getattr(PaymentMethod, payment_method.upper()),
+            payment_method=getattr(PaymentMethod, payment_method.upper()).value,
             amount=booking.total_amount,
             currency=booking.currency,
             status=PaymentStatus.PENDING.value,

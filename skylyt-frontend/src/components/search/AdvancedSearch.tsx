@@ -56,12 +56,20 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
     
     // Map fields for different types
     if (type === 'hotel') {
-      params.city = searchParams.destination;
+      params.destination = searchParams.destination;
+      params.checkin_date = searchParams.check_in;
+      params.checkout_date = searchParams.check_out;
       params.star_rating = searchParams.rating;
     } else {
       params.location = searchParams.destination;
       params.pickup_date = searchParams.check_in;
       params.return_date = searchParams.check_out;
+      params.category = searchParams.rating ? undefined : params.category;
+    }
+    
+    // Convert amenities array to comma-separated string
+    if (params.amenities && Array.isArray(params.amenities)) {
+      params.amenities = params.amenities.join(',');
     }
     
     onSearch(params);
@@ -209,11 +217,40 @@ export const AdvancedSearch = ({ onSearch, type }: AdvancedSearchProps) => {
           </div>
         </div>
 
-        {/* Search Button */}
-        <Button onClick={handleSearch} className="w-full bg-blue-600 hover:bg-blue-700">
-          <Search className="h-4 w-4 mr-2" />
-          Search {type === 'hotel' ? 'Hotels' : 'Cars'}
-        </Button>
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          <Button onClick={handleSearch} className="w-full bg-blue-600 hover:bg-blue-700">
+            <Search className="h-4 w-4 mr-2" />
+            Search {type === 'hotel' ? 'Hotels' : 'Cars'}
+          </Button>
+          <Button 
+            onClick={() => {
+              setSearchParams({
+                destination: '',
+                city: '',
+                check_in: '',
+                check_out: '',
+                pickup_date: '',
+                return_date: '',
+                location: '',
+                guests: 1,
+                min_price: 0,
+                max_price: 1000,
+                amenities: [],
+                rating: 0,
+                star_rating: 0,
+                sort_by: 'price',
+                page: 1,
+                per_page: 20,
+              });
+              onSearch({ page: 1, per_page: 20 });
+            }}
+            variant="outline" 
+            className="w-full"
+          >
+            Clear Filters
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

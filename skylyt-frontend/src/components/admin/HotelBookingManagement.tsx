@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Hotel, Edit, Trash2, Eye, Plus } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import PriceDisplay from '@/components/PriceDisplay';
 import BookingDetailsModal from '@/components/booking/BookingDetailsModal';
 import AddHotelBookingModal from '@/components/admin/AddHotelBookingModal';
 
@@ -20,6 +22,7 @@ const HotelBookingManagement = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [editForm, setEditForm] = useState({ status: '' });
   const { hasPermission } = useAuth();
+  const { currency } = useCurrency();
 
   useEffect(() => {
     fetchHotelBookings();
@@ -69,13 +72,30 @@ const HotelBookingManagement = () => {
   };
 
   const handleDeleteBooking = async (bookingId) => {
-    if (!confirm('Are you sure you want to delete this hotel booking?')) return;
+    if (!confirm('Are you sure you want to delete this hotel booking? This action cannot be undone.')) return;
     
     try {
       await apiService.request(`/admin/bookings/${bookingId}`, { method: 'DELETE' });
       fetchHotelBookings();
+      // Show success message
+      const event = new CustomEvent('show-toast', {
+        detail: {
+          title: "Booking deleted successfully",
+          description: "The hotel booking has been permanently removed.",
+        }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error('Failed to delete booking:', error);
+      // Show error message
+      const event = new CustomEvent('show-toast', {
+        detail: {
+          title: "Failed to delete booking",
+          description: error.message || "The booking could not be deleted. It may have associated payments or other dependencies.",
+          variant: "destructive"
+        }
+      });
+      window.dispatchEvent(event);
     }
   };
 
@@ -132,7 +152,11 @@ const HotelBookingManagement = () => {
                       <h3 className="font-semibold">#{booking.booking_reference}</h3>
                       <p className="text-sm text-gray-600">{booking.hotel_name}</p>
                       <p className="text-sm text-gray-600">
-                        ${booking.total_amount} {booking.currency}
+                        <PriceDisplay 
+                          amount={booking.total_amount} 
+                          currency={booking.currency}
+                          isNGNStored={true}
+                        />
                       </p>
                       <p className="text-sm text-gray-600">
                         Guest: {booking.customer_name}

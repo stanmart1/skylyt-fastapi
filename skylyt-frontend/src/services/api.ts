@@ -162,8 +162,12 @@ class ApiService {
   async searchHotels(params: SearchParams & { currency?: string }): Promise<{ hotels: Hotel[]; total: number }> {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = String(value);
+        if (value !== undefined && value !== null && value !== '') {
+          if (Array.isArray(value)) {
+            acc[key] = value.join(',');
+          } else {
+            acc[key] = String(value);
+          }
         }
         return acc;
       }, {} as Record<string, string>)
@@ -180,8 +184,12 @@ class ApiService {
   async searchCars(params: SearchParams): Promise<{ cars: Car[]; total: number }> {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = String(value);
+        if (value !== undefined && value !== null && value !== '') {
+          if (Array.isArray(value)) {
+            acc[key] = value.join(',');
+          } else {
+            acc[key] = String(value);
+          }
         }
         return acc;
       }, {} as Record<string, string>)

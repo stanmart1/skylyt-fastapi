@@ -12,58 +12,68 @@ router = APIRouter(prefix="/cars", tags=["cars"])
 
 @router.get("/search")
 def search_cars(
-    pickup_city: Optional[str] = Query(None, description="Pickup city"),
-    pickup_country: Optional[str] = Query(None, description="Pickup country"),
-    dropoff_city: Optional[str] = Query(None, description="Dropoff city"),
+    location: Optional[str] = Query(None, description="Pickup location"),
     pickup_date: Optional[str] = Query(None, description="Pickup date (YYYY-MM-DD)"),
-    dropoff_date: Optional[str] = Query(None, description="Dropoff date (YYYY-MM-DD)"),
-    driver_age: int = Query(25, description="Driver age"),
-    car_type: Optional[str] = Query(None, description="Car category"),
+    return_date: Optional[str] = Query(None, description="Return date (YYYY-MM-DD)"),
+    category: Optional[str] = Query(None, description="Car category"),
     transmission: Optional[str] = Query(None, description="Transmission type"),
     min_price: Optional[Decimal] = Query(None, description="Minimum price per day"),
     max_price: Optional[Decimal] = Query(None, description="Maximum price per day"),
+    guests: Optional[int] = Query(None, description="Number of passengers"),
+    amenities: Optional[str] = Query(None, description="Comma-separated features"),
+    rating: Optional[float] = Query(None, description="Minimum rating"),
+    sort_by: Optional[str] = Query("price", description="Sort by field"),
     currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
-    limit: int = Query(20, description="Items per page"),
+    per_page: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
 ):
     """Search cars with filters and caching"""
     from app.services.cache_service import CacheService
     
-    # Create cache key from search parameters
-    search_params = {
-        'pickup_city': pickup_city, 'pickup_country': pickup_country, 'dropoff_city': dropoff_city,
-        'pickup_date': pickup_date, 'dropoff_date': dropoff_date, 'driver_age': driver_age,
-        'car_type': car_type, 'transmission': transmission, 
-        'min_price': str(min_price) if min_price else None,
-        'max_price': str(max_price) if max_price else None, 'currency': currency,
-        'page': page, 'limit': limit
-    }
-    
-    # Try to get from cache first
-    cached_result = CacheService.get_cached_car_search(search_params)
-    if cached_result:
-        return cached_result
-    
     from app.models.car import Car
+    from sqlalchemy import desc, asc, and_, or_
     
-    # Simple query for all available cars
+    # Build query with filters
     query = db.query(Car).filter(Car.is_available == True)
     
-    # Apply filters if provided
-    if car_type:
-        query = query.filter(Car.category == car_type)
+    # Apply filters
+    if location:
+        query = query.filter(Car.location.ilike(f"%{location}%"))
+    if category:
+        query = query.filter(Car.category.ilike(f"%{category}%"))
     if transmission:
-        query = query.filter(Car.transmission == transmission)
+        query = query.filter(Car.transmission.ilike(f"%{transmission}%"))
     if min_price:
         query = query.filter(Car.price_per_day >= min_price)
     if max_price:
         query = query.filter(Car.price_per_day <= max_price)
+    if guests:
+        query = query.filter(Car.seats >= guests)
+    if rating:
+        query = query.filter(Car.rating >= rating)
+    
+    # Filter by features/amenities
+    if amenities:
+        feature_list = [f.strip() for f in amenities.split(',') if f.strip()]
+        if feature_list:
+            for feature in feature_list:
+                query = query.filter(Car.features.op('?')(feature))
+    
+    # Apply sorting
+    if sort_by:
+        if sort_by.startswith('-'):
+            sort_field = sort_by[1:]
+            if hasattr(Car, sort_field):
+                query = query.order_by(desc(getattr(Car, sort_field)))
+        else:
+            if hasattr(Car, sort_by):
+                query = query.order_by(asc(getattr(Car, sort_by)))
     
     # Get total and paginated results
     total = query.count()
-    offset = (page - 1) * limit
-    cars = query.offset(offset).limit(limit).all()
+    offset = (page - 1) * per_page
+    cars = query.offset(offset).limit(per_page).all()
     
     from app.services.currency_service import CurrencyService
     

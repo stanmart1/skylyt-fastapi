@@ -41,58 +41,72 @@ def get_all_hotels(db: Session = Depends(get_db)):
 
 @router.get("/search")
 def search_hotels(
+    destination: Optional[str] = Query(None, description="Destination city"),
     city: Optional[str] = Query(None, description="City to search in"),
-    country: Optional[str] = Query(None, description="Country"),
-    check_in: Optional[str] = Query(None, description="Check-in date (YYYY-MM-DD)"),
-    check_out: Optional[str] = Query(None, description="Check-out date (YYYY-MM-DD)"),
+    checkin_date: Optional[str] = Query(None, description="Check-in date (YYYY-MM-DD)"),
+    checkout_date: Optional[str] = Query(None, description="Check-out date (YYYY-MM-DD)"),
     guests: int = Query(1, description="Number of guests"),
-    rooms: int = Query(1, description="Number of rooms"),
     min_price: Optional[Decimal] = Query(None, description="Minimum price"),
     max_price: Optional[Decimal] = Query(None, description="Maximum price"),
-    star_rating: Optional[int] = Query(None, description="Minimum star rating"),
+    star_rating: Optional[float] = Query(None, description="Minimum star rating"),
+    rating: Optional[float] = Query(None, description="Minimum rating (alias)"),
+    amenities: Optional[str] = Query(None, description="Comma-separated amenities"),
+    sort_by: Optional[str] = Query("price", description="Sort by field"),
     currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
-    limit: int = Query(20, description="Items per page"),
+    per_page: int = Query(20, description="Items per page"),
     db: Session = Depends(get_db)
 ):
     """Search hotels with filters and caching"""
     from app.services.cache_service import CacheService
     
-    # Create cache key from search parameters
-    search_params = {
-        'city': city, 'country': country, 'check_in': check_in, 'check_out': check_out,
-        'guests': guests, 'rooms': rooms, 'min_price': str(min_price) if min_price else None,
-        'max_price': str(max_price) if max_price else None, 'star_rating': star_rating,
-        'currency': currency, 'page': page, 'limit': limit
-    }
-    
-    # Try to get from cache first
-    cached_result = CacheService.get_cached_hotel_search(search_params)
-    if cached_result:
-        return cached_result
-    
     try:
         from app.models.hotel import Hotel
-        from sqlalchemy import and_
+        from sqlalchemy import and_, desc, asc
         
         # Build query
         query = db.query(Hotel)
         
         # Apply filters
-        if city:
-            query = query.filter(Hotel.location.ilike(f"%{city}%"))
+        search_location = destination or city
+        if search_location:
+            query = query.filter(Hotel.location.ilike(f"%{search_location}%"))
         if min_price:
             query = query.filter(Hotel.price_per_night >= min_price)
         if max_price:
             query = query.filter(Hotel.price_per_night <= max_price)
-        if star_rating:
-            query = query.filter(Hotel.star_rating >= star_rating)
+        
+        # Handle both star_rating and rating parameters
+        min_rating = star_rating or rating
+        if min_rating:
+            query = query.filter(Hotel.star_rating >= min_rating)
+        
+        # Filter by amenities
+        if amenities:
+            amenity_list = [a.strip() for a in amenities.split(',') if a.strip()]
+            if amenity_list:
+                for amenity in amenity_list:
+                    query = query.filter(Hotel.amenities.op('?')(amenity))
+        
+        # Apply sorting
+        if sort_by:
+            if sort_by.startswith('-'):
+                sort_field = sort_by[1:]
+                if sort_field == 'price':
+                    query = query.order_by(desc(Hotel.price_per_night))
+                elif hasattr(Hotel, sort_field):
+                    query = query.order_by(desc(getattr(Hotel, sort_field)))
+            else:
+                if sort_by == 'price':
+                    query = query.order_by(asc(Hotel.price_per_night))
+                elif hasattr(Hotel, sort_by):
+                    query = query.order_by(asc(getattr(Hotel, sort_by)))
         
         # Get total count
         total = query.count()
         
         # Apply pagination
-        hotels = query.offset((page - 1) * limit).limit(limit).all()
+        hotels = query.offset((page - 1) * per_page).limit(per_page).all()
         
         # Format response with currency conversion
         from app.services.currency_service import CurrencyService
