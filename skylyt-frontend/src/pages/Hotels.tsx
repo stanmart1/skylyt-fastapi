@@ -16,6 +16,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 const Hotels = () => {
   const { hotels, totalHotels, isLoading, searchHotels } = useSearch();
@@ -147,7 +148,7 @@ const Hotels = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Eye clicked for hotel:', hotel.id);
+                          console.log('Eye clicked for hotel:', sanitizeForLogging(hotel.id));
                           window.location.href = `/hotel/${hotel.id}`;
                         }}
                       >

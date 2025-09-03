@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 interface PerformanceMetrics {
   loadTime: number;
@@ -19,18 +20,18 @@ export const usePerformance = () => {
       const duration = endTime - startTime;
       
       // Log performance metrics
-      console.log(`API Call [${endpoint}]: ${duration.toFixed(2)}ms`);
+      console.log(`API Call [${sanitizeForLogging(endpoint)}]: ${duration.toFixed(2)}ms`);
       
       // Send to analytics if needed
       if (duration > 2000) {
-        console.warn(`Slow API call detected: ${endpoint} took ${duration.toFixed(2)}ms`);
+        console.warn(`Slow API call detected: ${sanitizeForLogging(endpoint)} took ${duration.toFixed(2)}ms`);
       }
       
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      console.error(`API Call Failed [${endpoint}]: ${duration.toFixed(2)}ms`, error);
+      console.error(`API Call Failed [${sanitizeForLogging(endpoint)}]: ${duration.toFixed(2)}ms`, sanitizeForLogging(error));
       throw error;
     }
   }, []);
@@ -43,7 +44,7 @@ export const usePerformance = () => {
       const duration = endTime - startTime;
       
       if (duration > 16) { // 60fps threshold
-        console.warn(`Slow render detected: ${componentName} took ${duration.toFixed(2)}ms`);
+        console.warn(`Slow render detected: ${sanitizeForLogging(componentName)} took ${duration.toFixed(2)}ms`);
       }
     };
   }, []);

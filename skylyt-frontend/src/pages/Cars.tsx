@@ -12,6 +12,7 @@ import { ServerStatus } from '@/components/ServerStatus';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 const Cars = () => {
   const { cars, totalCars, isLoading, searchCars } = useSearch();
@@ -130,7 +131,7 @@ const Cars = () => {
                 key={car.id} 
                 className="relative overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 group cursor-pointer"
                 onClick={() => {
-                  console.log('Car clicked:', car);
+                  console.log('Car clicked:', sanitizeForLogging(car));
                   if (car.id) {
                     window.location.href = `/car/${car.id}`;
                   }
@@ -148,7 +149,7 @@ const Cars = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('Eye clicked for car:', car);
+                      console.log('Eye clicked for car:', sanitizeForLogging(car));
                       if (car.id) {
                         window.location.href = `/car/${car.id}`;
                       }

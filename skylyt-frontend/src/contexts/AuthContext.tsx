@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, LoginRequest, RegisterRequest, TokenResponse } from '@/types/api';
 import { apiService } from '@/services/api';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 interface AuthContextType {
   user: User | null;
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             window.location.replace('/dashboard');
           }
         } catch (error) {
-          console.error('Failed to get current user:', error);
+          console.error('Failed to get current user:', sanitizeForLogging(error));
           apiService.clearToken();
           localStorage.removeItem('access_token');
         }
@@ -75,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { success: true, redirectTo };
     } catch (error: any) {
-      console.error('Login failed:', error);
+      console.error('Login failed:', sanitizeForLogging(error));
       
       let errorMessage = "Login failed. Please try again.";
       
@@ -106,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await apiService.register(userData);
       return { success: true };
     } catch (error: any) {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', sanitizeForLogging(error));
       
       let errorMessage = "Registration failed. Please try again.";
       

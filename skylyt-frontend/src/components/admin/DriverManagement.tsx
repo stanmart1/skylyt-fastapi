@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { sanitizeForLogging, sanitizeForJson } from '@/utils/sanitize';
 
 interface Driver {
   id: number;
@@ -132,15 +133,16 @@ export const DriverManagement: React.FC = () => {
   const fetchDrivers = async () => {
     try {
       setLoading(true);
+      const sanitizedFilters = sanitizeForJson(filters);
       const params = new URLSearchParams();
-      if (filters.search) params.append('search', filters.search);
-      if (filters.is_active) params.append('is_active', filters.is_active);
-      if (filters.is_available) params.append('is_available', filters.is_available);
+      if (sanitizedFilters.search) params.append('search', sanitizedFilters.search);
+      if (sanitizedFilters.is_active) params.append('is_active', sanitizedFilters.is_active);
+      if (sanitizedFilters.is_available) params.append('is_available', sanitizedFilters.is_available);
       
       const data = await apiService.request(`/drivers?${params.toString()}`);
       setDrivers(data || []);
     } catch (error) {
-      console.error('Failed to fetch drivers:', error);
+      console.error('Failed to fetch drivers:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: 'Failed to fetch drivers',
@@ -215,7 +217,7 @@ export const DriverManagement: React.FC = () => {
       await fetchDrivers();
       setIsModalOpen(false);
     } catch (error: any) {
-      console.error('Failed to save driver:', error);
+      console.error('Failed to save driver:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Failed to save driver',
@@ -236,7 +238,7 @@ export const DriverManagement: React.FC = () => {
         variant: 'success'
       });
     } catch (error: any) {
-      console.error('Failed to delete driver:', error);
+      console.error('Failed to delete driver:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Failed to delete driver',
@@ -261,7 +263,7 @@ export const DriverManagement: React.FC = () => {
         variant: 'success'
       });
     } catch (error: any) {
-      console.error('Failed to delete drivers:', error);
+      console.error('Failed to delete drivers:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: 'Failed to delete selected drivers',
@@ -298,7 +300,7 @@ export const DriverManagement: React.FC = () => {
         variant: 'success'
       });
     } catch (error) {
-      console.error('Failed to update driver availability:', error);
+      console.error('Failed to update driver availability:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: 'Failed to update driver availability',
@@ -313,7 +315,7 @@ export const DriverManagement: React.FC = () => {
       const data = await apiService.request(`/drivers/${driverId}/bookings`);
       setDriverTrips(data.bookings || []);
     } catch (error) {
-      console.error('Failed to fetch driver trips:', error);
+      console.error('Failed to fetch driver trips:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: 'Failed to fetch driver trips',
@@ -339,19 +341,20 @@ export const DriverManagement: React.FC = () => {
   const fetchAssignableBookings = async () => {
     setBookingsLoading(true);
     try {
+      const sanitizedBookingFilters = sanitizeForJson(bookingFilters);
       const params = new URLSearchParams();
       params.append('booking_type', 'car');
       params.append('status', 'confirmed');
-      if (bookingFilters.search) params.append('search', bookingFilters.search);
-      if (bookingFilters.dateFrom) params.append('start_date', bookingFilters.dateFrom);
-      if (bookingFilters.dateTo) params.append('end_date', bookingFilters.dateTo);
+      if (sanitizedBookingFilters.search) params.append('search', sanitizedBookingFilters.search);
+      if (sanitizedBookingFilters.dateFrom) params.append('start_date', sanitizedBookingFilters.dateFrom);
+      if (sanitizedBookingFilters.dateTo) params.append('end_date', sanitizedBookingFilters.dateTo);
       
       const data = await apiService.request(`/admin/bookings?${params.toString()}`);
       // Filter out bookings that already have drivers assigned
       const unassignedBookings = (data.bookings || []).filter(booking => !booking.driver_id);
       setAssignableBookings(unassignedBookings);
     } catch (error) {
-      console.error('Failed to fetch assignable bookings:', error);
+      console.error('Failed to fetch assignable bookings:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: 'Failed to fetch assignable bookings',
@@ -381,7 +384,7 @@ export const DriverManagement: React.FC = () => {
       await fetchDrivers();
       await fetchAssignableBookings();
     } catch (error: any) {
-      console.error('Failed to assign driver:', error);
+      console.error('Failed to assign driver:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Failed to assign driver to booking',
@@ -410,7 +413,7 @@ export const DriverManagement: React.FC = () => {
       
       setStatusUpdate({ open: false, tripId: 0, currentStatus: '' });
     } catch (error: any) {
-      console.error('Failed to update trip status:', error);
+      console.error('Failed to update trip status:', sanitizeForLogging(error));
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Failed to update trip status',

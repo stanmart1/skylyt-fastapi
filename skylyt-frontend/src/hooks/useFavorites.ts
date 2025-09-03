@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeForLogging, sanitizeForJson } from '@/utils/sanitize';
 
 interface Favorite {
   id: number;
@@ -22,7 +23,7 @@ export const useFavorites = () => {
       const userFavorites = Array.isArray(response) ? response : [];
       setFavorites(userFavorites);
     } catch (error) {
-      console.error('Favorites fetch error:', error);
+      console.error('Favorites fetch error:', sanitizeForLogging(error));
       setFavorites([]);
       // Don't show error toast for unauthenticated users
     } finally {
@@ -32,11 +33,12 @@ export const useFavorites = () => {
 
   const addFavorite = async (itemType: string, itemId: string, name: string) => {
     try {
-      const response = await apiService.addFavorite({
+      const sanitizedData = sanitizeForJson({
         item_type: itemType,
         item_id: itemId,
         name: name,
       });
+      const response = await apiService.addFavorite(sanitizedData);
       // Refresh favorites list after adding
       await fetchFavorites();
       toast({

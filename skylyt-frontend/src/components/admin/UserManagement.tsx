@@ -10,6 +10,7 @@ import { Users, Shield, Edit, Trash2, Plus } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/api';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -46,7 +47,7 @@ export const UserManagement = () => {
         const rolesData = await apiService.request('/rbac/roles');
         setRoles(rolesData || []);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch data:', sanitizeForLogging(error));
       }
     };
 
@@ -89,7 +90,7 @@ export const UserManagement = () => {
       setIsModalOpen(false);
       setEditingUser(null);
     } catch (error) {
-      console.error('Failed to update user:', error);
+      console.error('Failed to update user:', sanitizeForLogging(error));
     }
   };
 
@@ -102,7 +103,7 @@ export const UserManagement = () => {
       const userData = await getUsers();
       setUsers(Array.isArray(userData) ? userData : userData.users || []);
     } catch (error) {
-      console.error('Failed to delete user:', error);
+      console.error('Failed to delete user:', sanitizeForLogging(error));
     }
   };
 
@@ -111,9 +112,9 @@ export const UserManagement = () => {
       const { apiService } = await import('@/services/api');
       const activityData = await apiService.request(`/admin/users/${userId}/activity`);
       // This would open a modal or navigate to user activity page
-      console.log('User activity:', activityData);
+      console.log('User activity:', sanitizeForLogging(activityData));
     } catch (error) {
-      console.error('Failed to fetch user activity:', error);
+      console.error('Failed to fetch user activity:', sanitizeForLogging(error));
     }
   };
 
@@ -128,7 +129,7 @@ export const UserManagement = () => {
       const userData = await getUsers();
       setUsers(Array.isArray(userData) ? userData : userData.users || []);
     } catch (error) {
-      console.error('Failed to flag user:', error);
+      console.error('Failed to flag user:', sanitizeForLogging(error));
     }
   };
 
@@ -167,7 +168,7 @@ export const UserManagement = () => {
       setAddModalOpen(false);
       setAddForm({ first_name: '', last_name: '', email: '', password: '', role_id: '' });
     } catch (error) {
-      console.error('Failed to create user:', error);
+      console.error('Failed to create user:', sanitizeForLogging(error));
       alert('Failed to create user');
     } finally {
       setCreating(false);

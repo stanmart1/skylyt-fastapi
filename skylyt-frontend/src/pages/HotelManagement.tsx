@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Hotel, Plus, Edit, Trash2, ArrowLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '@/services/api';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 interface HotelData {
   id: string;
@@ -48,11 +49,11 @@ const HotelManagement = () => {
   const fetchHotels = async () => {
     try {
       const data = await apiService.request('/admin/hotels');
-      console.log('HOTEL DATA RECEIVED:', data);
-      console.log('FIRST HOTEL:', data[0]);
+      console.log('HOTEL DATA RECEIVED:', sanitizeForLogging(data));
+      console.log('FIRST HOTEL:', sanitizeForLogging(data[0]));
       setHotels(data);
     } catch (error) {
-      console.error('Failed to fetch hotels:', error);
+      console.error('Failed to fetch hotels:', sanitizeForLogging(error));
     } finally {
       setLoading(false);
     }
@@ -99,7 +100,7 @@ formData.append('upload_type', 'general');
       const response = await apiService.uploadFile(formData);
       setHotelForm({...hotelForm, image_url: response.url});
     } catch (error) {
-      console.error('Failed to upload image:', error);
+      console.error('Failed to upload image:', sanitizeForLogging(error));
     } finally {
       setUploading(false);
     }
@@ -112,7 +113,7 @@ formData.append('upload_type', 'general');
         amenities: hotelForm.amenities.split(',').map(a => a.trim()).filter(a => a)
       };
 
-      console.log('Saving hotel data:', hotelData);
+      console.log('Saving hotel data:', sanitizeForLogging(hotelData));
 
       if (editingHotel) {
         await apiService.request(`/admin/hotels/${editingHotel.id}`, {
@@ -129,7 +130,7 @@ formData.append('upload_type', 'general');
       await fetchHotels();
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Failed to save hotel:', error);
+      console.error('Failed to save hotel:', sanitizeForLogging(error));
     }
   };
 
@@ -140,7 +141,7 @@ formData.append('upload_type', 'general');
       });
       await fetchHotels();
     } catch (error) {
-      console.error('Failed to toggle featured status:', error);
+      console.error('Failed to toggle featured status:', sanitizeForLogging(error));
     }
   };
 
@@ -151,7 +152,7 @@ formData.append('upload_type', 'general');
       await apiService.request(`/admin/hotels/${hotelId}`, { method: 'DELETE' });
       await fetchHotels();
     } catch (error) {
-      console.error('Failed to delete hotel:', error);
+      console.error('Failed to delete hotel:', sanitizeForLogging(error));
     }
   };
 
@@ -196,13 +197,13 @@ formData.append('upload_type', 'general');
                     <img 
                       src={(() => {
                         const url = apiService.getImageUrl(hotel.image_url || '');
-                        console.log('Final image URL:', url);
+                        console.log('Final image URL:', sanitizeForLogging(url));
                         return url;
                       })()} 
                       alt={hotel.name}
                       className="w-full h-48 object-cover rounded-t-lg"
                       onError={(e) => {
-                        console.log('Image failed to load:', e.currentTarget.src);
+                        console.log('Image failed to load:', sanitizeForLogging(e.currentTarget.src));
                         e.currentTarget.style.display = 'none';
                       }}
                     />

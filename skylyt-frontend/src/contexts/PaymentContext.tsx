@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { apiService } from '@/services/api';
+import { sanitizeForLogging, sanitizeForJson } from '@/utils/sanitize';
 
 export interface Payment {
   id: number;
@@ -141,11 +142,12 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   const fetchPayments = async (page = 1) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
+      const sanitizedFilters = sanitizeForJson(state.filters);
       const params = new URLSearchParams({
         page: page.toString(),
         per_page: state.pagination.per_page.toString(),
         ...Object.fromEntries(
-          Object.entries(state.filters).filter(([_, v]) => v !== undefined && v !== '')
+          Object.entries(sanitizedFilters).filter(([_, v]) => v !== undefined && v !== '')
         ),
       });
 
@@ -163,6 +165,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         },
       });
     } catch (error) {
+      console.error('Failed to fetch payments:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch payments' });
     }
   };
@@ -172,6 +175,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       const stats = await apiService.request('/api/v1/payments/stats');
       dispatch({ type: 'SET_STATS', payload: stats });
     } catch (error) {
+      console.error('Failed to fetch payment stats:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch payment stats' });
     }
   };
@@ -182,6 +186,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       const payment = await apiService.request(`/api/v1/payments/${id}`);
       dispatch({ type: 'SET_SELECTED_PAYMENT', payload: payment });
     } catch (error) {
+      console.error('Failed to fetch payment details:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch payment details' });
     }
   };
@@ -195,6 +200,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
     } catch (error) {
+      console.error('Failed to verify payment:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to verify payment' });
     }
   };
@@ -209,6 +215,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
     } catch (error) {
+      console.error('Failed to process refund:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to process refund' });
     }
   };
@@ -223,6 +230,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       await fetchPaymentDetails(id);
       await fetchPayments(state.pagination.page);
     } catch (error) {
+      console.error('Failed to update payment status:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update payment status' });
     }
   };
@@ -250,6 +258,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
+      console.error('Failed to export payments:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to export payments' });
     }
   };
@@ -271,6 +280,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       const result = await apiService.initializePayment(paymentData);
       return result;
     } catch (error) {
+      console.error('Failed to initialize payment:', sanitizeForLogging(error));
       dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize payment' });
       throw error;
     }

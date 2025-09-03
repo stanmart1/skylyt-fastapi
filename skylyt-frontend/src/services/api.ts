@@ -10,6 +10,7 @@ import {
   Payment,
   ApiError 
 } from '@/types/api';
+import { sanitizeHtml, sanitizeForLogging } from '@/utils/sanitize';
 
 class ApiService {
   private baseURL = import.meta.env.VITE_API_BASE_URL;
@@ -54,9 +55,7 @@ class ApiService {
         try {
           const error: ApiError = await response.json();
           // Sanitize error message to prevent XSS
-          const sanitizedDetail = typeof error.detail === 'string' ? 
-            error.detail.replace(/[<>"'&]/g, '') : 'API request failed';
-          errorMessage = sanitizedDetail || 'API request failed';
+          errorMessage = sanitizeHtml(error.detail || 'API request failed');
         } catch {
           // Provide more specific error messages based on status codes
           switch (response.status) {
@@ -634,10 +633,6 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify({ rate })
     });
-  }
-
-  async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<any> {
-    return this.request(`/admin/currency-rates/convert/${amount}/${fromCurrency}/${toCurrency}`);
   }
 
   // Helper method to get full image URL

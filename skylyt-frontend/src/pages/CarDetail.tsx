@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import { apiService } from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
+import { sanitizeForLogging } from '@/utils/sanitize';
 
 interface CarDetails {
   id: string;
@@ -58,13 +59,13 @@ const CarDetail = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching car details for ID:', carId);
+      console.log('Fetching car details for ID:', sanitizeForLogging(carId));
       const response = await apiService.request(`/cars/${carId}?currency=${currency}`);
       setCar(response);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load car details';
       setError(errorMessage);
-      console.error('Error fetching car details for ID:', carId, 'Error:', error);
+      console.error('Error fetching car details for ID:', sanitizeForLogging(carId), 'Error:', sanitizeForLogging(error));
     } finally {
       setLoading(false);
     }
