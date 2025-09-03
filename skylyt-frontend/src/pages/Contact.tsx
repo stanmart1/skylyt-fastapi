@@ -8,7 +8,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { apiService } from '@/services/api';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/hooks/use-toast';
 
 interface ContactSettings {
   page_title: string;
@@ -52,6 +52,28 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -68,6 +90,7 @@ const Contact = () => {
       
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
+      console.error('Contact form error:', error);
       toast({
         title: 'Error',
         description: 'Failed to send message. Please try again.',

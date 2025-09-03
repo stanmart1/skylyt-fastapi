@@ -45,6 +45,7 @@ const Booking = () => {
     email: '',
     pickupDate: '',
     returnDate: '',
+    state: '',
     pickupLocation: '',
     dropoffLocation: '',
     specialRequests: '',
@@ -83,7 +84,7 @@ const Booking = () => {
     const fetchItemDetails = async () => {
       try {
         setLoading(true);
-        const data = await apiService.request(`/bookings/summary/${type}/${itemId}`);
+        const data = await apiService.request(`/bookings/summary/${type}/${itemId}?currency=${currency}`);
         setCurrentItem(data);
         
         if (type === 'hotel' && data.location) {
@@ -107,7 +108,7 @@ const Booking = () => {
     if (itemId) {
       fetchItemDetails();
     }
-  }, [itemId, type, toast]);
+  }, [itemId, type, currency, toast]);
   
   if (loading) {
     return (
@@ -249,7 +250,7 @@ const Booking = () => {
       case 1:
         return bookingData.firstName && bookingData.lastName && bookingData.email;
       case 2:
-        return bookingData.pickupDate && bookingData.returnDate && bookingData.pickupLocation;
+        return bookingData.pickupDate && bookingData.returnDate && bookingData.state && bookingData.pickupLocation;
       case 3:
         return true;
       case 4:
@@ -373,6 +374,20 @@ const Booking = () => {
                     </div>
                   </div>
                   <div>
+                    <Label htmlFor="state">State</Label>
+                    <select
+                      id="state"
+                      value={bookingData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select a state</option>
+                      <option value="Abuja">Abuja</option>
+                      <option value="Port Harcourt">Port Harcourt</option>
+                      <option value="Lagos">Lagos</option>
+                    </select>
+                  </div>
+                  <div>
                     <Label htmlFor="pickupLocation">
                       {type === 'car' ? 'Pickup Location' : 'Hotel Location'}
                     </Label>
@@ -427,6 +442,7 @@ const Booking = () => {
                       <p><strong>Email:</strong> {bookingData.email}</p>
                       <p><strong>{type === 'car' ? 'Pickup' : 'Check-in'}:</strong> {bookingData.pickupDate}</p>
                       <p><strong>{type === 'car' ? 'Return' : 'Check-out'}:</strong> {bookingData.returnDate}</p>
+                      <p><strong>State:</strong> {bookingData.state}</p>
                       <p><strong>Location:</strong> {bookingData.pickupLocation}</p>
                       {bookingData.specialRequests && (
                         <p><strong>Special Requests:</strong> {bookingData.specialRequests}</p>

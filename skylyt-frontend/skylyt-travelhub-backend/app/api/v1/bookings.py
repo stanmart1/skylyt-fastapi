@@ -292,9 +292,10 @@ def update_booking_details(
 def get_booking_summary(
     item_type: str,
     item_id: str,
+    currency: str = Query("NGN", description="Currency code"),
     db: Session = Depends(get_db)
 ):
-    """Get booking summary for an item"""
+    """Get booking summary for an item with currency conversion"""
     if item_type not in ['car', 'hotel']:
         raise HTTPException(status_code=400, detail="Invalid item type")
     
@@ -309,11 +310,25 @@ def get_booking_summary(
         if not item:
             raise HTTPException(status_code=404, detail=f"{item_type.title()} not found")
         
+        from app.services.currency_service import CurrencyService
+        
         if item_type == 'car':
+            base_price = float(item.price_per_day)
+            base_currency = getattr(item, 'base_currency', 'NGN')
+            
+            converted_price = CurrencyService.convert_currency(
+                base_price, base_currency, currency.upper(), db
+            )
+            
+            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+            symbol = curr_obj.symbol if curr_obj else currency.upper()
+            
             return {
                 "id": str(item.id),
                 "name": item.name,
-                "price": float(item.price_per_day),
+                "price": converted_price,
+                "currency": currency.upper(),
+                "currency_symbol": symbol,
                 "image_url": item.images[0] if item.images else None,
                 "rating": 4.5,
                 "passengers": item.seats,
@@ -321,10 +336,22 @@ def get_booking_summary(
                 "features": item.features or []
             }
         else:
+            base_price = float(item.price_per_night)
+            base_currency = getattr(item, 'base_currency', 'NGN')
+            
+            converted_price = CurrencyService.convert_currency(
+                base_price, base_currency, currency.upper(), db
+            )
+            
+            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+            symbol = curr_obj.symbol if curr_obj else currency.upper()
+            
             return {
                 "id": str(item.id),
                 "name": item.name,
-                "price": float(item.price_per_night),
+                "price": converted_price,
+                "currency": currency.upper(),
+                "currency_symbol": symbol,
                 "image_url": item.images[0] if item.images else None,
                 "rating": float(item.star_rating),
                 "location": item.location,
