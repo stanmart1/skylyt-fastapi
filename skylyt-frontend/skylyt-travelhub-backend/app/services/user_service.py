@@ -41,7 +41,44 @@ class UserService:
     
     @staticmethod
     def get_user_bookings(db: Session, user_id: int) -> List[Booking]:
-        return db.query(Booking).filter(Booking.user_id == user_id).distinct().all()
+        # Get all bookings for the user
+        all_bookings = db.query(Booking).filter(Booking.user_id == user_id).all()
+        
+        # Group bookings by similar characteristics to identify duplicates
+        unique_bookings = {}
+        for booking in all_bookings:
+            # Create a key based on booking characteristics
+            key = (
+                booking.customer_email,
+                booking.total_amount,
+                booking.booking_type,
+                booking.start_date,
+                booking.end_date
+            )
+            
+            # Keep the booking with the most recent status (payment_pending over pending)
+            if key not in unique_bookings:
+                unique_bookings[key] = booking
+            else:
+                existing = unique_bookings[key]
+                # Prioritize confirmed > payment_pending > pending
+                status_priority = {
+                    'confirmed': 3,
+                    'payment_pending': 2, 
+                    'pending': 1,
+                    'cancelled': 0
+                }
+                
+                current_priority = status_priority.get(booking.status, 0)
+                existing_priority = status_priority.get(existing.status, 0)
+                
+                if current_priority > existing_priority:
+                    unique_bookings[key] = booking
+                elif current_priority == existing_priority and booking.created_at > existing.created_at:
+                    # If same priority, keep the newer one
+                    unique_bookings[key] = booking
+        
+        return list(unique_bookings.values())
     
     @staticmethod
     def manage_favorites(db: Session, user_id: int, item_type: str, item_id: str, item_data: dict, action: str) -> bool:
