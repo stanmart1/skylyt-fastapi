@@ -58,7 +58,14 @@ def get_settings(db: Session = Depends(get_db)):
         "bank_name": settings.bank_name,
         "account_name": settings.account_name,
         "account_number": settings.account_number,
-        "is_primary_account": settings.is_primary_account
+        "is_primary_account": settings.is_primary_account,
+        "smtp_server": settings.smtp_server,
+        "smtp_port": settings.smtp_port,
+        "smtp_username": settings.smtp_username,
+        "from_email": settings.from_email,
+        "onesignal_app_id": settings.onesignal_app_id,
+        "email_notifications_enabled": settings.email_notifications_enabled,
+        "push_notifications_enabled": settings.push_notifications_enabled
     }
     
     # Public keys are safe to expose (no authentication needed)

@@ -16,7 +16,6 @@ def get_notification_templates(
     if not current_user.has_role("admin") and not current_user.has_role("superadmin"):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    # Return empty list for now - implement proper notification template model later
     return []
 
 @router.post("/notification-templates")

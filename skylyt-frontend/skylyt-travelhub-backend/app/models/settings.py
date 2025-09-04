@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Text, JSON
+from sqlalchemy import Column, String, Boolean, Text, JSON, Integer
 from .base import BaseModel
 
 
@@ -34,6 +34,18 @@ class Settings(BaseModel):
     account_name = Column(String(255), nullable=True)
     account_number = Column(String(100), nullable=True)
     is_primary_account = Column(Boolean, default=True)
+    
+    # Notification Settings
+    smtp_server = Column(String(255), nullable=True)
+    smtp_port = Column(Integer, default=587)
+    smtp_username = Column(String(255), nullable=True)
+    smtp_password = Column(String(255), nullable=True)
+    from_email = Column(String(255), nullable=True)
+    resend_api_key = Column(String(255), nullable=True)
+    onesignal_app_id = Column(String(255), nullable=True)
+    onesignal_api_key = Column(String(255), nullable=True)
+    email_notifications_enabled = Column(Boolean, default=True)
+    push_notifications_enabled = Column(Boolean, default=True)
     
     # Additional settings as JSON
     additional_settings = Column(JSON, nullable=True)
