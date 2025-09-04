@@ -7,6 +7,9 @@ from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.core.dependencies import get_current_user
 from datetime import timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 email_service = EmailService()
@@ -20,12 +23,20 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         
         # Send welcome email immediately
         try:
-            email_service.send_welcome_email(user.email, f"{user.first_name} {user.last_name}")
+            email_sent = email_service.send_welcome_email(user.email, f"{user.first_name} {user.last_name}")
+            if email_sent:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"Welcome email sent successfully to {user.email}")
+            else:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send welcome email to {user.email}")
         except Exception as e:
             # Don't fail registration if email fails
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to send welcome email: {e}")
+            logger.error(f"Exception sending welcome email to {user.email}: {e}")
         
         # Create access token for immediate login
         access_token = AuthService.create_access_token(user)
