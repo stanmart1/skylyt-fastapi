@@ -139,7 +139,9 @@ const CarDetail = () => {
               {(carImages.length > 0) || (car.images && car.images.length > 0) || car.image_url ? (
                 <img
                   src={carImages.length > 0 && selectedImageIndex < carImages.length
-                    ? `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`
+                    ? (carImages[selectedImageIndex]?.image_url?.startsWith('http')
+                      ? carImages[selectedImageIndex].image_url
+                      : `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`)
                     : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
                       ? car.images[selectedImageIndex]
                       : car.image_url)
@@ -148,7 +150,9 @@ const CarDetail = () => {
                   className="w-full h-96 object-cover rounded-lg shadow-lg cursor-pointer"
                   onClick={() => {
                     const imageUrl = carImages.length > 0 && selectedImageIndex < carImages.length
-                      ? `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`
+                      ? (carImages[selectedImageIndex]?.image_url?.startsWith('http')
+                        ? carImages[selectedImageIndex].image_url
+                        : `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`)
                       : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
                         ? car.images[selectedImageIndex]
                         : car.image_url);
@@ -203,7 +207,9 @@ const CarDetail = () => {
                   >
                     <img
                       src={carImages.length > 0 
-                        ? `${import.meta.env.VITE_API_BASE_URL}${image.image_url}`
+                        ? (image.image_url?.startsWith('http')
+                          ? image.image_url
+                          : `${import.meta.env.VITE_API_BASE_URL}${image.image_url}`)
                         : image
                       }
                       alt={`${car.name} ${index + 1}`}
