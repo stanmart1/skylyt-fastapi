@@ -47,7 +47,7 @@ def get_all_cars(
         "category": car.category,
         "price_per_day": float(car.price_per_day),
         "currency": car.currency,
-        "image_url": car.images[0] if car.images else None,
+        "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
         "passengers": car.seats,
         "transmission": car.transmission,
         "fuel_type": car.fuel_type,

@@ -109,7 +109,7 @@ def search_cars(
             "price": converted_price,
             "currency": currency.upper(),
             "currency_symbol": symbol,
-            "image_url": car.images[0] if car.images else None,
+            "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
             "passengers": car.seats,
             "transmission": car.transmission,
             "features": car.features or []
@@ -153,7 +153,7 @@ def get_all_cars(
             "price": converted_price,
             "currency": currency.upper(),
             "currency_symbol": symbol,
-            "image_url": car.images[0] if car.images else None,
+            "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
             "passengers": car.seats,
             "transmission": car.transmission,
             "features": car.features or []
@@ -194,7 +194,7 @@ def get_featured_cars(
                 "price": converted_price,
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
-                "image_url": car.images[0] if car.images and len(car.images) > 0 else None,
+                "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images and len(car.images) > 0 else None),
                 "passengers": car.seats,
                 "transmission": car.transmission,
                 "features": car.features or [],
@@ -259,8 +259,8 @@ def get_car_details(car_id: str, db: Session = Depends(get_db)):
         "model": car.model,
         "description": car.description,
         "features": car.features,
-        "image_url": car.images[0] if car.images and len(car.images) > 0 else None,
-        "images": car.images or [],
+        "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images and len(car.images) > 0 else None),
+        "images": [img.image_url for img in car.car_images] if car.car_images else (car.images or []),
         "location": car.location,
         "rating": car.rating,
         "available": car.is_available

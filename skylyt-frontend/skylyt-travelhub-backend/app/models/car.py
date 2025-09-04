@@ -46,8 +46,9 @@ class Car(Base):
     roadworthiness_doc_url = Column(String, nullable=True)
     roadworthiness_expiry = Column(DateTime, nullable=True)
     
-    # Maintenance relationship
+    # Relationships
     maintenance_records = relationship("CarMaintenance", back_populates="car")
+    car_images = relationship("CarImage", back_populates="car", cascade="all, delete-orphan")
 
 
 class CarMaintenance(Base):

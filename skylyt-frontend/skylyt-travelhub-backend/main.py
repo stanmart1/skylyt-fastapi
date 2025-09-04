@@ -27,7 +27,7 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
@@ -36,7 +36,7 @@ from app.core.redis import RedisService
 setup_logging()
 
 # Constants
-ALLOWED_UPLOAD_FOLDERS = ["general", "hotels", "payment_proofs", "documents"]
+ALLOWED_UPLOAD_FOLDERS = ["general", "hotels", "cars", "payment_proofs", "documents"]
 ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
 ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".pdf"]
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -206,6 +206,7 @@ app.include_router(settings.router, prefix="/api/v1", tags=["Settings"])
 app.include_router(emails.router, prefix="/api/v1", tags=["Emails"])
 app.include_router(destinations.router, prefix="/api/v1", tags=["Destinations"])
 app.include_router(hotel_images.router, prefix="/api/v1", tags=["Hotel Images"])
+app.include_router(car_images.router, prefix="/api/v1", tags=["Car Images"])
 app.include_router(localization.router, prefix="/api/v1", tags=["Localization"])
 app.include_router(payment_webhooks.router, prefix="/api/v1", tags=["Payment Webhooks"])
 app.include_router(payment_config.router, prefix="/api/v1", tags=["Payment Config"])
