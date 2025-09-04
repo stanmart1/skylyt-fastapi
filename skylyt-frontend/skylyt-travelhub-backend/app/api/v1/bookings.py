@@ -6,6 +6,9 @@ from app.core.dependencies import get_current_user, get_current_user_optional
 from app.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
 from app.services.booking_service import BookingService
 from app.services.email_service import EmailService
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 email_service = EmailService()
@@ -46,28 +49,31 @@ def create_booking(
         db.commit()
         db.refresh(booking)
         
-        # Send confirmation email via background task
+        # Send confirmation email immediately
         try:
             customer_email = guest_data.get('guest_email', '') if not current_user else current_user.email
             customer_name = guest_data.get('guest_name', '') if not current_user else f"{current_user.first_name} {current_user.last_name}"
             
-            from app.tasks.email_tasks import send_booking_confirmation_email
-            send_booking_confirmation_email.delay({
-                "user_email": customer_email,
-                "user_name": customer_name,
-                "booking_reference": booking.booking_reference,
-                "booking_type": booking.booking_type,
-                "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
-                "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
-                "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
-                "check_in_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
-                "check_out_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
-                "guests": booking.booking_data.get("guests", 1),
-                "total_amount": float(booking.total_amount),
-                "currency": booking.currency
-            })
+            email_service.send_booking_confirmation(
+                customer_email,
+                {
+                    "user_name": customer_name,
+                    "booking_reference": booking.booking_reference,
+                    "booking_type": booking.booking_type,
+                    "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
+                    "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
+                    "room_type": booking.booking_data.get("hotel", {}).get("room_type", "Standard"),
+                    "check_in_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
+                    "check_out_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
+                    "guests": booking.booking_data.get("guests", 1),
+                    "total_amount": float(booking.total_amount),
+                    "currency": booking.currency
+                }
+            )
         except Exception as e:
-            print(f"Email task queuing failed: {e}")  # Don't fail booking if email task fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send booking confirmation email: {e}")  # Don't fail booking if email fails
         
         return {
             "id": booking.id,
@@ -136,10 +142,37 @@ def cancel_booking(
     db: Session = Depends(get_db)
 ):
     """Cancel booking"""
-    success = BookingService.cancel_booking(db, booking_id)
+    from app.models.booking import Booking
     
-    if not success:
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id,
+        Booking.user_id == current_user.id
+    ).first()
+    
+    if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Update booking status
+    booking.status = "cancelled"
+    db.commit()
+    
+    # Send cancellation email
+    try:
+        email_service.send_booking_cancellation(
+            current_user.email,
+            {
+                "user_name": f"{current_user.first_name} {current_user.last_name}",
+                "booking_reference": booking.booking_reference,
+                "booking_type": booking.booking_type,
+                "hotel_name": booking.booking_data.get("hotel", {}).get("name") if booking.booking_type == "hotel" else None,
+                "car_name": booking.booking_data.get("car", {}).get("name") if booking.booking_type == "car" else None,
+                "total_amount": float(booking.total_amount),
+                "currency": booking.currency,
+                "status": "cancelled"
+            }
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send cancellation email: {e}")
     
     return {"message": "Booking cancelled successfully"}
 
@@ -359,3 +392,49 @@ def get_booking_summary(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch booking summary")
+
+
+@router.put("/{booking_id}/status")
+def update_booking_status(
+    booking_id: int,
+    status_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update booking status"""
+    from app.models.booking import Booking
+    
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id,
+        Booking.user_id == current_user.id
+    ).first()
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    old_status = booking.status
+    new_status = status_data.get('status')
+    
+    if new_status:
+        booking.status = new_status
+        db.commit()
+        
+        # Send status update email if status changed
+        if old_status != new_status:
+            try:
+                email_service.send_booking_status_update(
+                    current_user.email,
+                    {
+                        "user_name": f"{current_user.first_name} {current_user.last_name}",
+                        "booking_reference": booking.booking_reference,
+                        "booking_type": booking.booking_type,
+                        "old_status": old_status,
+                        "new_status": new_status,
+                        "total_amount": float(booking.total_amount),
+                        "currency": booking.currency
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send status update email: {e}")
+    
+    return {"message": "Booking status updated successfully", "status": booking.status}

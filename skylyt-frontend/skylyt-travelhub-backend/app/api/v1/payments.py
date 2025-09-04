@@ -105,7 +105,7 @@ async def _process_payment_internal(
         if not result.get('success'):
             raise HTTPException(status_code=400, detail=result.get('error', 'Payment creation failed'))
         
-        # Send payment confirmation email if payment was successful
+        # Send payment confirmation or failure email
         if result.get('success') and result.get('payment_id'):
             try:
                 email_service.send_payment_confirmation(
@@ -121,6 +121,21 @@ async def _process_payment_internal(
                 )
             except Exception as e:
                 logger.warning(f"Failed to send payment confirmation email: {e}")
+        elif not result.get('success'):
+            try:
+                email_service.send_payment_failed(
+                    booking.customer_email,
+                    {
+                        "user_name": booking.customer_name,
+                        "booking_reference": booking.booking_reference,
+                        "payment_method": request.payment_method,
+                        "amount": float(booking.total_amount),
+                        "currency": booking.currency,
+                        "error_message": result.get('error', 'Payment processing failed')
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send payment failure email: {e}")
         
         return result
         
@@ -396,7 +411,35 @@ def manual_verify_payment(
 ):
     """Manually verify payment with provider"""
     try:
+        from app.models.payment import Payment
+        from app.models.booking import Booking
+        
+        payment = db.query(Payment).filter(Payment.id == payment_id).first()
+        if not payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        booking = db.query(Booking).filter(Booking.id == payment.booking_id).first()
+        
         result = payment_service.manual_verify_payment(db, payment_id)
+        
+        # Send verification email if successful
+        if result.get('verified') and booking:
+            try:
+                email_service.send_payment_confirmation(
+                    booking.customer_email,
+                    {
+                        "user_name": booking.customer_name,
+                        "booking_reference": booking.booking_reference,
+                        "payment_method": payment.payment_method,
+                        "amount": float(payment.amount),
+                        "currency": payment.currency,
+                        "transaction_id": payment.transaction_id or 'N/A',
+                        "verified": True
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send payment verification email: {e}")
+        
         return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

@@ -122,19 +122,23 @@ async def update_booking_status_api(booking_id: int, status_update: BookingStatu
         booking_service = BookingService(db)
         result = booking_service.update_booking_status_helper(booking_id, status_update.status)
         
-        # Send status update email
+        # Send status update email immediately
         try:
             booking = db.query(Booking).filter(Booking.id == booking_id).first()
             if booking and booking.customer_email:
-                send_booking_status_update_email.delay({
-                    "user_email": booking.customer_email,
-                    "user_name": booking.customer_name,
-                    "booking_reference": booking.booking_reference,
-                    "booking_type": booking.booking_type,
-                    "status": status_update.status,
-                    "total_amount": float(booking.total_amount),
-                    "currency": booking.currency
-                })
+                from app.services.email_service import EmailService
+                email_service = EmailService()
+                email_service.send_booking_status_update(
+                    booking.customer_email,
+                    {
+                        "user_name": booking.customer_name,
+                        "booking_reference": booking.booking_reference,
+                        "booking_type": booking.booking_type,
+                        "new_status": status_update.status,
+                        "total_amount": float(booking.total_amount),
+                        "currency": booking.currency
+                    }
+                )
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.warning(f"Failed to send status update email: {e}")
@@ -265,20 +269,23 @@ async def create_booking(booking_data: BookingCreateRequest, current_user = Depe
         db.commit()
         db.refresh(new_booking)
         
-        # Send booking confirmation email
+        # Send booking confirmation email immediately
         try:
-            from app.tasks.email_tasks import send_booking_confirmation_email
-            send_booking_confirmation_email.delay({
-                "user_email": user.email,
-                "user_name": f"{user.first_name} {user.last_name}",
-                "booking_reference": new_booking.booking_reference,
-                "booking_type": new_booking.booking_type,
-                "hotel_name": booking_data.hotel_name,
-                "car_name": booking_data.car_name,
-                "total_amount": float(booking_data.total_amount),
-                "currency": booking_data.currency,
-                "status": booking_data.status
-            })
+            from app.services.email_service import EmailService
+            email_service = EmailService()
+            email_service.send_booking_confirmation(
+                user.email,
+                {
+                    "user_name": f"{user.first_name} {user.last_name}",
+                    "booking_reference": new_booking.booking_reference,
+                    "booking_type": new_booking.booking_type,
+                    "hotel_name": booking_data.hotel_name,
+                    "car_name": booking_data.car_name,
+                    "total_amount": float(booking_data.total_amount),
+                    "currency": booking_data.currency,
+                    "status": booking_data.status
+                }
+            )
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.warning(f"Failed to send admin booking confirmation email: {e}")
@@ -386,12 +393,15 @@ async def assign_driver_to_booking(
             email_service = EmailService()
             
             # Send driver assignment email
-            email_service.send_booking_confirmation(
+            email_service.send_driver_assignment(
                 driver.email,
                 {
-                    "user_name": driver.name,
+                    "name": driver.name,
+                    "email": driver.email,
+                    "phone": driver.phone
+                },
+                {
                     "booking_reference": booking.booking_reference,
-                    "booking_type": "Driver Assignment",
                     "customer_name": booking.customer_name,
                     "customer_email": booking.customer_email,
                     "customer_phone": booking.customer_phone,
@@ -403,19 +413,20 @@ async def assign_driver_to_booking(
             )
             
             # Send customer notification about driver assignment
-            email_service.send_booking_confirmation(
+            email_service.send_booking_status_update(
                 booking.customer_email,
                 {
                     "user_name": booking.customer_name,
                     "booking_reference": booking.booking_reference,
-                    "booking_type": "Driver Assignment Update",
+                    "booking_type": booking.booking_type,
                     "driver_name": driver.name,
                     "driver_phone": driver.phone,
                     "driver_email": driver.email,
                     "pickup_date": booking.start_date.strftime("%B %d, %Y") if booking.start_date else "",
                     "return_date": booking.end_date.strftime("%B %d, %Y") if booking.end_date else "",
                     "total_amount": float(booking.total_amount),
-                    "currency": booking.currency
+                    "currency": booking.currency,
+                    "status": "Driver Assigned"
                 }
             )
         except Exception as email_error:
@@ -487,20 +498,23 @@ async def cancel_booking_admin(booking_id: int, cancel_data: CancelBookingReques
         db.commit()
         db.refresh(booking)
         
-        # Send cancellation email
+        # Send cancellation email immediately
         if booking.customer_email:
             try:
-                from app.tasks.email_tasks import send_booking_status_update_email
-                send_booking_status_update_email.delay({
-                    "user_email": booking.customer_email,
-                    "user_name": booking.customer_name,
-                    "booking_reference": booking.booking_reference,
-                    "booking_type": booking.booking_type,
-                    "status": "cancelled",
-                    "cancellation_reason": cancel_data.reason,
-                    "total_amount": float(booking.total_amount),
-                    "currency": booking.currency
-                })
+                from app.services.email_service import EmailService
+                email_service = EmailService()
+                email_service.send_booking_cancellation(
+                    booking.customer_email,
+                    {
+                        "user_name": booking.customer_name,
+                        "booking_reference": booking.booking_reference,
+                        "booking_type": booking.booking_type,
+                        "status": "cancelled",
+                        "cancellation_reason": cancel_data.reason,
+                        "total_amount": float(booking.total_amount),
+                        "currency": booking.currency
+                    }
+                )
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.warning(f"Failed to send cancellation email: {e}")

@@ -18,9 +18,14 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     try:
         user = AuthService.register_user(db, user_data)
         
-        # Send welcome email via background task
-        from app.tasks.email_tasks import send_welcome_email
-        send_welcome_email.delay(user.email, f"{user.first_name} {user.last_name}")
+        # Send welcome email immediately
+        try:
+            email_service.send_welcome_email(user.email, f"{user.first_name} {user.last_name}")
+        except Exception as e:
+            # Don't fail registration if email fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send welcome email: {e}")
         
         # Create access token for immediate login
         access_token = AuthService.create_access_token(user)
@@ -146,9 +151,8 @@ def forgot_password(request: PasswordReset, db: Session = Depends(get_db)):
         user = db.query(User).filter(User.email == request.email).first()
         if user:
             reset_token = token_urlsafe(32)
-            # Send password reset email via background task
-            from app.tasks.email_tasks import send_password_reset_email
-            send_password_reset_email.delay(request.email, reset_token, f"{user.first_name} {user.last_name}")
+            # Send password reset email
+            email_service.send_password_reset(request.email, reset_token, f"{user.first_name} {user.last_name}")
     except Exception:
         pass  # Don't reveal if user exists
     
