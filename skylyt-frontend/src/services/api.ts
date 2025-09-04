@@ -596,6 +596,37 @@ class ApiService {
     });
   }
 
+  // Car Images
+  async getCarImages(carId: string): Promise<any> {
+    return this.request(`/car-images/${carId}`);
+  }
+
+  async uploadCarImages(formData: FormData): Promise<any> {
+    return this.upload('/car-images/upload', formData);
+  }
+
+  async uploadCarImageFromUrl(carId: string, imageUrl: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('car_id', carId);
+    formData.append('image_url', imageUrl);
+    return this.upload('/car-images/upload-url', formData);
+  }
+
+  async setCarImageAsCover(imageId: number): Promise<any> {
+    return this.request(`/car-images/${imageId}/cover`, { method: 'PUT' });
+  }
+
+  async deleteCarImage(imageId: number): Promise<any> {
+    return this.request(`/car-images/${imageId}`, { method: 'DELETE' });
+  }
+
+  async reorderCarImages(imageOrders: Array<{id: number, order: number}>): Promise<any> {
+    return this.request('/car-images/reorder', {
+      method: 'PUT',
+      body: JSON.stringify(imageOrders)
+    });
+  }
+
   // Localization
   async detectLocation(): Promise<any> {
     return this.request('/localization/detect');

@@ -6,7 +6,7 @@ from .base import BaseModel
 class HotelImage(BaseModel):
     __tablename__ = "hotel_images"
     
-    hotel_id = Column(Integer, ForeignKey("hotels.id"), nullable=False)
+    hotel_id = Column(String, ForeignKey("hotels.id"), nullable=False)
     image_url = Column(String(500), nullable=False)
     is_cover = Column(Boolean, default=False, nullable=False)
     display_order = Column(Integer, default=0, nullable=False)

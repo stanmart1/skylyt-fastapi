@@ -40,6 +40,7 @@ const CarDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [carImages, setCarImages] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -51,9 +52,9 @@ const CarDetail = () => {
   }, [id, currency]);
 
   useEffect(() => {
-    // Reset selected image when car changes
+    // Reset selected image when car or carImages change
     setSelectedImageIndex(0);
-  }, [car]);
+  }, [car, carImages]);
 
   const fetchCarDetails = async (carId: string) => {
     try {
@@ -62,6 +63,14 @@ const CarDetail = () => {
       console.log('Fetching car details for ID:', sanitizeForLogging(carId));
       const response = await apiService.request(`/cars/${carId}?currency=${currency}`);
       setCar(response);
+      
+      // Fetch car images from new API
+      try {
+        const imagesData = await apiService.request(`/car-images/${carId}`);
+        setCarImages(imagesData.images || []);
+      } catch (imageErr) {
+        console.error('Failed to fetch car images:', imageErr);
+      }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load car details';
       setError(errorMessage);
@@ -127,11 +136,24 @@ const CarDetail = () => {
           <div className="relative">
             {/* Main Image */}
             <div className="relative mb-4">
-              {(car.images && car.images.length > 0) || car.image_url ? (
+              {(carImages.length > 0) || (car.images && car.images.length > 0) || car.image_url ? (
                 <img
-                  src={(car.images && car.images.length > 0) ? car.images[selectedImageIndex] : car.image_url}
+                  src={carImages.length > 0 && selectedImageIndex < carImages.length
+                    ? `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`
+                    : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
+                      ? car.images[selectedImageIndex]
+                      : car.image_url)
+                  }
                   alt={car.name}
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
+                  className="w-full h-96 object-cover rounded-lg shadow-lg cursor-pointer"
+                  onClick={() => {
+                    const imageUrl = carImages.length > 0 && selectedImageIndex < carImages.length
+                      ? `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`
+                      : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
+                        ? car.images[selectedImageIndex]
+                        : car.image_url);
+                    window.open(imageUrl, '_blank');
+                  }}
                 />
               ) : (
                 <div className="w-full h-96 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
@@ -143,6 +165,20 @@ const CarDetail = () => {
                   {car.category}
                 </Badge>
               </div>
+              {carImages.length > 1 && (
+                <div className="absolute bottom-4 right-4">
+                  <Badge className="bg-black/70 text-white">
+                    {selectedImageIndex + 1} of {carImages.length}
+                  </Badge>
+                </div>
+              )}
+              {carImages.find(img => img.is_cover) && (
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-yellow-500 text-white">
+                    Cover Photo
+                  </Badge>
+                </div>
+              )}
               {!car.available && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
                   <Badge variant="destructive" className="text-lg px-4 py-2">
@@ -153,11 +189,11 @@ const CarDetail = () => {
             </div>
             
             {/* Image Thumbnails */}
-            {car.images && car.images.length > 1 && (
+            {((carImages.length > 1) || (car.images && car.images.length > 1)) && (
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {car.images.map((image, index) => (
+                {(carImages.length > 0 ? carImages : car.images || []).map((image, index) => (
                   <button
-                    key={index}
+                    key={carImages.length > 0 ? image.id || index : index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={`flex-shrink-0 w-20 h-16 rounded-md overflow-hidden border-2 transition-all ${
                       selectedImageIndex === index 
@@ -166,7 +202,10 @@ const CarDetail = () => {
                     }`}
                   >
                     <img
-                      src={image}
+                      src={carImages.length > 0 
+                        ? `${import.meta.env.VITE_API_BASE_URL}${image.image_url}`
+                        : image
+                      }
                       alt={`${car.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -235,7 +274,7 @@ const CarDetail = () => {
               </div>
               <Button 
                 className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
-                onClick={() => window.location.href = `/booking?type=car&id=${car.id}`}
+                onClick={() => navigate(`/booking?type=car&id=${car.id}`)
                 disabled={!car.available}
               >
                 {car.available ? 'Book Now' : 'Not Available'}

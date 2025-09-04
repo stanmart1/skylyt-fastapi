@@ -14,6 +14,7 @@ from .currency import Currency
 from .state import State
 from .city import City
 from .hotel_image import HotelImage
+from .car_image import CarImage
 from .driver import Driver
 from .footer_settings import FooterSettings
 from .contact_message import ContactMessage
@@ -36,6 +37,7 @@ __all__ = [
     "State",
     "City",
     "HotelImage",
+    "CarImage",
     "Driver",
     "FooterSettings",
     "ContactMessage"
