@@ -89,16 +89,28 @@ export const NotificationSettings = () => {
     setSaving(true);
     try {
       const { apiService } = await import('@/services/api');
-      await apiService.request('/settings/notifications', {
+      const response = await apiService.request('/settings/notifications', {
         method: 'PUT',
         body: JSON.stringify(notificationForm)
       });
+      
+      // Update form with saved values
+      if (response.settings) {
+        setNotificationForm(prev => ({
+          ...prev,
+          ...response.settings,
+          smtp_password: '',
+          resend_api_key: '',
+          onesignal_api_key: ''
+        }));
+      }
       
       toast({
         title: "Success",
         description: "Notification settings updated successfully"
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: "Error",
         description: "Failed to update notification settings",

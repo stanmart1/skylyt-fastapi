@@ -173,8 +173,17 @@ def update_notification_settings(
     
     update_data = settings_update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        if hasattr(settings, field):
+        if hasattr(settings, field) and value is not None:
             setattr(settings, field, value)
     
     db.commit()
-    return {"message": "Notification settings updated successfully"}
+    db.refresh(settings)
+    return {"message": "Notification settings updated successfully", "settings": {
+        "smtp_server": settings.smtp_server,
+        "smtp_port": settings.smtp_port,
+        "smtp_username": settings.smtp_username,
+        "from_email": settings.from_email,
+        "onesignal_app_id": settings.onesignal_app_id,
+        "email_notifications_enabled": settings.email_notifications_enabled,
+        "push_notifications_enabled": settings.push_notifications_enabled
+    }}
