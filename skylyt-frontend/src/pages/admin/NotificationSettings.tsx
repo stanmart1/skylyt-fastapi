@@ -58,8 +58,11 @@ export const NotificationSettings = () => {
 
   const fetchSettings = async () => {
     try {
+      setLoading(true);
       const { apiService } = await import('@/services/api');
       const data = await apiService.request('/settings/');
+      
+      console.log('Fetched settings:', data);
       
       setNotificationForm({
         smtp_server: data.smtp_server || '',
@@ -86,34 +89,48 @@ export const NotificationSettings = () => {
   };
 
   const saveNotificationSettings = async () => {
+    if (saving) return;
+    
     setSaving(true);
     try {
       const { apiService } = await import('@/services/api');
+      
+      // Only send non-empty password fields
+      const dataToSend = { ...notificationForm };
+      if (!dataToSend.smtp_password) delete dataToSend.smtp_password;
+      if (!dataToSend.resend_api_key) delete dataToSend.resend_api_key;
+      if (!dataToSend.onesignal_api_key) delete dataToSend.onesignal_api_key;
+      
+      console.log('Saving notification settings:', dataToSend);
+      
       const response = await apiService.request('/settings/notifications', {
         method: 'PUT',
-        body: JSON.stringify(notificationForm)
+        body: JSON.stringify(dataToSend)
       });
       
-      // Update form with saved values
-      if (response.settings) {
-        setNotificationForm(prev => ({
-          ...prev,
-          ...response.settings,
-          smtp_password: '',
-          resend_api_key: '',
-          onesignal_api_key: ''
-        }));
-      }
+      console.log('Save response:', response);
+      
+      // Clear password fields after successful save
+      setNotificationForm(prev => ({
+        ...prev,
+        smtp_password: '',
+        resend_api_key: '',
+        onesignal_api_key: ''
+      }));
       
       toast({
         title: "Success",
-        description: "Notification settings updated successfully"
+        description: "Notification settings saved successfully"
       });
+      
+      // Refresh settings to confirm save
+      await fetchSettings();
+      
     } catch (error) {
       console.error('Save error:', error);
       toast({
         title: "Error",
-        description: "Failed to update notification settings",
+        description: error.message || "Failed to save notification settings",
         variant: "destructive"
       });
     } finally {
@@ -132,9 +149,10 @@ export const NotificationSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse h-16 bg-gray-200 rounded" />
-            ))}
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-gray-600">Loading notification settings...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -266,7 +284,7 @@ export const NotificationSettings = () => {
             </div>
 
             {canManage && (
-              <Button onClick={saveNotificationSettings} disabled={saving}>
+              <Button onClick={saveNotificationSettings} disabled={saving || loading}>
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Notification Settings'}
               </Button>

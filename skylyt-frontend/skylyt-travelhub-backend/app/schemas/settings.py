@@ -56,6 +56,13 @@ class SettingsResponse(BaseModel):
     account_name: Optional[str]
     account_number: Optional[str]
     is_primary_account: bool
+    smtp_server: Optional[str]
+    smtp_port: Optional[int]
+    smtp_username: Optional[str]
+    from_email: Optional[str]
+    onesignal_app_id: Optional[str]
+    email_notifications_enabled: Optional[bool]
+    push_notifications_enabled: Optional[bool]
     
     class Config:
         from_attributes = True
