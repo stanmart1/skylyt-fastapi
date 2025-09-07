@@ -194,6 +194,9 @@ const Navigation = () => {
                 </button>
               </div>
               <div className="flex-1 p-4 space-y-2">
+                <div className="px-3 py-2 mb-4">
+                  <CurrencySelector />
+                </div>
                 <div className="space-y-1">
                   <Link to="/" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
                     Home
