@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Depends, UploadFile, File, HTTPException
+from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
@@ -27,7 +28,7 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
@@ -223,8 +224,7 @@ app.include_router(admin_stats.router, prefix="/api/v1", tags=["Admin Stats"])
 app.include_router(footer_settings.router, prefix="/api/v1", tags=["Footer Settings"])
 app.include_router(contact_settings.router, prefix="/api/v1", tags=["Contact Settings"])
 app.include_router(about_settings.router, prefix="/api/v1", tags=["About Settings"])
-
-
+app.include_router(seo.router, prefix="/api/v1", tags=["SEO"])
 
 
 # Simple image serving endpoint without security middleware
@@ -273,7 +273,7 @@ async def serve_image(folder: str, filename: str):
         }
         media_type = media_type_map.get(suffix, "application/octet-stream")
         
-        # Use FileResponse for memory efficiency
+        # Use FileResponse for memory efficiency with lazy loading support
         return FileResponse(
             path=file_path,
             media_type=media_type,
@@ -281,7 +281,9 @@ async def serve_image(folder: str, filename: str):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "GET",
                 "Access-Control-Allow-Headers": "*",
-                "Cache-Control": "public, max-age=3600"
+                "Cache-Control": "public, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+                "Loading": "lazy"
             }
         )
     else:
@@ -367,6 +369,32 @@ async def options_handler(path: str):
 @app.get("/")
 async def root():
     return {"message": "Skylyt Luxury API", "version": "1.0.0"}
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt():
+    """Serve robots.txt from root"""
+    return """User-agent: *
+Allow: /
+Allow: /api/v1/hotels/
+Allow: /api/v1/cars/
+Allow: /uploads/
+
+Disallow: /api/v1/admin/
+Disallow: /api/v1/auth/
+Disallow: /api/v1/payments/
+Disallow: /docs
+Disallow: /redoc
+
+Sitemap: https://skylytluxury.com/api/v1/seo/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1"""
+
+@app.get("/sitemap.xml", response_class=PlainTextResponse)
+async def sitemap_xml(db: Session = Depends(get_db)):
+    """Serve sitemap.xml from root"""
+    from app.api.v1.seo import generate_sitemap
+    return await generate_sitemap(db)
 
 @app.get("/api/v1/test")
 async def test_connection():

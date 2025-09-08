@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /api/v1/hotels/
+Allow: /api/v1/cars/
+Allow: /uploads/
+
+Disallow: /api/v1/admin/
+Disallow: /api/v1/auth/
+Disallow: /api/v1/payments/
+Disallow: /docs
+Disallow: /redoc
+
+Sitemap: https://skylytluxury.com/api/v1/seo/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

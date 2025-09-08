@@ -110,9 +110,11 @@ def search_cars(
             "currency": currency.upper(),
             "currency_symbol": symbol,
             "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
+            "image_alt": f"{car.make} {car.model} - Luxury {car.category} car rental",
             "passengers": car.seats,
             "transmission": car.transmission,
-            "features": car.features or []
+            "features": car.features or [],
+            "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
         })
     
     result = {"cars": cars_data, "total": total}
@@ -154,9 +156,11 @@ def get_all_cars(
             "currency": currency.upper(),
             "currency_symbol": symbol,
             "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
+            "image_alt": f"{car.make} {car.model} - Luxury {car.category} car rental",
             "passengers": car.seats,
             "transmission": car.transmission,
-            "features": car.features or []
+            "features": car.features or [],
+            "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
         })
     
     return cars_data
@@ -195,10 +199,12 @@ def get_featured_cars(
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
                 "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images and len(car.images) > 0 else None),
+                "image_alt": f"{car.name} - Featured luxury {car.category} car rental",
                 "passengers": car.seats,
                 "transmission": car.transmission,
                 "features": car.features or [],
-                "is_featured": car.is_featured
+                "is_featured": car.is_featured,
+                "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
             })
         
         return {"cars": car_list}

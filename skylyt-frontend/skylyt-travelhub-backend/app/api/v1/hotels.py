@@ -27,10 +27,12 @@ def get_all_hotels(db: Session = Depends(get_db)):
                 "rating": float(hotel.star_rating),
                 "price": float(hotel.price_per_night),
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_alt": f"{hotel.name} - Luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
                 "is_available": getattr(hotel, 'is_available', True),
-                "is_featured": getattr(hotel, 'is_featured', False)
+                "is_featured": getattr(hotel, 'is_featured', False),
+                "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
         return {"hotels": hotel_list}
@@ -153,9 +155,11 @@ def search_hotels(
                 "currency_symbol": symbol,
                 "exchange_rate": exchange_rate,
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_alt": f"{hotel.name} - Luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
-                "is_available": getattr(hotel, 'is_available', True)
+                "is_available": getattr(hotel, 'is_available', True),
+                "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
         result = {"hotels": hotel_list, "total": total}
@@ -203,10 +207,12 @@ def get_featured_hotels(
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
                 "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_alt": f"{hotel.name} - Featured luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
                 "is_available": getattr(hotel, 'is_available', True),
-                "is_featured": hotel.is_featured
+                "is_featured": hotel.is_featured,
+                "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
         return {"hotels": hotel_list}
