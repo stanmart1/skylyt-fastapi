@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, Mail, Save, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NotificationSender } from '@/components/admin/NotificationSender';
@@ -50,7 +51,12 @@ export const NotificationSettings = () => {
   });
 
   useEffect(() => {
-    fetchSettings();
+    // Defer API call to after initial render
+    const timer = setTimeout(() => {
+      fetchSettings();
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchSettings = async () => {
@@ -139,12 +145,16 @@ export const NotificationSettings = () => {
             Notification Settings
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-gray-600">Loading notification settings...</p>
-            </div>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-6 w-48" />
           </div>
         </CardContent>
       </Card>

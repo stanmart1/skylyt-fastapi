@@ -32,7 +32,7 @@ export const useSettings = () => {
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SettingsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const refreshSettings = async () => {
     try {
@@ -64,7 +64,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
-    refreshSettings();
+    // Defer settings loading to after initial render
+    const timer = setTimeout(() => {
+      refreshSettings();
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const value = {

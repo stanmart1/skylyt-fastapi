@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +42,10 @@ import { NotificationSender } from '@/components/admin/NotificationSender';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/hooks/useToast';
-import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
-import { CarFleetStats } from '@/components/admin/CarFleetStats';
-import { HotelOverviewStats } from '@/components/admin/HotelOverviewStats';
+// Lazy load chart components to defer rendering
+const AnalyticsDashboard = lazy(() => import('@/components/analytics/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })));
+const CarFleetStats = lazy(() => import('@/components/admin/CarFleetStats').then(module => ({ default: module.CarFleetStats })));
+const HotelOverviewStats = lazy(() => import('@/components/admin/HotelOverviewStats').then(module => ({ default: module.HotelOverviewStats })));
 import { DriverManagement } from '@/components/admin/DriverManagement';
 
 import { FooterManagement } from '@/components/admin/FooterManagement';
@@ -113,10 +114,15 @@ const AdminDashboard = () => {
       }
     };
     
-    fetchStats();
-    fetchRecentActivity();
-    fetchActiveUsers();
-    fetchRoles();
+    // Defer non-critical API calls
+    const timer = setTimeout(() => {
+      fetchStats();
+      fetchRecentActivity();
+      fetchActiveUsers();
+      fetchRoles();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [hasRole, navigate]);
 
   const fetchRoles = async () => {
@@ -1478,13 +1484,15 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <ErrorBoundary>
-                {activeCarTab === 'overview' && <CarFleetStats />}
-                {activeCarTab === 'bookings' && <CarBookingManagement />}
-                {activeCarTab === 'payments' && <PaymentManagement bookingType="car" />}
-                {activeCarTab === 'fleet' && <CarManagement />}
-                {activeCarTab === 'reviews' && <ReviewManagement />}
-                {activeCarTab === 'drivers' && <DriverManagement />}
-                {!activeCarTab && <CarManagement />}
+                <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded" />}>
+                  {activeCarTab === 'overview' && <CarFleetStats />}
+                  {activeCarTab === 'bookings' && <CarBookingManagement />}
+                  {activeCarTab === 'payments' && <PaymentManagement bookingType="car" />}
+                  {activeCarTab === 'fleet' && <CarManagement />}
+                  {activeCarTab === 'reviews' && <ReviewManagement />}
+                  {activeCarTab === 'drivers' && <DriverManagement />}
+                  {!activeCarTab && <CarManagement />}
+                </Suspense>
               </ErrorBoundary>
             </div>
           )}
@@ -1510,12 +1518,14 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <ErrorBoundary>
-                {activeHotelTab === 'overview' && <HotelOverviewStats />}
-                {activeHotelTab === 'bookings' && <HotelBookingManagement />}
-                {activeHotelTab === 'payments' && <PaymentManagement bookingType="hotel" />}
-                {activeHotelTab === 'hotels' && <HotelManagement />}
-                {activeHotelTab === 'reviews' && <ReviewManagement />}
-                {!activeHotelTab && <HotelManagement />}
+                <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded" />}>
+                  {activeHotelTab === 'overview' && <HotelOverviewStats />}
+                  {activeHotelTab === 'bookings' && <HotelBookingManagement />}
+                  {activeHotelTab === 'payments' && <PaymentManagement bookingType="hotel" />}
+                  {activeHotelTab === 'hotels' && <HotelManagement />}
+                  {activeHotelTab === 'reviews' && <ReviewManagement />}
+                  {!activeHotelTab && <HotelManagement />}
+                </Suspense>
               </ErrorBoundary>
             </div>
           )}

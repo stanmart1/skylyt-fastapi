@@ -15,16 +15,25 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { usePageTransition } from "./hooks/usePageTransition";
+import { Suspense } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import DriverDashboard from "./pages/DriverDashboard";
-import HotelBookingsPage from "./pages/HotelBookingsPage";
-import CarBookingsPage from "./pages/CarBookingsPage";
+import { lazy } from "react";
+
+// Lazy load heavy admin components
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const DriverDashboard = lazy(() => import("./pages/DriverDashboard"));
+const HotelBookingsPage = lazy(() => import("./pages/HotelBookingsPage"));
+const CarBookingsPage = lazy(() => import("./pages/CarBookingsPage"));
+const FleetManagement = lazy(() => import("./pages/FleetManagement"));
+const HotelManagement = lazy(() => import("./pages/HotelManagement"));
+const CarManagement = lazy(() => import("./pages/CarManagement"));
+
+// Keep critical path components as regular imports
 import Cars from "./pages/Cars";
 import Hotels from "./pages/Hotels";
 import HotelDetail from "./pages/HotelDetail";
@@ -33,9 +42,6 @@ import Booking from "./pages/Booking";
 import Payment from "./pages/Payment";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
 import BookingDetails from "./pages/BookingDetails";
-import FleetManagement from "./pages/FleetManagement";
-import HotelManagement from "./pages/HotelManagement";
-import CarManagement from "./pages/CarManagement";
 
 import Destinations from "./pages/Destinations";
 import StateDestinationPage from "./pages/StateDestinationPage";
@@ -84,7 +90,8 @@ const PageTransitionWrapper = () => {
     <>
       {isLoading && <LoadingSpinner />}
       <MaintenanceMode>
-        <Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -154,7 +161,8 @@ const PageTransitionWrapper = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>
-        </MaintenanceMode>
+        </Suspense>
+      </MaintenanceMode>
       </>
     );
   };

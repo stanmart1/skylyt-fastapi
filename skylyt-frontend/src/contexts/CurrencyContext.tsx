@@ -43,11 +43,14 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    loadCurrencies();
-    detectUserLocation();
+    // Defer currency loading to after initial render
+    const timer = setTimeout(() => {
+      loadCurrencies();
+      detectUserLocation();
+    }, 0);
     
     // Listen for currency rate updates
     const handleRatesUpdate = () => {
@@ -57,6 +60,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('currencyRatesUpdated', handleRatesUpdate);
     
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('currencyRatesUpdated', handleRatesUpdate);
     };
   }, []);

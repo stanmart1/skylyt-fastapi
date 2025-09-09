@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback, useLayoutEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,28 @@ import CurrencySelector from './CurrencySelector';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  
+  // Batch DOM measurements to prevent forced reflows
+  const measureNav = useCallback(() => {
+    if (navRef.current) {
+      const rect = navRef.current.getBoundingClientRect();
+      setDimensions({ width: rect.width, height: rect.height });
+    }
+  }, []);
+  
+  useLayoutEffect(() => {
+    measureNav();
+    const handleResize = () => {
+      // Debounce resize measurements
+      const timeoutId = setTimeout(measureNav, 100);
+      return () => clearTimeout(timeoutId);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [measureNav]);
   const { user, logout, isAuthenticated, hasRole } = useAuth();
   const { settings } = useSettings();
   const { notifications, unreadCount, markAsRead } = useNotifications();
@@ -26,7 +48,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav ref={navRef} className="bg-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
