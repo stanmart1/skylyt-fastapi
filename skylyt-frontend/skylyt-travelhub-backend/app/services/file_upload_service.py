@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 
 class FileUploadService:
     
-    def __init__(self, upload_dir: str = "uploads/payment_proofs"):
-        if os.path.exists("/app/storage"):
-            self.upload_dir = upload_dir.replace("uploads/", "/app/storage/")
-        else:
-            self.upload_dir = upload_dir
-        os.makedirs(self.upload_dir, exist_ok=True)
+    def __init__(self, upload_dir: str = "payment_proofs"):
+        from app.core.storage import StorageManager
+        self.category = upload_dir
+        # Ensure directory exists
+        StorageManager.ensure_directory(StorageManager.get_storage_path(self.category))
     
     def save_payment_proof(self, file: UploadFile, transfer_reference: str) -> Dict[str, Any]:
         """Save uploaded payment proof file"""
@@ -22,7 +21,8 @@ class FileUploadService:
             # Generate unique filename
             file_extension = os.path.splitext(file.filename)[1]
             unique_filename = f"{transfer_reference}_{uuid.uuid4().hex[:8]}{file_extension}"
-            file_path = os.path.join(self.upload_dir, unique_filename)
+            from app.core.storage import StorageManager
+            file_path = StorageManager.get_upload_path(self.category, unique_filename)
             
             # Save file
             with open(file_path, "wb") as buffer:

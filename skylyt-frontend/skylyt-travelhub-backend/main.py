@@ -322,62 +322,36 @@ from app.schemas.payment import PaymentUpdateRequest, RefundRequest
 
 @app.post("/api/v1/upload")
 async def upload_file(file: UploadFile = File(...), upload_type: str = "general", current_user = Depends(get_current_user)):
-    """Upload file with security validation"""
-    import logging
-    from os import path
+    """Upload file with centralized storage"""
     from uuid import uuid4
     from pathlib import Path
+    from app.core.storage import StorageManager
     
-    logger = logging.getLogger(__name__)
+    # Validate upload type
+    if upload_type not in ALLOWED_UPLOAD_FOLDERS:
+        raise HTTPException(status_code=400, detail="Invalid upload type")
     
-    try:
-        # Validate upload type
-        if upload_type not in ALLOWED_UPLOAD_FOLDERS:
-            raise HTTPException(status_code=400, detail="Invalid upload type")
-        
-        # Validate file type and size
-        if file.content_type not in ALLOWED_FILE_TYPES:
-            raise HTTPException(status_code=400, detail="File type not allowed")
-        
-        # Validate file extension
-        file_extension = Path(file.filename).suffix.lower()
-        if file_extension not in ALLOWED_FILE_EXTENSIONS:
-            raise HTTPException(status_code=400, detail="File extension not allowed")
-        
-        # Check file size before reading content
-        if file.size and file.size > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail="File too large")
-        
-        # Generate secure filename
-        secure_name = f"{uuid4()}{file_extension}"
-        
-        # Determine storage directory
-        storage_path = Path("/app/storage")
-        if storage_path.exists():
-            base_upload_dir = storage_path
-            logger.info("Using production storage: /app/storage")
-        else:
-            base_upload_dir = Path("uploads").resolve()
-            logger.info(f"Using dev storage: {base_upload_dir}")
-        
-        upload_dir = base_upload_dir / upload_type
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        file_path = upload_dir / secure_name
-        
-        # Save file
-        content = await file.read()
-        with open(file_path, "wb") as buffer:
-            buffer.write(content)
-        
-        logger.info(f"File uploaded successfully: {file_path}")
+    # Validate file type and size
+    if file.content_type not in ALLOWED_FILE_TYPES:
+        raise HTTPException(status_code=400, detail="File type not allowed")
     
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Upload failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in ALLOWED_FILE_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="File extension not allowed")
+    
+    if file.size and file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large")
+    
+    # Generate secure filename and get storage path
+    secure_name = f"{uuid4()}{file_extension}"
+    file_path = StorageManager.get_upload_path(upload_type, secure_name)
+    
+    # Save file
+    content = await file.read()
+    with open(file_path, "wb") as buffer:
+        buffer.write(content)
+    
+    return {"url": StorageManager.get_serve_url(upload_type, secure_name), "filename": secure_name}
 
 @app.options("/{path:path}")
 async def options_handler(path: str):

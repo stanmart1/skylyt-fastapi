@@ -29,21 +29,9 @@ async def upload_hotel_images(
     if not hotel:
         raise HTTPException(status_code=404, detail="Hotel not found")
     
+    from app.core.storage import StorageManager
+    
     uploaded_images = []
-    
-    # Determine storage directory
-    storage_path = Path("/app/storage")
-    if storage_path.exists():
-        upload_dir = storage_path / "hotels"
-    else:
-        upload_dir = Path("uploads/hotels")
-    
-    try:
-        upload_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        raise HTTPException(status_code=500, detail="Storage directory permission denied")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
     
     for file in files:
         # Validate file type
@@ -75,7 +63,8 @@ async def upload_hotel_images(
         except (OSError, ValueError):
             raise HTTPException(status_code=400, detail="Invalid file path")
         
-        # Save file
+        # Get storage path and save file
+        file_path = StorageManager.get_upload_path("hotels", unique_filename)
         with open(file_path, "wb") as f:
             f.write(content)
         
@@ -161,19 +150,8 @@ async def upload_hotel_image_from_url(
         if len(response.content) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
         
-        # Save file
-        storage_path = Path("/app/storage")
-        if storage_path.exists():
-            upload_dir = storage_path / "hotels"
-        else:
-            upload_dir = Path("uploads/hotels")
-        
-        try:
-            upload_dir.mkdir(parents=True, exist_ok=True)
-        except PermissionError:
-            raise HTTPException(status_code=500, detail="Storage directory permission denied")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
+        # Save file using centralized storage
+        file_path = StorageManager.get_upload_path("hotels", unique_filename)
         
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
         unique_filename = f"{uuid.uuid4()}{file_extension}"
@@ -261,11 +239,9 @@ def delete_hotel_image(
         if '..' in filename or '/' in filename or '\\' in filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
         
-        # Construct safe path - check both locations
-        if Path("/app/storage").exists():
-            base_path = Path("/app/storage/hotels")
-        else:
-            base_path = Path("uploads/hotels").resolve()
+        # Use centralized storage for file deletion
+        from app.core.storage import StorageManager
+        base_path = StorageManager.get_storage_path("hotels")
         file_path = base_path / filename
         
         # Ensure resolved path is within uploads directory
