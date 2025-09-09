@@ -324,6 +324,10 @@ def delete_user(
     if any(role.name == 'superadmin' for role in user.roles):
         raise HTTPException(status_code=400, detail="Cannot delete superadmin users")
     
+    # Delete related notifications first
+    from app.models.notification import Notification
+    db.query(Notification).filter(Notification.user_id == user_id).delete()
+    
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}
