@@ -34,6 +34,18 @@
                         <span style="font-weight: 600; color: #0369a1;">Hotel:</span>
                         <span style="color: #1e293b;">{{ booking.hotel_name or hotel_name }}</span>
                     </div>
+                    {% if booking.hotel_address or hotel_address %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Address:</span>
+                        <span style="color: #1e293b;">{{ booking.hotel_address or hotel_address }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.hotel_phone or hotel_phone %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Hotel Phone:</span>
+                        <span style="color: #1e293b;">{{ booking.hotel_phone or hotel_phone }}</span>
+                    </div>
+                    {% endif %}
                     {% endif %}
                     
                     {% if booking.car_name or car_name %}
@@ -41,6 +53,30 @@
                         <span style="font-weight: 600; color: #0369a1;">Vehicle:</span>
                         <span style="color: #1e293b;">{{ booking.car_name or car_name }}</span>
                     </div>
+                    {% if booking.pickup_location or pickup_location %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Pickup Location:</span>
+                        <span style="color: #1e293b;">{{ booking.pickup_location or pickup_location }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.dropoff_location or dropoff_location %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Dropoff Location:</span>
+                        <span style="color: #1e293b;">{{ booking.dropoff_location or dropoff_location }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.pickup_time or pickup_time %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Pickup Time:</span>
+                        <span style="color: #1e293b;">{{ booking.pickup_time or pickup_time }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.rental_duration or rental_duration %}
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
+                        <span style="font-weight: 600; color: #0369a1;">Rental Duration:</span>
+                        <span style="color: #1e293b;">{{ booking.rental_duration or rental_duration }}</span>
+                    </div>
+                    {% endif %}
                     {% endif %}
                     
                     {% if booking.room_type or room_type %}
@@ -78,18 +114,46 @@
                 </div>
             </div>
             
-            {% if status == 'cancelled' %}
+            {% if booking.status == 'cancelled' or status == 'cancelled' %}
             <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 24px 0;">
                 <p style="margin: 0; color: #dc2626; font-weight: 600;">❌ Booking Cancelled</p>
-                {% if cancellation_reason %}
-                <p style="margin: 8px 0 0 0; color: #7f1d1d;">Reason: {{ cancellation_reason }}</p>
+                {% if booking.cancellation_reason or cancellation_reason %}
+                <p style="margin: 8px 0 0 0; color: #7f1d1d;">Reason: {{ booking.cancellation_reason or cancellation_reason }}</p>
                 {% endif %}
+                {% if booking.refund_amount or refund_amount %}
+                <p style="margin: 8px 0 0 0; color: #059669;">Refund Amount: {{ booking.currency or currency }} {{ booking.refund_amount or refund_amount }}</p>
+                {% endif %}
+            </div>
+            {% elif booking.status == 'confirmed' or status == 'confirmed' %}
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #059669; font-weight: 600;">✅ Booking Confirmed</p>
+                <p style="margin: 8px 0 0 0; color: #065f46;">Your booking is confirmed and ready. Check your email for further instructions.</p>
+            </div>
+            {% elif booking.status == 'pending' or status == 'pending' %}
+            <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; color: #92400e; font-weight: 600;">⏳ Booking Pending</p>
+                <p style="margin: 8px 0 0 0; color: #78350f;">Your booking is being processed. We'll notify you once confirmed.</p>
+            </div>
+            {% endif %}
+            
+            {% if booking.special_requests or special_requests %}
+            <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0 0 8px 0; color: #475569; font-weight: 600;">📝 Special Requests:</p>
+                <p style="margin: 0; color: #64748b;">{{ booking.special_requests or special_requests }}</p>
             </div>
             {% endif %}
             
             <div style="text-align: center; margin: 32px 0;">
-                <a href="https://skylytluxury.com/bookings" style="background: linear-gradient(to right, #f97316, #ea580c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-right: 12px;">View Booking</a>
-                <a href="https://skylytluxury.com/support" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0;">Need Help?</a>
+                <table style="margin: 0 auto;">
+                    <tr>
+                        <td style="padding-right: 8px;">
+                            <a href="{{ frontend_url }}/booking/{{ booking.id or booking_id }}" style="background: linear-gradient(to right, #f97316, #ea580c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 140px; text-align: center;">View Booking</a>
+                        </td>
+                        <td style="padding-left: 8px;">
+                            <a href="{{ frontend_url }}/contact" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0; min-width: 140px; text-align: center;">Need Help?</a>
+                        </td>
+                    </tr>
+                </table>
             </div>
             
             <p style="margin: 24px 0 0 0; font-size: 16px; color: #64748b;">Thank you for choosing Skylyt Luxury! We're here to make your journey exceptional.</p>
@@ -97,7 +161,11 @@
         
         <!-- Footer -->
         <div style="background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; color: #64748b; font-size: 14px;">Best regards,<br><strong>The Skylyt Luxury Team</strong></p>
+            <p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px;">Best regards,<br><strong>The Skylyt Luxury Team</strong></p>
+            <div style="margin-top: 16px;">
+                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 12px;">📞 24/7 Support: <a href="tel:+1234567890" style="color: #0369a1;">+1 (234) 567-890</a></p>
+                <p style="margin: 0; color: #64748b; font-size: 12px;">✉️ Email: <a href="mailto:support@skylytluxury.com" style="color: #0369a1;">support@skylytluxury.com</a></p>
+            </div>
         </div>
     </div>
 </body>

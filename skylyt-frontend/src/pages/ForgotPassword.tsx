@@ -49,8 +49,8 @@ const ForgotPassword = () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 px-4">
+        <Card className="w-full max-w-md shadow-2xl border-0">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -69,7 +69,7 @@ const ForgotPassword = () => {
             </Alert>
             <div className="text-center">
               <Link to="/login">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full h-12">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Login
                 </Button>
@@ -82,8 +82,8 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 px-4">
+      <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">Forgot Password?</CardTitle>
           <CardDescription>
@@ -91,7 +91,7 @@ const ForgotPassword = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -102,19 +102,20 @@ const ForgotPassword = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-12"
               />
             </div>
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Sending..." : "Send Reset Link"}
             </Button>
             
             <div className="text-center">
-              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-800">
+              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
                 <ArrowLeft className="w-4 h-4 inline mr-1" />
                 Back to Login
               </Link>

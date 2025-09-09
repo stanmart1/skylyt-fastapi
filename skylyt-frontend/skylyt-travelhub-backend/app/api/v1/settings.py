@@ -21,6 +21,71 @@ class NotificationSettingsUpdate(BaseModel):
     from_email: Optional[str] = None
     resend_api_key: Optional[str] = None
     email_notifications_enabled: Optional[bool] = None
+    sms_enabled: Optional[bool] = None
+    push_notifications_enabled: Optional[bool] = None
+    booking_notifications: Optional[bool] = None
+    payment_notifications: Optional[bool] = None
+    system_notifications: Optional[bool] = None
+    driver_notifications: Optional[bool] = None
+    admin_notifications: Optional[bool] = None
+    notification_frequency: Optional[str] = None
+    quiet_hours_start: Optional[str] = None
+    quiet_hours_end: Optional[str] = None
+    timezone: Optional[str] = None
+
+class PaymentGatewaySettingsUpdateSimplified(BaseModel):
+    stripe_public_key: Optional[str] = None
+    stripe_secret_key: Optional[str] = None
+    paystack_public_key: Optional[str] = None
+    paystack_secret_key: Optional[str] = None
+    flutterwave_public_key: Optional[str] = None
+    flutterwave_secret_key: Optional[str] = None
+    paypal_client_id: Optional[str] = None
+    paypal_client_secret: Optional[str] = None
+    paypal_sandbox: Optional[bool] = None
+    webhook_secret_stripe: Optional[str] = None
+    webhook_secret_paystack: Optional[str] = None
+    webhook_secret_flutterwave: Optional[str] = None
+
+class SecuritySettingsUpdateSimplified(BaseModel):
+    password_min_length: Optional[str] = None
+    session_timeout: Optional[str] = None
+    two_factor_enabled: Optional[bool] = None
+    login_attempts_limit: Optional[str] = None
+
+class BankTransferSettingsUpdateSimplified(BaseModel):
+    bank_name: Optional[str] = None
+    account_name: Optional[str] = None
+    account_number: Optional[str] = None
+    is_primary_account: Optional[bool] = None
+    bank_address: Optional[str] = None
+    account_type: Optional[str] = None
+    currency: Optional[str] = None
+    transfer_fee: Optional[str] = None
+    processing_time_hours: Optional[str] = None
+    auto_verification_enabled: Optional[bool] = None
+    require_reference_number: Optional[bool] = None
+    bank_transfer_instructions: Optional[str] = None
+
+class FeatureSettingsUpdate(BaseModel):
+    car_rental_enabled: Optional[bool] = None
+    hotel_booking_enabled: Optional[bool] = None
+    driver_service_enabled: Optional[bool] = None
+    multi_currency_enabled: Optional[bool] = None
+    reviews_enabled: Optional[bool] = None
+    loyalty_program_enabled: Optional[bool] = None
+    referral_program_enabled: Optional[bool] = None
+    chat_support_enabled: Optional[bool] = None
+    mobile_app_enabled: Optional[bool] = None
+    api_access_enabled: Optional[bool] = None
+    booking_modifications_enabled: Optional[bool] = None
+    cancellation_enabled: Optional[bool] = None
+    partial_payments_enabled: Optional[bool] = None
+    group_bookings_enabled: Optional[bool] = None
+    corporate_accounts_enabled: Optional[bool] = None
+    maintenance_notifications: Optional[bool] = None
+    feature_announcements: Optional[bool] = None
+    beta_features_enabled: Optional[bool] = None
 
 
 def get_or_create_settings(db: Session) -> Settings:
@@ -62,6 +127,28 @@ def get_settings(db: Session = Depends(get_db)):
         "smtp_username": settings.smtp_username,
         "from_email": settings.from_email,
         "email_notifications_enabled": settings.email_notifications_enabled,
+        "sms_enabled": getattr(settings, 'sms_enabled', False),
+        "push_notifications_enabled": getattr(settings, 'push_notifications_enabled', True),
+        "booking_notifications": getattr(settings, 'booking_notifications', True),
+        "payment_notifications": getattr(settings, 'payment_notifications', True),
+        "system_notifications": getattr(settings, 'system_notifications', True),
+        "driver_notifications": getattr(settings, 'driver_notifications', True),
+        "admin_notifications": getattr(settings, 'admin_notifications', True),
+        "notification_frequency": getattr(settings, 'notification_frequency', 'immediate'),
+        "quiet_hours_start": getattr(settings, 'quiet_hours_start', '22:00'),
+        "quiet_hours_end": getattr(settings, 'quiet_hours_end', '08:00'),
+        "timezone": getattr(settings, 'timezone', 'UTC'),
+        "bank_address": getattr(settings, 'bank_address', None),
+        "account_type": getattr(settings, 'account_type', 'checking'),
+        "currency": getattr(settings, 'currency', 'USD'),
+        "transfer_fee": getattr(settings, 'transfer_fee', '0.00'),
+        "processing_time_hours": getattr(settings, 'processing_time_hours', '24'),
+        "auto_verification_enabled": getattr(settings, 'auto_verification_enabled', False),
+        "require_reference_number": getattr(settings, 'require_reference_number', True),
+        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None),
+        "webhook_secret_stripe": None,  # Never expose secrets
+        "webhook_secret_paystack": None,
+        "webhook_secret_flutterwave": None,
         "google_analytics_tracking_id": getattr(settings, 'google_analytics_tracking_id', None),
         "google_analytics_measurement_id": getattr(settings, 'google_analytics_measurement_id', None),
         "google_analytics_enabled": getattr(settings, 'google_analytics_enabled', False)
@@ -100,7 +187,7 @@ def update_general_settings(
 
 @router.put("/payment-gateway")
 def update_payment_gateway_settings(
-    settings_update: PaymentGatewaySettingsUpdate,
+    settings_update: PaymentGatewaySettingsUpdateSimplified,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -112,7 +199,8 @@ def update_payment_gateway_settings(
     
     update_data = settings_update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(settings, field, value)
+        if hasattr(settings, field) and value is not None:
+            setattr(settings, field, value)
     
     db.commit()
     return {"message": "Payment gateway settings updated successfully"}
@@ -120,7 +208,7 @@ def update_payment_gateway_settings(
 
 @router.put("/security")
 def update_security_settings(
-    settings_update: SecuritySettingsUpdate,
+    settings_update: SecuritySettingsUpdateSimplified,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -132,7 +220,8 @@ def update_security_settings(
     
     update_data = settings_update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(settings, field, value)
+        if hasattr(settings, field) and value is not None:
+            setattr(settings, field, value)
     
     db.commit()
     return {"message": "Security settings updated successfully"}
@@ -140,7 +229,7 @@ def update_security_settings(
 
 @router.put("/bank-transfer")
 def update_bank_transfer_settings(
-    settings_update: BankTransferSettingsUpdate,
+    settings_update: BankTransferSettingsUpdateSimplified,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -152,7 +241,8 @@ def update_bank_transfer_settings(
     
     update_data = settings_update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(settings, field, value)
+        if hasattr(settings, field) and value is not None:
+            setattr(settings, field, value)
     
     db.commit()
     return {"message": "Bank transfer settings updated successfully"}
@@ -182,7 +272,18 @@ def update_notification_settings(
         "smtp_port": settings.smtp_port,
         "smtp_username": settings.smtp_username,
         "from_email": settings.from_email,
-        "email_notifications_enabled": settings.email_notifications_enabled
+        "email_notifications_enabled": settings.email_notifications_enabled,
+        "sms_enabled": settings.sms_enabled,
+        "push_notifications_enabled": settings.push_notifications_enabled,
+        "booking_notifications": settings.booking_notifications,
+        "payment_notifications": settings.payment_notifications,
+        "system_notifications": settings.system_notifications,
+        "driver_notifications": settings.driver_notifications,
+        "admin_notifications": settings.admin_notifications,
+        "notification_frequency": settings.notification_frequency,
+        "quiet_hours_start": settings.quiet_hours_start,
+        "quiet_hours_end": settings.quiet_hours_end,
+        "timezone": settings.timezone
     }}
 
 
@@ -212,5 +313,77 @@ def update_google_analytics_settings(
             "google_analytics_tracking_id": settings.google_analytics_tracking_id,
             "google_analytics_measurement_id": settings.google_analytics_measurement_id,
             "google_analytics_enabled": settings.google_analytics_enabled
+        }
+    }
+
+
+@router.get("/features")
+def get_feature_settings(db: Session = Depends(get_db)):
+    """Get feature settings"""
+    settings = get_or_create_settings(db)
+    
+    return {
+        "car_rental_enabled": getattr(settings, 'car_rental_enabled', True),
+        "hotel_booking_enabled": getattr(settings, 'hotel_booking_enabled', True),
+        "driver_service_enabled": getattr(settings, 'driver_service_enabled', True),
+        "multi_currency_enabled": getattr(settings, 'multi_currency_enabled', True),
+        "reviews_enabled": getattr(settings, 'reviews_enabled', True),
+        "loyalty_program_enabled": getattr(settings, 'loyalty_program_enabled', False),
+        "referral_program_enabled": getattr(settings, 'referral_program_enabled', False),
+        "chat_support_enabled": getattr(settings, 'chat_support_enabled', True),
+        "mobile_app_enabled": getattr(settings, 'mobile_app_enabled', False),
+        "api_access_enabled": getattr(settings, 'api_access_enabled', False),
+        "booking_modifications_enabled": getattr(settings, 'booking_modifications_enabled', True),
+        "cancellation_enabled": getattr(settings, 'cancellation_enabled', True),
+        "partial_payments_enabled": getattr(settings, 'partial_payments_enabled', False),
+        "group_bookings_enabled": getattr(settings, 'group_bookings_enabled', False),
+        "corporate_accounts_enabled": getattr(settings, 'corporate_accounts_enabled', False),
+        "maintenance_notifications": getattr(settings, 'maintenance_notifications', True),
+        "feature_announcements": getattr(settings, 'feature_announcements', True),
+        "beta_features_enabled": getattr(settings, 'beta_features_enabled', False)
+    }
+
+
+@router.put("/features")
+def update_feature_settings(
+    settings_update: FeatureSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Update feature settings"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    settings = get_or_create_settings(db)
+    
+    update_data = settings_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(settings, field) and value is not None:
+            setattr(settings, field, value)
+    
+    db.commit()
+    db.refresh(settings)
+    
+    return {
+        "message": "Feature settings updated successfully",
+        "settings": {
+            "car_rental_enabled": settings.car_rental_enabled,
+            "hotel_booking_enabled": settings.hotel_booking_enabled,
+            "driver_service_enabled": settings.driver_service_enabled,
+            "multi_currency_enabled": settings.multi_currency_enabled,
+            "reviews_enabled": settings.reviews_enabled,
+            "loyalty_program_enabled": settings.loyalty_program_enabled,
+            "referral_program_enabled": settings.referral_program_enabled,
+            "chat_support_enabled": settings.chat_support_enabled,
+            "mobile_app_enabled": settings.mobile_app_enabled,
+            "api_access_enabled": settings.api_access_enabled,
+            "booking_modifications_enabled": settings.booking_modifications_enabled,
+            "cancellation_enabled": settings.cancellation_enabled,
+            "partial_payments_enabled": settings.partial_payments_enabled,
+            "group_bookings_enabled": settings.group_bookings_enabled,
+            "corporate_accounts_enabled": settings.corporate_accounts_enabled,
+            "maintenance_notifications": settings.maintenance_notifications,
+            "feature_announcements": settings.feature_announcements,
+            "beta_features_enabled": settings.beta_features_enabled
         }
     }

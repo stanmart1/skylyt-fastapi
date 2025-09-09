@@ -2,21 +2,21 @@
 
 ## Overview
 
-**Skylyt Luxury** is a premium car rental platform that provides luxury vehicle rentals for discerning travelers and businesses. The platform focuses exclusively on delivering high-quality transportation services with a curated fleet of premium vehicles.
+**Skylyt Luxury** is a comprehensive travel booking platform that combines luxury hotel reservations and premium car rentals into a unified digital experience. The platform serves as a complete travel solution for discerning customers seeking high-quality accommodations and transportation services.
 
 ## Business Model
 
 ### Value Proposition
-- **Premium Fleet**: Curated selection of luxury and high-end vehicles
-- **Professional Service**: White-glove customer service and vehicle maintenance
-- **Flexible Rentals**: Daily, weekly, and monthly rental options
-- **Seamless Experience**: Simple booking process, multiple payment options, reliable service
+- **Dual Service Platform**: Integrated hotel and car rental booking system
+- **Premium Focus**: Curated selection of luxury hotels and premium vehicles
+- **Seamless Experience**: Single booking process, unified payment, coordinated services
+- **Local Payment Integration**: Comprehensive African payment method support
 
 ### Revenue Streams
-1. **Direct Rental Revenue**: Daily, weekly, and monthly car rental fees
-2. **Premium Services**: Insurance, GPS, chauffeur services, delivery/pickup
-3. **Corporate Contracts**: Long-term agreements with businesses
-4. **Service Fees**: Processing fees and additional service charges
+1. **Commission-Based Revenue**: 10-15% commission on hotel bookings, 15-20% on car rentals
+2. **Service Fees**: Processing fees on transactions
+3. **Premium Features**: Enhanced search, priority support, exclusive deals
+4. **Corporate Accounts**: B2B booking solutions and volume discounts
 
 ### Target Market
 - **Primary**: Business travelers and affluent leisure travelers
@@ -34,27 +34,36 @@
 
 ### Key Technical Features
 - **Multi-Gateway Payments**: 5 payment methods including Stripe, Flutterwave, Paystack, PayPal, and bank transfers
-- **Real-Time Availability**: Live inventory management and booking confirmation
-- **Advanced Search**: 15+ filter options with location-based results
+- **Real-Time Availability**: Live inventory management for both hotels and cars
+- **Advanced Search**: 15+ filter options with location-based results for hotels and vehicles
 - **Role-Based Access**: Comprehensive admin panel with user management
 - **Mobile Responsive**: Optimized for all devices and screen sizes
+- **Google Analytics Integration**: Advanced tracking and business intelligence
+- **Multi-Currency Support**: Real-time currency conversion and pricing
 
 ## Operational Capabilities
 
 ### Core Functionality
-1. **Fleet Management**:
+1. **Hotel Management**:
+   - Real-time availability checking
+   - Dynamic pricing engine
+   - Multi-room type support
+   - Amenity filtering and search
+   - Image management system
+
+2. **Fleet Management**:
    - Vehicle inventory tracking
    - Maintenance scheduling
    - Status management (available, booked, maintenance)
    - Document management (insurance, registration)
 
-2. **Booking System**:
+3. **Booking System**:
    - Instant confirmation
    - Modification and cancellation
    - Flexible rental periods
    - Customer communication automation
 
-3. **Payment Processing**:
+4. **Payment Processing**:
    - Multi-currency support
    - Secure transaction processing
    - Automated refund handling
@@ -64,15 +73,17 @@
 - **Dashboard Analytics**: Real-time business metrics and KPIs
 - **User Management**: Customer account oversight and support
 - **Financial Reporting**: Revenue tracking, payment analytics, export capabilities
-- **Inventory Control**: Vehicle availability and maintenance management
+- **Inventory Control**: Hotel and vehicle availability management
+- **Analytics Dashboard**: Google Analytics integration with real-time metrics
+- **Multi-Currency System**: Dynamic currency conversion and pricing
 - **Customer Support**: Integrated communication and issue resolution
 
 ## Market Position
 
 ### Competitive Advantages
-1. **Premium Focus**: Exclusive focus on luxury and high-end vehicles
+1. **Dual Service Model**: Unique combination of hotel and car rental services
 2. **Local Payment Integration**: Comprehensive African payment method support
-3. **Quality Curation**: Rigorous vehicle selection and maintenance standards
+3. **Premium Curation**: Focus on quality over quantity in service selection
 4. **Technology Leadership**: Modern, fast, and reliable platform architecture
 
 ### Market Opportunity
@@ -89,10 +100,10 @@
 - **Year 3**: Achieve $3.5M revenue with 12,000 bookings
 
 ### Key Metrics
-- **Average Booking Value**: $180 per rental
-- **Fleet Utilization**: Target 75% utilization rate
-- **Customer Acquisition Cost**: $30 per customer
-- **Customer Lifetime Value**: $500 per customer
+- **Average Booking Value**: $250 (hotel), $150 (car)
+- **Commission Rates**: 12% average across all services
+- **Customer Acquisition Cost**: $25 per customer
+- **Customer Lifetime Value**: $400 per customer
 
 ### Break-Even Analysis
 - **Monthly Break-Even**: 400 bookings per month
@@ -115,14 +126,14 @@
 
 ### Phase 3: Regional Growth (Year 2)
 - Expand to Ghana and Kenya markets
-- Add chauffeur and delivery services
-- Introduce vehicle subscription models
+- Add flight booking capabilities
+- Introduce travel insurance products
 - Develop API for third-party integrations
 
 ### Phase 4: Platform Evolution (Year 3+)
-- Marketplace model with third-party fleet owners
-- AI-powered vehicle recommendations
-- Electric vehicle fleet expansion
+- Marketplace model with third-party providers
+- AI-powered recommendations
+- Blockchain-based loyalty tokens
 - International market expansion
 
 ## Risk Assessment

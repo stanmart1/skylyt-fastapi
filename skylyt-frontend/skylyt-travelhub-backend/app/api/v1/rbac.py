@@ -212,8 +212,19 @@ def get_all_users(
     
     # Filter out superadmin users if current user is not superadmin
     if not current_user.is_superadmin():
-        users = [user for user in users if not any(role.name == 'superadmin' for role in user.roles)]
-        total = len([u for u in query.all() if not any(role.name == 'superadmin' for role in u.roles)])
+        # Filter users before pagination
+        all_users = query.all()
+        filtered_users = [user for user in all_users if not any(role.name == 'superadmin' for role in user.roles)]
+        total = len(filtered_users)
+        
+        # Apply pagination to filtered users
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        users = filtered_users[start_idx:end_idx]
+    else:
+        # For superadmin, use original pagination
+        total = query.count()
+        users = query.offset((page - 1) * per_page).limit(per_page).all()
     
     return {
         "users": [{
@@ -537,6 +548,12 @@ def create_user(
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
     
+    # Prevent non-superadmin from creating users with superadmin role
+    if "role_id" in user_data and not current_user.is_superadmin():
+        role = db.query(Role).filter(Role.id == user_data["role_id"]).first()
+        if role and role.name == 'superadmin':
+            raise HTTPException(status_code=403, detail="Cannot assign superadmin role")
+    
     from app.core.security import get_password_hash
     
     new_user = User(
@@ -544,7 +561,6 @@ def create_user(
         hashed_password=get_password_hash(user_data["password"]),
         first_name=user_data["first_name"],
         last_name=user_data["last_name"],
-
         is_active=user_data.get("is_active", True),
         is_verified=user_data.get("is_verified", False)
     )

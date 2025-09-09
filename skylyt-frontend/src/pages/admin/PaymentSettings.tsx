@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Save, Shield, TestTube, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +29,10 @@ export const PaymentSettings = () => {
     flutterwave_secret_key: '',
     paypal_client_id: '',
     paypal_client_secret: '',
-    paypal_sandbox: true
+    paypal_sandbox: true,
+    webhook_secret_stripe: '',
+    webhook_secret_paystack: '',
+    webhook_secret_flutterwave: ''
   });
 
   useEffect(() => {
@@ -49,7 +53,10 @@ export const PaymentSettings = () => {
         flutterwave_secret_key: '',
         paypal_client_id: data.paypal_client_id || '',
         paypal_client_secret: '',
-        paypal_sandbox: data.paypal_sandbox || true
+        paypal_sandbox: data.paypal_sandbox || true,
+        webhook_secret_stripe: '',
+        webhook_secret_paystack: '',
+        webhook_secret_flutterwave: ''
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -373,6 +380,48 @@ export const PaymentSettings = () => {
                 disabled={!canManage}
               />
               <Label htmlFor="paypal_sandbox">Sandbox Mode (Use test environment)</Label>
+            </div>
+          </div>
+
+
+
+          {/* Webhook Configuration */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Webhook Configuration</h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="webhook_secret_stripe">Stripe Webhook Secret</Label>
+                <Input
+                  id="webhook_secret_stripe"
+                  type="password"
+                  value={paymentForm.webhook_secret_stripe}
+                  onChange={(e) => setPaymentForm({...paymentForm, webhook_secret_stripe: e.target.value})}
+                  placeholder="whsec_... (Enter to update)"
+                  disabled={!canManage}
+                />
+              </div>
+              <div>
+                <Label htmlFor="webhook_secret_paystack">Paystack Webhook Secret</Label>
+                <Input
+                  id="webhook_secret_paystack"
+                  type="password"
+                  value={paymentForm.webhook_secret_paystack}
+                  onChange={(e) => setPaymentForm({...paymentForm, webhook_secret_paystack: e.target.value})}
+                  placeholder="Enter webhook secret"
+                  disabled={!canManage}
+                />
+              </div>
+              <div>
+                <Label htmlFor="webhook_secret_flutterwave">Flutterwave Webhook Secret</Label>
+                <Input
+                  id="webhook_secret_flutterwave"
+                  type="password"
+                  value={paymentForm.webhook_secret_flutterwave}
+                  onChange={(e) => setPaymentForm({...paymentForm, webhook_secret_flutterwave: e.target.value})}
+                  placeholder="Enter webhook secret"
+                  disabled={!canManage}
+                />
+              </div>
             </div>
           </div>
 

@@ -476,6 +476,14 @@ class ApiService {
     account_name: string;
     account_number: string;
     is_primary_account: boolean;
+    bank_address?: string;
+    account_type?: string;
+    currency?: string;
+    transfer_fee?: string;
+    processing_time_hours?: string;
+    auto_verification_enabled?: boolean;
+    require_reference_number?: boolean;
+    bank_transfer_instructions?: string;
   }): Promise<any> {
     return this.request('/settings/bank-transfer', {
       method: 'PUT',

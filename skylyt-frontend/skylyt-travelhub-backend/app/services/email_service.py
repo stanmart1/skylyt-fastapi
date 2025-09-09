@@ -54,9 +54,6 @@ class EmailService:
             if response.status_code == 200:
                 logger.info(f"Email sent successfully to {to_email}")
                 return True
-            elif response.status_code == 403 and "testing emails" in response.text:
-                logger.warning(f"Resend API in testing mode - can only send to verified email: {response.text}")
-                return False
             else:
                 logger.error(f"Failed to send email: {response.status_code} - {response.text}")
                 return False
@@ -81,7 +78,7 @@ class EmailService:
             to_email,
             "welcome",
             {"user_name": html.escape(user_name), "frontend_url": settings.FRONTEND_URL},
-            "Welcome to Skylyt TravelHub!"
+            "Welcome to Skylyt Luxury!"
         )
     
     def send_booking_confirmation(self, to_email: str, booking_data: Dict[str, Any]) -> bool:
@@ -89,7 +86,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "booking_confirmation",
-            {"booking": booking_data},
+            {"booking": booking_data, "frontend_url": settings.FRONTEND_URL},
             f"Booking Confirmation - {booking_data.get('booking_reference', 'N/A')}"
         )
     
@@ -98,7 +95,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "payment_confirmation",
-            {"payment": payment_data},
+            {"payment": payment_data, "frontend_url": settings.FRONTEND_URL},
             f"Payment Confirmed - {payment_data.get('transaction_id', 'N/A')}"
         )
     
@@ -118,7 +115,7 @@ class EmailService:
             "password_reset",
             {
                 "user_name": html.escape(user_name),
-                "reset_link": f"https://skylytluxury.com/reset-password?token={reset_token}",
+                "reset_link": f"{settings.FRONTEND_URL}/reset-password?token={reset_token}",
                 "reset_token": reset_token
             },
             "Password Reset Request - Skylyt TravelHub"
@@ -129,7 +126,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "booking_confirmation",  # Reuse existing template
-            {"booking": booking_data},
+            {"booking": booking_data, "frontend_url": settings.FRONTEND_URL},
             f"Booking Update - {booking_data.get('booking_reference', 'N/A')}"
         )
     
@@ -138,7 +135,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "booking_confirmation",  # Reuse existing template
-            {"booking": booking_data, "is_cancellation": True},
+            {"booking": booking_data, "is_cancellation": True, "frontend_url": settings.FRONTEND_URL},
             f"Booking Cancelled - {booking_data.get('booking_reference', 'N/A')}"
         )
     
@@ -147,7 +144,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "payment_confirmation",  # Reuse existing template
-            {"payment": payment_data, "is_failed": True},
+            {"payment": payment_data, "is_failed": True, "frontend_url": settings.FRONTEND_URL},
             f"Payment Failed - {payment_data.get('booking_reference', 'N/A')}"
         )
     
@@ -156,7 +153,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "booking_confirmation",  # Reuse existing template
-            {"driver": driver_data, "booking": booking_data, "is_driver_assignment": True},
+            {"driver": driver_data, "booking": booking_data, "is_driver_assignment": True, "frontend_url": settings.FRONTEND_URL},
             f"New Trip Assignment - {booking_data.get('booking_reference', 'N/A')}"
         )
     

@@ -134,6 +134,8 @@ export const SecuritySettings = () => {
             <Input
               id="password_min_length"
               type="number"
+              min="6"
+              max="50"
               value={securityForm.password_min_length}
               onChange={(e) => setSecurityForm({...securityForm, password_min_length: e.target.value})}
               disabled={!canManage}
@@ -145,6 +147,8 @@ export const SecuritySettings = () => {
             <Input
               id="session_timeout"
               type="number"
+              min="5"
+              max="1440"
               value={securityForm.session_timeout}
               onChange={(e) => setSecurityForm({...securityForm, session_timeout: e.target.value})}
               disabled={!canManage}
@@ -156,6 +160,8 @@ export const SecuritySettings = () => {
             <Input
               id="login_attempts_limit"
               type="number"
+              min="1"
+              max="20"
               value={securityForm.login_attempts_limit}
               onChange={(e) => setSecurityForm({...securityForm, login_attempts_limit: e.target.value})}
               disabled={!canManage}

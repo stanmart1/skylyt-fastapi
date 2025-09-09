@@ -34,6 +34,14 @@ class BankTransferSettingsUpdate(BaseModel):
     account_name: Optional[str] = None
     account_number: Optional[str] = None
     is_primary_account: Optional[bool] = None
+    bank_address: Optional[str] = None
+    account_type: Optional[str] = None
+    currency: Optional[str] = None
+    transfer_fee: Optional[str] = None
+    processing_time_hours: Optional[str] = None
+    auto_verification_enabled: Optional[bool] = None
+    require_reference_number: Optional[bool] = None
+    bank_transfer_instructions: Optional[str] = None
 
 
 class GoogleAnalyticsSettingsUpdate(BaseModel):
@@ -68,6 +76,28 @@ class SettingsResponse(BaseModel):
     smtp_username: Optional[str]
     from_email: Optional[str]
     email_notifications_enabled: Optional[bool]
+    sms_enabled: Optional[bool]
+    push_notifications_enabled: Optional[bool]
+    booking_notifications: Optional[bool]
+    payment_notifications: Optional[bool]
+    system_notifications: Optional[bool]
+    driver_notifications: Optional[bool]
+    admin_notifications: Optional[bool]
+    notification_frequency: Optional[str]
+    quiet_hours_start: Optional[str]
+    quiet_hours_end: Optional[str]
+    timezone: Optional[str]
+    bank_address: Optional[str]
+    account_type: Optional[str]
+    currency: Optional[str]
+    transfer_fee: Optional[str]
+    processing_time_hours: Optional[str]
+    auto_verification_enabled: Optional[bool]
+    require_reference_number: Optional[bool]
+    bank_transfer_instructions: Optional[str]
+    webhook_secret_stripe: Optional[str]
+    webhook_secret_paystack: Optional[str]
+    webhook_secret_flutterwave: Optional[str]
     google_analytics_tracking_id: Optional[str]
     google_analytics_measurement_id: Optional[str]
     google_analytics_enabled: Optional[bool]

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
-    FROM_EMAIL: str = "onboarding@resend.dev"
+    FROM_EMAIL: str = "noreply@skylytluxury.com"
     
     # Frontend URL
     FRONTEND_URL: str = "https://skylyt.scaleitpro.com"

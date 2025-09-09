@@ -33,7 +33,7 @@ const UserManagement = () => {
   });
   const [creating, setCreating] = useState(false);
   const { isLoading, getUsers, updateUserRole } = useAdmin();
-  const { hasPermission } = useAuth();
+  const { hasPermission, hasRole } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +45,11 @@ const UserManagement = () => {
         // Fetch roles
         const { apiService } = await import('@/services/api');
         const rolesData = await apiService.request('/rbac/roles');
-        setRoles(rolesData || []);
+        // Filter out superadmin role if current user is not superadmin
+        const filteredRoles = hasRole('superadmin') 
+          ? rolesData || []
+          : (rolesData || []).filter((role: any) => role.name !== 'superadmin');
+        setRoles(filteredRoles);
       } catch (error) {
         console.error('Failed to fetch data:', sanitizeForLogging(error));
       }
@@ -254,7 +258,7 @@ const UserManagement = () => {
                         <SelectValue placeholder="Change Role" />
                       </SelectTrigger>
                       <SelectContent>
-                        {roles.map((role) => (
+                        {roles.filter(role => hasRole('superadmin') || role.name !== 'superadmin').map((role) => (
                           <SelectItem key={role.id} value={role.id.toString()}>
                             {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                           </SelectItem>
@@ -401,7 +405,7 @@ const UserManagement = () => {
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
+                {roles.filter(role => hasRole('superadmin') || role.name !== 'superadmin').map((role) => (
                   <SelectItem key={role.id} value={role.id.toString()}>
                     {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                   </SelectItem>

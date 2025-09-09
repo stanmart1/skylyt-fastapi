@@ -112,8 +112,8 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 px-4">
+        <Card className="w-full max-w-md shadow-2xl border-0">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -125,7 +125,7 @@ const ResetPassword = () => {
           </CardHeader>
           <CardContent>
             <Link to="/login">
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button className="w-full h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium">
                 Go to Login
               </Button>
             </Link>
@@ -137,8 +137,8 @@ const ResetPassword = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 px-4">
+        <Card className="w-full max-w-md shadow-2xl border-0">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6 text-red-600" />
@@ -150,7 +150,7 @@ const ResetPassword = () => {
           </CardHeader>
           <CardContent>
             <Link to="/forgot-password">
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button className="w-full h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium">
                 Request New Reset Link
               </Button>
             </Link>
@@ -161,8 +161,8 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 px-4">
+      <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">Reset Your Password</CardTitle>
           <CardDescription>
@@ -170,7 +170,7 @@ const ResetPassword = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
               <div className="relative">
@@ -182,6 +182,7 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-12 pr-10"
                 />
                 <Button
                   type="button"
@@ -211,6 +212,7 @@ const ResetPassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-12 pr-10"
                 />
                 <Button
                   type="button"
@@ -238,14 +240,14 @@ const ResetPassword = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Resetting..." : "Reset Password"}
             </Button>
             
             <div className="text-center">
-              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-800">
+              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
                 Back to Login
               </Link>
             </div>
