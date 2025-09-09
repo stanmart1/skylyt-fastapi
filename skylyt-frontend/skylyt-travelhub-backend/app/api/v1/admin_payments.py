@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.core.dependencies import get_current_user
@@ -7,6 +7,9 @@ from app.services.payment_service import PaymentService
 from app.tasks.email_tasks import send_payment_confirmation_email
 import logging
 from decimal import Decimal
+from typing import Optional
+import os
+from werkzeug.utils import secure_filename
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -18,6 +21,11 @@ class ManualPaymentCreate(BaseModel):
     payment_reference: str
     notes: str = ""
     status: str = "completed"
+    # Additional fields for different payment methods
+    transfer_reference: Optional[str] = None
+    transaction_id: Optional[str] = None
+    gateway_reference: Optional[str] = None
+    customer_email: Optional[str] = None
 
 @router.put("/admin/payments/{payment_id}/verify")
 async def verify_payment_admin(
@@ -141,11 +149,23 @@ async def reject_payment_admin(
 
 @router.post("/admin/payments/manual")
 async def create_manual_payment(
-    payment_data: ManualPaymentCreate,
+    booking_id: int = Form(...),
+    amount: float = Form(...),
+    payment_method: str = Form(...),
+    payment_reference: str = Form(...),
+    status: str = Form("completed"),
+    notes: str = Form(""),
+    # Bank transfer specific fields
+    transfer_reference: Optional[str] = Form(None),
+    proof_of_payment: Optional[UploadFile] = File(None),
+    # Gateway specific fields
+    transaction_id: Optional[str] = Form(None),
+    gateway_reference: Optional[str] = Form(None),
+    customer_email: Optional[str] = Form(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create manual payment record for admin"""
+    """Create manual payment record for admin with file upload support"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -153,23 +173,48 @@ async def create_manual_payment(
         from app.models.payment import Payment
         from app.models.booking import Booking
         
-        booking = db.query(Booking).filter(Booking.id == payment_data.booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
+        # Handle file upload for bank transfer
+        proof_url = None
+        if proof_of_payment and payment_method == 'bank_transfer':
+            try:
+                # Create upload directory if it doesn't exist
+                upload_dir = "uploads/payment_proofs"
+                os.makedirs(upload_dir, exist_ok=True)
+                
+                # Generate secure filename
+                filename = secure_filename(proof_of_payment.filename or "proof.jpg")
+                file_path = os.path.join(upload_dir, f"{booking_id}_{filename}")
+                
+                # Save file
+                with open(file_path, "wb") as buffer:
+                    content = await proof_of_payment.read()
+                    buffer.write(content)
+                
+                proof_url = file_path
+            except Exception as e:
+                logger.error(f"Failed to upload proof of payment: {e}")
+        
         payment = Payment(
-            booking_id=payment_data.booking_id,
-            amount=Decimal(str(payment_data.amount)),
+            booking_id=booking_id,
+            amount=Decimal(str(amount)),
             currency=booking.currency,
-            payment_method=payment_data.payment_method,
-            payment_reference=payment_data.payment_reference,
-            status=payment_data.status,
-            transaction_id=payment_data.payment_reference
+            payment_method=payment_method,
+            payment_reference=payment_reference,
+            status=status,
+            transaction_id=transaction_id or payment_reference,
+            transfer_reference=transfer_reference,
+            proof_of_payment_url=proof_url,
+            customer_email=customer_email or booking.customer_email,
+            gateway_response={'manual_entry': True, 'notes': notes, 'gateway_reference': gateway_reference}
         )
         
         db.add(payment)
         
-        if payment_data.status == "completed":
+        if status == "completed":
             booking.payment_status = "completed"
             booking.status = "confirmed"
         
@@ -181,7 +226,8 @@ async def create_manual_payment(
             "payment_id": payment.id,
             "booking_id": booking.id,
             "amount": float(payment.amount),
-            "status": payment.status
+            "status": payment.status,
+            "proof_uploaded": proof_url is not None
         }
         
     except HTTPException:

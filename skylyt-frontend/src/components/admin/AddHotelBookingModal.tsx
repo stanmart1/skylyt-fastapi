@@ -40,6 +40,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
     checkInDate: '',
     checkOutDate: '',
     numberOfGuests: 1,
+    numberOfChildren: 0,
     specialRequests: ''
   });
 
@@ -148,7 +149,8 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
           guest_email: formData.email,
           special_requests: formData.specialRequests,
           pickup_location: selectedHotel.location,
-          number_of_guests: formData.numberOfGuests
+          number_of_guests: formData.numberOfGuests,
+          number_of_children: formData.numberOfChildren
         },
         start_date: new Date(formData.checkInDate).toISOString(),
         end_date: new Date(formData.checkOutDate).toISOString(),
@@ -190,6 +192,7 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
       checkInDate: '',
       checkOutDate: '',
       numberOfGuests: 1,
+      numberOfChildren: 0,
       specialRequests: ''
     });
     onClose();
@@ -398,16 +401,29 @@ const AddHotelBookingModal = ({ isOpen, onClose, onSuccess }: AddHotelBookingMod
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="numberOfGuests">Number of Guests</Label>
-            <Input
-              id="numberOfGuests"
-              type="number"
-              min="1"
-              value={formData.numberOfGuests}
-              onChange={(e) => setFormData(prev => ({ ...prev, numberOfGuests: parseInt(e.target.value) || 1 }))}
-              placeholder="Enter number of guests"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="numberOfGuests">Number of Guests</Label>
+              <Input
+                id="numberOfGuests"
+                type="number"
+                min="1"
+                value={formData.numberOfGuests}
+                onChange={(e) => setFormData(prev => ({ ...prev, numberOfGuests: parseInt(e.target.value) || 1 }))}
+                placeholder="Enter number of guests"
+              />
+            </div>
+            <div>
+              <Label htmlFor="numberOfChildren">Number of Children</Label>
+              <Input
+                id="numberOfChildren"
+                type="number"
+                min="0"
+                value={formData.numberOfChildren}
+                onChange={(e) => setFormData(prev => ({ ...prev, numberOfChildren: parseInt(e.target.value) || 0 }))}
+                placeholder="Enter number of children"
+              />
+            </div>
           </div>
 
           <div>

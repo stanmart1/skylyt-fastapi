@@ -50,14 +50,50 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
     amount: '',
     payment_method: 'bank_transfer',
     payment_reference: '',
-    notes: ''
+    transaction_id: '',
+    notes: '',
+    // Bank transfer specific fields
+    transfer_reference: '',
+    proof_of_payment: null as File | null,
+    // Gateway specific fields
+    gateway_reference: '',
+    customer_email: ''
   });
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const { hasPermission } = useAuth();
   const { currency } = useCurrency();
 
   useEffect(() => {
     fetchPayments();
+    fetchAvailablePaymentMethods();
   }, []);
+
+  const fetchAvailablePaymentMethods = async () => {
+    try {
+      setLoadingPaymentMethods(true);
+      const response = await apiService.request('/payment-config/gateways');
+      const methods = response.gateways || [];
+      // Add bank transfer as it's always available
+      const allMethods = [
+        { id: 'bank_transfer', name: 'Bank Transfer', description: 'Direct bank transfer' },
+        ...methods
+      ];
+      setAvailablePaymentMethods(allMethods);
+    } catch (error) {
+      console.error('Failed to fetch payment methods:', error);
+      // Fallback to basic methods
+      setAvailablePaymentMethods([
+        { id: 'bank_transfer', name: 'Bank Transfer', description: 'Direct bank transfer' },
+        { id: 'stripe', name: 'Stripe', description: 'Credit/Debit Cards' },
+        { id: 'paystack', name: 'Paystack', description: 'Nigerian Payment Gateway' },
+        { id: 'flutterwave', name: 'Flutterwave', description: 'African Payment Gateway' },
+        { id: 'paypal', name: 'PayPal', description: 'PayPal Account' }
+      ]);
+    } finally {
+      setLoadingPaymentMethods(false);
+    }
+  };
 
   const fetchPayments = async () => {
     try {
@@ -176,17 +212,42 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
   const handleAddPayment = async () => {
     try {
       setUpdating(true);
+      
+      const formData = new FormData();
+      formData.append('booking_id', addPaymentForm.booking_id);
+      formData.append('amount', addPaymentForm.amount);
+      formData.append('payment_method', addPaymentForm.payment_method);
+      formData.append('payment_reference', addPaymentForm.payment_reference);
+      formData.append('notes', addPaymentForm.notes);
+      formData.append('status', 'completed');
+      
+      // Add method-specific fields
+      if (addPaymentForm.payment_method === 'bank_transfer') {
+        if (addPaymentForm.transfer_reference) {
+          formData.append('transfer_reference', addPaymentForm.transfer_reference);
+        }
+        if (addPaymentForm.proof_of_payment) {
+          formData.append('proof_of_payment', addPaymentForm.proof_of_payment);
+        }
+      } else {
+        // For gateway payments
+        if (addPaymentForm.transaction_id) {
+          formData.append('transaction_id', addPaymentForm.transaction_id);
+        }
+        if (addPaymentForm.gateway_reference) {
+          formData.append('gateway_reference', addPaymentForm.gateway_reference);
+        }
+        if (addPaymentForm.customer_email) {
+          formData.append('customer_email', addPaymentForm.customer_email);
+        }
+      }
+      
       await apiService.request('/admin/payments/manual', {
         method: 'POST',
-        body: JSON.stringify({
-          booking_id: parseInt(addPaymentForm.booking_id),
-          amount: parseFloat(addPaymentForm.amount),
-          payment_method: addPaymentForm.payment_method,
-          payment_reference: addPaymentForm.payment_reference,
-          notes: addPaymentForm.notes,
-          status: 'completed'
-        })
+        body: formData,
+        headers: {} // Let browser set content-type for FormData
       });
+      
       await fetchPayments();
       setAddPaymentModalOpen(false);
       setAddPaymentForm({
@@ -194,7 +255,12 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
         amount: '',
         payment_method: 'bank_transfer',
         payment_reference: '',
-        notes: ''
+        transaction_id: '',
+        notes: '',
+        transfer_reference: '',
+        proof_of_payment: null,
+        gateway_reference: '',
+        customer_email: ''
       });
     } catch (error) {
       console.error('Failed to add payment:', error);
@@ -405,55 +471,135 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
 
       {/* Add Payment Modal */}
       <Dialog open={addPaymentModalOpen} onOpenChange={setAddPaymentModalOpen}>
-        <DialogContent className="w-full max-w-md mx-4 sm:max-w-lg">
+        <DialogContent className="w-full max-w-md mx-4 sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Manual Payment Record</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="booking_id">Booking ID</Label>
-              <Input
-                id="booking_id"
-                type="number"
-                value={addPaymentForm.booking_id}
-                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, booking_id: e.target.value })}
-                placeholder="Enter booking ID"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="booking_id">Booking ID</Label>
+                <Input
+                  id="booking_id"
+                  type="number"
+                  value={addPaymentForm.booking_id}
+                  onChange={(e) => setAddPaymentForm({ ...addPaymentForm, booking_id: e.target.value })}
+                  placeholder="Enter booking ID"
+                />
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={addPaymentForm.amount}
+                  onChange={(e) => setAddPaymentForm({ ...addPaymentForm, amount: e.target.value })}
+                  placeholder="Enter payment amount"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={addPaymentForm.amount}
-                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, amount: e.target.value })}
-                placeholder="Enter payment amount"
-              />
-            </div>
+            
             <div>
               <Label htmlFor="payment_method">Payment Method</Label>
-              <select
-                id="payment_method"
-                value={addPaymentForm.payment_method}
-                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, payment_method: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cash">Cash</option>
-                <option value="check">Check</option>
-                <option value="other">Other</option>
-              </select>
+              {loadingPaymentMethods ? (
+                <div className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Loading payment methods...
+                </div>
+              ) : (
+                <select
+                  id="payment_method"
+                  value={addPaymentForm.payment_method}
+                  onChange={(e) => setAddPaymentForm({ ...addPaymentForm, payment_method: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  {availablePaymentMethods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name} - {method.description}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
+
+            {/* Bank Transfer Specific Fields */}
+            {addPaymentForm.payment_method === 'bank_transfer' && (
+              <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-800">Bank Transfer Details</h4>
+                <div>
+                  <Label htmlFor="transfer_reference">Transfer Reference</Label>
+                  <Input
+                    id="transfer_reference"
+                    value={addPaymentForm.transfer_reference}
+                    onChange={(e) => setAddPaymentForm({ ...addPaymentForm, transfer_reference: e.target.value })}
+                    placeholder="Bank transfer reference number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="proof_of_payment">Proof of Payment</Label>
+                  <Input
+                    id="proof_of_payment"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setAddPaymentForm({ ...addPaymentForm, proof_of_payment: file });
+                    }}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Upload receipt, screenshot, or PDF</p>
+                </div>
+              </div>
+            )}
+
+            {/* Gateway Payment Specific Fields */}
+            {addPaymentForm.payment_method !== 'bank_transfer' && (
+              <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-800">
+                  {availablePaymentMethods.find(m => m.id === addPaymentForm.payment_method)?.name || 'Gateway'} Payment Details
+                </h4>
+                <div>
+                  <Label htmlFor="transaction_id">Transaction ID</Label>
+                  <Input
+                    id="transaction_id"
+                    value={addPaymentForm.transaction_id}
+                    onChange={(e) => setAddPaymentForm({ ...addPaymentForm, transaction_id: e.target.value })}
+                    placeholder="Gateway transaction ID"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gateway_reference">Gateway Reference</Label>
+                  <Input
+                    id="gateway_reference"
+                    value={addPaymentForm.gateway_reference}
+                    onChange={(e) => setAddPaymentForm({ ...addPaymentForm, gateway_reference: e.target.value })}
+                    placeholder="Gateway reference number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="customer_email">Customer Email</Label>
+                  <Input
+                    id="customer_email"
+                    type="email"
+                    value={addPaymentForm.customer_email}
+                    onChange={(e) => setAddPaymentForm({ ...addPaymentForm, customer_email: e.target.value })}
+                    placeholder="Customer email address"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="payment_reference">Payment Reference</Label>
               <Input
                 id="payment_reference"
                 value={addPaymentForm.payment_reference}
                 onChange={(e) => setAddPaymentForm({ ...addPaymentForm, payment_reference: e.target.value })}
-                placeholder="Enter payment reference"
+                placeholder="General payment reference"
               />
             </div>
+            
             <div>
               <Label htmlFor="notes">Notes (Optional)</Label>
               <Input
@@ -463,11 +609,34 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
                 placeholder="Additional notes"
               />
             </div>
+            
             <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <Button onClick={handleAddPayment} disabled={updating || !addPaymentForm.booking_id || !addPaymentForm.amount} className="w-full sm:w-auto">
+              <Button 
+                onClick={handleAddPayment} 
+                disabled={updating || !addPaymentForm.booking_id || !addPaymentForm.amount} 
+                className="w-full sm:w-auto"
+              >
                 {updating ? 'Adding...' : 'Add Payment'}
               </Button>
-              <Button variant="outline" onClick={() => setAddPaymentModalOpen(false)} className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setAddPaymentModalOpen(false);
+                  setAddPaymentForm({
+                    booking_id: '',
+                    amount: '',
+                    payment_method: 'bank_transfer',
+                    payment_reference: '',
+                    transaction_id: '',
+                    notes: '',
+                    transfer_reference: '',
+                    proof_of_payment: null,
+                    gateway_reference: '',
+                    customer_email: ''
+                  });
+                }} 
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
             </div>

@@ -54,9 +54,21 @@ async def health_check(db: Session = Depends(get_db)):
         health_data["status"] = "warning"
         health_data["database"]["status"] = "error"
     
-    # Redis check disabled
-    health_data["redis"]["status"] = "disabled"
-    health_data["redis"]["responseTime"] = 0
+    # Test Redis/DragonflyDB
+    try:
+        from app.core.redis import RedisService
+        start_time = time.time()
+        client = RedisService.get_client()
+        if client and client.ping():
+            health_data["redis"]["responseTime"] = round((time.time() - start_time) * 1000, 2)
+            health_data["redis"]["status"] = "connected"
+        else:
+            health_data["redis"]["status"] = "disconnected"
+    except Exception as e:
+        print(f"Redis/DragonflyDB health check failed: {e}")
+        health_data["redis"]["status"] = "error"
+        if health_data["status"] == "healthy":
+            health_data["status"] = "warning"
     
     return health_data
 
@@ -78,8 +90,18 @@ async def detailed_health_check(db: Session = Depends(get_db)):
         health_status["checks"]["database"] = {"status": "unhealthy", "error": str(e)}
         health_status["status"] = "unhealthy"
     
-    # Redis check disabled
-    health_status["checks"]["redis"] = {"status": "disabled"}
+    # Redis/DragonflyDB check
+    try:
+        from app.core.redis import RedisService
+        client = RedisService.get_client()
+        if client and client.ping():
+            health_status["checks"]["redis"] = {"status": "healthy"}
+        else:
+            health_status["checks"]["redis"] = {"status": "unhealthy", "error": "Connection failed"}
+            health_status["status"] = "unhealthy"
+    except Exception as e:
+        health_status["checks"]["redis"] = {"status": "unhealthy", "error": str(e)}
+        health_status["status"] = "unhealthy"
     
     return health_status
 
