@@ -124,7 +124,7 @@ def get_settings(db: Session = Depends(get_db)):
         "admin_notifications": getattr(settings, 'admin_notifications', True),
 
 
-        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None)
+        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None),
         "webhook_secret_stripe": None,  # Never expose secrets
         "webhook_secret_paystack": None,
         "webhook_secret_flutterwave": None,
