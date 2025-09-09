@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CreditCard, Save, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CreditCard, Save, Shield, TestTube, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export const PaymentSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState({});
+  const [testResults, setTestResults] = useState({});
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   
@@ -73,6 +76,9 @@ export const PaymentSettings = () => {
         title: "Success",
         description: "Payment gateway settings updated successfully"
       });
+      
+      // Clear test results after saving
+      setTestResults({});
     } catch (error) {
       toast({
         title: "Error",
@@ -81,6 +87,38 @@ export const PaymentSettings = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testGateway = async (gatewayType) => {
+    setTesting(prev => ({ ...prev, [gatewayType]: true }));
+    try {
+      const { apiService } = await import('@/services/api');
+      const result = await apiService.request(`/payment-config/test/${gatewayType}`, {
+        method: 'POST'
+      });
+      
+      setTestResults(prev => ({ ...prev, [gatewayType]: result }));
+      
+      toast({
+        title: result.success ? "Test Successful" : "Test Failed",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      });
+    } catch (error) {
+      const errorResult = {
+        success: false,
+        message: error.message || 'Test failed due to network error'
+      };
+      setTestResults(prev => ({ ...prev, [gatewayType]: errorResult }));
+      
+      toast({
+        title: "Test Failed",
+        description: errorResult.message,
+        variant: "destructive"
+      });
+    } finally {
+      setTesting(prev => ({ ...prev, [gatewayType]: false }));
     }
   };
 
@@ -134,7 +172,31 @@ export const PaymentSettings = () => {
       <CardContent className="space-y-6">
         <div className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Stripe</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Stripe</h3>
+              <div className="flex items-center gap-2">
+                {testResults.stripe && (
+                  <Badge variant={testResults.stripe.success ? "default" : "destructive"}>
+                    {testResults.stripe.success ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> Configured</>
+                    ) : (
+                      <><XCircle className="h-3 w-3 mr-1" /> Failed</>
+                    )}
+                  </Badge>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testGateway('stripe')}
+                    disabled={testing.stripe || !paymentForm.stripe_public_key || !paymentForm.stripe_secret_key}
+                  >
+                    <TestTube className="h-3 w-3 mr-1" />
+                    {testing.stripe ? 'Testing...' : 'Test'}
+                  </Button>
+                )}
+              </div>
+            </div>
             <div>
               <Label htmlFor="stripe_public_key">Public Key</Label>
               <Input
@@ -142,6 +204,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.stripe_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, stripe_public_key: e.target.value})}
                 disabled={!canManage}
+                placeholder="pk_test_..."
               />
             </div>
             <div>
@@ -151,14 +214,38 @@ export const PaymentSettings = () => {
                 type="password"
                 value={paymentForm.stripe_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, stripe_secret_key: e.target.value})}
-                placeholder="Enter to update"
+                placeholder="sk_test_... (Enter to update)"
                 disabled={!canManage}
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Paystack</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Paystack</h3>
+              <div className="flex items-center gap-2">
+                {testResults.paystack && (
+                  <Badge variant={testResults.paystack.success ? "default" : "destructive"}>
+                    {testResults.paystack.success ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> Configured</>
+                    ) : (
+                      <><XCircle className="h-3 w-3 mr-1" /> Failed</>
+                    )}
+                  </Badge>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testGateway('paystack')}
+                    disabled={testing.paystack || !paymentForm.paystack_public_key || !paymentForm.paystack_secret_key}
+                  >
+                    <TestTube className="h-3 w-3 mr-1" />
+                    {testing.paystack ? 'Testing...' : 'Test'}
+                  </Button>
+                )}
+              </div>
+            </div>
             <div>
               <Label htmlFor="paystack_public_key">Public Key</Label>
               <Input
@@ -166,6 +253,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.paystack_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, paystack_public_key: e.target.value})}
                 disabled={!canManage}
+                placeholder="pk_test_..."
               />
             </div>
             <div>
@@ -175,14 +263,38 @@ export const PaymentSettings = () => {
                 type="password"
                 value={paymentForm.paystack_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, paystack_secret_key: e.target.value})}
-                placeholder="Enter to update"
+                placeholder="sk_test_... (Enter to update)"
                 disabled={!canManage}
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Flutterwave</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Flutterwave</h3>
+              <div className="flex items-center gap-2">
+                {testResults.flutterwave && (
+                  <Badge variant={testResults.flutterwave.success ? "default" : "destructive"}>
+                    {testResults.flutterwave.success ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> Configured</>
+                    ) : (
+                      <><XCircle className="h-3 w-3 mr-1" /> Failed</>
+                    )}
+                  </Badge>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testGateway('flutterwave')}
+                    disabled={testing.flutterwave || !paymentForm.flutterwave_public_key || !paymentForm.flutterwave_secret_key}
+                  >
+                    <TestTube className="h-3 w-3 mr-1" />
+                    {testing.flutterwave ? 'Testing...' : 'Test'}
+                  </Button>
+                )}
+              </div>
+            </div>
             <div>
               <Label htmlFor="flutterwave_public_key">Public Key</Label>
               <Input
@@ -190,6 +302,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.flutterwave_public_key}
                 onChange={(e) => setPaymentForm({...paymentForm, flutterwave_public_key: e.target.value})}
                 disabled={!canManage}
+                placeholder="FLWPUBK_TEST-..."
               />
             </div>
             <div>
@@ -199,14 +312,38 @@ export const PaymentSettings = () => {
                 type="password"
                 value={paymentForm.flutterwave_secret_key}
                 onChange={(e) => setPaymentForm({...paymentForm, flutterwave_secret_key: e.target.value})}
-                placeholder="Enter to update"
+                placeholder="FLWSECK_TEST-... (Enter to update)"
                 disabled={!canManage}
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">PayPal</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">PayPal</h3>
+              <div className="flex items-center gap-2">
+                {testResults.paypal && (
+                  <Badge variant={testResults.paypal.success ? "default" : "destructive"}>
+                    {testResults.paypal.success ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> Configured</>
+                    ) : (
+                      <><XCircle className="h-3 w-3 mr-1" /> Failed</>
+                    )}
+                  </Badge>
+                )}
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testGateway('paypal')}
+                    disabled={testing.paypal || !paymentForm.paypal_client_id || !paymentForm.paypal_client_secret}
+                  >
+                    <TestTube className="h-3 w-3 mr-1" />
+                    {testing.paypal ? 'Testing...' : 'Test'}
+                  </Button>
+                )}
+              </div>
+            </div>
             <div>
               <Label htmlFor="paypal_client_id">Client ID</Label>
               <Input
@@ -214,6 +351,7 @@ export const PaymentSettings = () => {
                 value={paymentForm.paypal_client_id}
                 onChange={(e) => setPaymentForm({...paymentForm, paypal_client_id: e.target.value})}
                 disabled={!canManage}
+                placeholder="AYSq3RDGsmBLJE-otTkBtM-jBRd1TCQwFf9RGfwddNXWz0uFU9ztK7TEjWJRb6..."
               />
             </div>
             <div>
@@ -223,7 +361,7 @@ export const PaymentSettings = () => {
                 type="password"
                 value={paymentForm.paypal_client_secret}
                 onChange={(e) => setPaymentForm({...paymentForm, paypal_client_secret: e.target.value})}
-                placeholder="Enter to update"
+                placeholder="EGnHDxD_qRPdaLdZz8iCr8N7_MzF-YHPTkjs6NKYQvQSBngp4PTTVWkPZRbL... (Enter to update)"
                 disabled={!canManage}
               />
             </div>
@@ -234,7 +372,7 @@ export const PaymentSettings = () => {
                 onCheckedChange={(checked) => setPaymentForm({...paymentForm, paypal_sandbox: checked})}
                 disabled={!canManage}
               />
-              <Label htmlFor="paypal_sandbox">Sandbox Mode</Label>
+              <Label htmlFor="paypal_sandbox">Sandbox Mode (Use test environment)</Label>
             </div>
           </div>
 

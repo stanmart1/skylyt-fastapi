@@ -73,13 +73,35 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
     try {
       setLoadingPaymentMethods(true);
       const response = await apiService.request('/payment-config/gateways');
-      const methods = response.gateways || [];
-      // Add bank transfer as it's always available
-      const allMethods = [
+      
+      // Always include bank transfer and basic methods
+      const basicMethods = [
         { id: 'bank_transfer', name: 'Bank Transfer', description: 'Direct bank transfer' },
-        ...methods
+        { id: 'stripe', name: 'Stripe', description: 'Credit/Debit Cards' },
+        { id: 'paystack', name: 'Paystack', description: 'Nigerian Payment Gateway' },
+        { id: 'flutterwave', name: 'Flutterwave', description: 'African Payment Gateway' },
+        { id: 'paypal', name: 'PayPal', description: 'PayPal Account' }
       ];
-      setAvailablePaymentMethods(allMethods);
+      
+      // If API returns configured gateways, merge with basic methods
+      if (response.success && response.gateways) {
+        const configuredGateways = response.gateways.map(gateway => ({
+          id: gateway.id,
+          name: gateway.name,
+          description: gateway.description
+        }));
+        
+        // Merge configured with basic, preferring configured data
+        const mergedMethods = basicMethods.map(basic => {
+          const configured = configuredGateways.find(c => c.id === basic.id);
+          return configured || basic;
+        });
+        
+        setAvailablePaymentMethods(mergedMethods);
+      } else {
+        // Use basic methods as fallback
+        setAvailablePaymentMethods(basicMethods);
+      }
     } catch (error) {
       console.error('Failed to fetch payment methods:', error);
       // Fallback to basic methods

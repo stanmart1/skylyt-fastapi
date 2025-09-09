@@ -23,8 +23,52 @@ class PaymentGatewayConfig(BaseModel):
 @router.get("/gateways")
 def get_payment_gateways(db: Session = Depends(get_db)):
     """Get available payment gateways for frontend"""
-    result = PaymentProcessor.get_available_gateways(db)
-    return result
+    try:
+        available_gateways = PaymentProcessor.get_available_gateways(db)
+        
+        # Enhanced gateway information
+        gateway_info = {
+            'stripe': {'name': 'Stripe', 'description': 'Credit/Debit Cards', 'type': 'card'},
+            'paystack': {'name': 'Paystack', 'description': 'Nigerian Payment Gateway', 'type': 'redirect'},
+            'flutterwave': {'name': 'Flutterwave', 'description': 'African Payment Gateway', 'type': 'redirect'},
+            'paypal': {'name': 'PayPal', 'description': 'PayPal Account', 'type': 'redirect'}
+        }
+        
+        configured_gateways = []
+        if available_gateways.get('success'):
+            for gateway_id in available_gateways.get('gateways', []):
+                if gateway_id in gateway_info:
+                    configured_gateways.append({
+                        'id': gateway_id,
+                        **gateway_info[gateway_id],
+                        'configured': True
+                    })
+        
+        # Always return all gateways, marking which are configured
+        all_gateways = []
+        for gateway_id, info in gateway_info.items():
+            configured = any(g['id'] == gateway_id for g in configured_gateways)
+            all_gateways.append({
+                'id': gateway_id,
+                **info,
+                'configured': configured
+            })
+        
+        return {
+            'success': True,
+            'gateways': all_gateways
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'gateways': [
+                {'id': 'stripe', 'name': 'Stripe', 'description': 'Credit/Debit Cards', 'configured': False},
+                {'id': 'paystack', 'name': 'Paystack', 'description': 'Nigerian Payment Gateway', 'configured': False},
+                {'id': 'flutterwave', 'name': 'Flutterwave', 'description': 'African Payment Gateway', 'configured': False},
+                {'id': 'paypal', 'name': 'PayPal', 'description': 'PayPal Account', 'configured': False}
+            ]
+        }
 
 @router.get("/config")
 def get_payment_config(
@@ -37,19 +81,24 @@ def get_payment_config(
     
     settings = db.query(Settings).first()
     if not settings:
-        return {}
+        return {
+            "stripe_configured": False,
+            "paystack_configured": False,
+            "flutterwave_configured": False,
+            "paypal_configured": False
+        }
     
-    # Return only public keys and configuration status
+    # Return configuration status and public keys (safe to expose)
     return {
         "stripe_configured": bool(settings.stripe_public_key and settings.stripe_secret_key),
-        "stripe_public_key": settings.stripe_public_key,
+        "stripe_public_key": settings.stripe_public_key or "",
         "paystack_configured": bool(settings.paystack_public_key and settings.paystack_secret_key),
-        "paystack_public_key": settings.paystack_public_key,
+        "paystack_public_key": settings.paystack_public_key or "",
         "flutterwave_configured": bool(settings.flutterwave_public_key and settings.flutterwave_secret_key),
-        "flutterwave_public_key": settings.flutterwave_public_key,
+        "flutterwave_public_key": settings.flutterwave_public_key or "",
         "paypal_configured": bool(settings.paypal_client_id and settings.paypal_client_secret),
-        "paypal_client_id": settings.paypal_client_id,
-        "paypal_sandbox": settings.paypal_sandbox
+        "paypal_client_id": settings.paypal_client_id or "",
+        "paypal_sandbox": settings.paypal_sandbox if settings.paypal_sandbox is not None else True
     }
 
 @router.put("/config")
@@ -67,15 +116,29 @@ def update_payment_config(
         settings = Settings()
         db.add(settings)
     
-    # Update only provided fields
+    # Update only provided fields (skip empty strings for secret keys)
     update_data = config.dict(exclude_unset=True)
     for field, value in update_data.items():
-        if hasattr(settings, field):
-            setattr(settings, field, value)
+        if hasattr(settings, field) and value is not None:
+            # Don't update secret keys if they're empty (keep existing)
+            if field.endswith('_secret_key') or field.endswith('_client_secret'):
+                if value.strip():  # Only update if not empty
+                    setattr(settings, field, value)
+            else:
+                setattr(settings, field, value)
     
     db.commit()
+    db.refresh(settings)
     
-    return {"message": "Payment gateway configuration updated successfully"}
+    return {
+        "message": "Payment gateway configuration updated successfully",
+        "configured_gateways": {
+            "stripe": bool(settings.stripe_public_key and settings.stripe_secret_key),
+            "paystack": bool(settings.paystack_public_key and settings.paystack_secret_key),
+            "flutterwave": bool(settings.flutterwave_public_key and settings.flutterwave_secret_key),
+            "paypal": bool(settings.paypal_client_id and settings.paypal_client_secret)
+        }
+    }
 
 @router.post("/test/{gateway_type}")
 async def test_payment_gateway(
@@ -91,21 +154,35 @@ async def test_payment_gateway(
     
     gateway = PaymentGatewayFactory.create_gateway(gateway_type, db)
     if not gateway:
-        return {"success": False, "message": f"Gateway {gateway_type} not configured"}
+        return {"success": False, "message": f"Gateway {gateway_type} not configured or missing API keys"}
     
     try:
         # Test with a small amount
         test_result = await gateway.create_payment(
             amount=1.00,
             currency="NGN",
-            customer_email="test@example.com",
-            booking_reference="TEST_" + gateway_type.upper(),
-            metadata={"test": True}
+            customer_email="test@skylyt.com",
+            booking_reference=f"TEST_{gateway_type.upper()}_{int(__import__('time').time())}",
+            metadata={"test": True, "environment": "test"}
         )
         
-        return {
-            "success": test_result.get('success', False),
-            "message": "Gateway test successful" if test_result.get('success') else test_result.get('error', 'Test failed')
-        }
+        if test_result.get('success'):
+            return {
+                "success": True,
+                "message": f"{gateway_type.title()} gateway is properly configured and functional",
+                "test_data": {
+                    "transaction_id": test_result.get('transaction_id'),
+                    "amount": test_result.get('amount'),
+                    "currency": test_result.get('currency')
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{gateway_type.title()} gateway test failed: {test_result.get('error', 'Unknown error')}"
+            }
     except Exception as e:
-        return {"success": False, "message": f"Gateway test failed: {str(e)}"}
+        return {
+            "success": False, 
+            "message": f"{gateway_type.title()} gateway test failed: {str(e)}"
+        }
