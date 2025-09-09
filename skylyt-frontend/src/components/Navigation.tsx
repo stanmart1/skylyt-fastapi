@@ -19,21 +19,31 @@ const Navigation = () => {
   // Batch DOM measurements to prevent forced reflows
   const measureNav = useCallback(() => {
     if (navRef.current) {
-      const rect = navRef.current.getBoundingClientRect();
-      setDimensions({ width: rect.width, height: rect.height });
+      // Use requestAnimationFrame to batch DOM reads
+      requestAnimationFrame(() => {
+        if (navRef.current) {
+          const rect = navRef.current.getBoundingClientRect();
+          setDimensions({ width: rect.width, height: rect.height });
+        }
+      });
     }
   }, []);
   
   useLayoutEffect(() => {
-    measureNav();
+    let timeoutId: number;
     const handleResize = () => {
-      // Debounce resize measurements
-      const timeoutId = setTimeout(measureNav, 100);
-      return () => clearTimeout(timeoutId);
+      // Debounce and batch resize measurements
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(measureNav, 150);
     };
     
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Initial measurement after layout
+    measureNav();
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, [measureNav]);
   const { user, logout, isAuthenticated, hasRole } = useAuth();
   const { settings } = useSettings();

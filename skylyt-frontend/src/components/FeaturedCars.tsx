@@ -117,6 +117,7 @@ const FeaturedCars = () => {
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:left-0"
             onClick={prevSlide}
+            aria-label="Previous cars"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -126,6 +127,7 @@ const FeaturedCars = () => {
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:right-0"
             onClick={nextSlide}
+            aria-label="Next cars"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -224,6 +226,7 @@ const FeaturedCars = () => {
                   index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
                 }`}
                 onClick={() => setCurrentIndex(index)}
+                aria-label={`Go to car slide ${index + 1}`}
               />
             ))}
           </div>

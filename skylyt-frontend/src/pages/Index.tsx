@@ -90,7 +90,7 @@ const Index = () => {
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
                         <Select value={searchData.cars.location} onValueChange={(value) => handleInputChange('cars', 'location', value)}>
-                          <SelectTrigger className="border-0 bg-gray-50">
+                          <SelectTrigger className="border-0 bg-gray-50" aria-label="Pick-up location">
                             <SelectValue placeholder="Pick-up location" />
                           </SelectTrigger>
                           <SelectContent>
@@ -107,6 +107,7 @@ const Index = () => {
                           className="border-0 bg-gray-50" 
                           value={searchData.cars.pickupDate}
                           onChange={(e) => handleInputChange('cars', 'pickupDate', e.target.value)}
+                          aria-label="Pick-up date"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -116,6 +117,7 @@ const Index = () => {
                           className="border-0 bg-gray-50" 
                           value={searchData.cars.returnDate}
                           onChange={(e) => handleInputChange('cars', 'returnDate', e.target.value)}
+                          aria-label="Return date"
                         />
                       </div>
                       <Button 
@@ -137,7 +139,7 @@ const Index = () => {
                       <div className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-blue-600" />
                         <Select value={searchData.hotels.destination} onValueChange={(value) => handleInputChange('hotels', 'destination', value)}>
-                          <SelectTrigger className="border-0 bg-gray-50">
+                          <SelectTrigger className="border-0 bg-gray-50" aria-label="Destination">
                             <SelectValue placeholder="Destination" />
                           </SelectTrigger>
                           <SelectContent>
@@ -155,6 +157,7 @@ const Index = () => {
                           className="border-0 bg-gray-50" 
                           value={searchData.hotels.checkinDate}
                           onChange={(e) => handleInputChange('hotels', 'checkinDate', e.target.value)}
+                          aria-label="Check-in date"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -165,6 +168,7 @@ const Index = () => {
                           className="border-0 bg-gray-50" 
                           value={searchData.hotels.checkoutDate}
                           onChange={(e) => handleInputChange('hotels', 'checkoutDate', e.target.value)}
+                          aria-label="Check-out date"
                         />
                       </div>
                       <Button 

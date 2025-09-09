@@ -115,6 +115,7 @@ const FeaturedHotels = () => {
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:left-0"
             onClick={prevSlide}
+            aria-label="Previous hotels"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -124,6 +125,7 @@ const FeaturedHotels = () => {
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg md:right-0"
             onClick={nextSlide}
+            aria-label="Next hotels"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -152,6 +154,8 @@ const FeaturedHotels = () => {
                           src={hotel.image_url || '/placeholder.svg'}
                           alt={hotel.name}
                           className="w-full h-48 md:h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
                         />
                         {/* Desktop Eye Icon - Centered */}
                         <div
@@ -222,6 +226,7 @@ const FeaturedHotels = () => {
                   index === currentIndex ? 'bg-teal-600' : 'bg-gray-300'
                 }`}
                 onClick={() => setCurrentIndex(index)}
+                aria-label={`Go to hotel slide ${index + 1}`}
               />
             ))}
           </div>
