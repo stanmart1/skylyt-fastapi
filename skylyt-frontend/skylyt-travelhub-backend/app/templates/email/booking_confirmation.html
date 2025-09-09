@@ -23,11 +23,11 @@
             <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #0d9488;">
                 <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 20px; font-weight: 600;">📋 Booking Details</h3>
                 
-                <div style="display: grid; gap: 12px;">
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
-                        <span style="font-weight: 600; color: #0369a1;">Booking Reference:</span>
-                        <span style="color: #1e293b; font-weight: 700;">{{ booking.booking_reference or booking_reference }}</span>
-                    </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid #bae6fd;">
+                        <td style="padding: 8px 0; font-weight: 600; color: #0369a1;">Booking Reference:</td>
+                        <td style="padding: 8px 0; color: #1e293b; font-weight: 700; text-align: right;">{{ booking.booking_reference or booking_reference }}</td>
+                    </tr>
                     
                     {% if booking.hotel_name or hotel_name %}
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
@@ -107,11 +107,11 @@
                     </div>
                     {% endif %}
                     
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; background: white; border-radius: 8px; padding: 16px; margin-top: 8px;">
-                        <span style="font-weight: 700; color: #1e293b; font-size: 18px;">Total Amount:</span>
-                        <span style="color: #0d9488; font-weight: 700; font-size: 18px;">{{ booking.currency or currency }} {{ booking.total_amount or total_amount }}</span>
-                    </div>
-                </div>
+                    <tr style="background: white;">
+                        <td style="padding: 16px 0; font-weight: 700; color: #1e293b; font-size: 18px;">Total Amount:</td>
+                        <td style="padding: 16px 0; color: #0d9488; font-weight: 700; font-size: 18px; text-align: right;">{{ booking.currency or currency }} {{ booking.total_amount or total_amount }}</td>
+                    </tr>
+                </table>
             </div>
             
             {% if booking.status == 'cancelled' or status == 'cancelled' %}
