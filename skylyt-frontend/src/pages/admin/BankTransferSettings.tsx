@@ -173,105 +173,13 @@ export const BankTransferSettings = () => {
                   disabled={!canManage}
                 />
               </div>
-              <div>
-                <Label htmlFor="account_type">Account Type</Label>
-                <Select value={bankTransferForm.account_type} onValueChange={(value) => setBankTransferForm({...bankTransferForm, account_type: value})} disabled={!canManage}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="checking">Checking</SelectItem>
-                    <SelectItem value="savings">Savings</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
             </div>
 
-            <div>
-              <Label htmlFor="bank_address">Bank Address</Label>
-              <Textarea
-                id="bank_address"
-                value={bankTransferForm.bank_address}
-                onChange={(e) => setBankTransferForm({...bankTransferForm, bank_address: e.target.value})}
-                placeholder="Full bank address"
-                disabled={!canManage}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Transfer Configuration</h3>
-            <div>
-              <Label htmlFor="currency">Currency</Label>
-              <Select value={bankTransferForm.currency} onValueChange={(value) => setBankTransferForm({...bankTransferForm, currency: value})} disabled={!canManage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="NGN">NGN - Nigerian Naira</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="transfer_fee">Transfer Fee</Label>
-                <Input
-                  id="transfer_fee"
-                  type="number"
-                  step="0.01"
-                  value={bankTransferForm.transfer_fee}
-                  onChange={(e) => setBankTransferForm({...bankTransferForm, transfer_fee: e.target.value})}
-                  disabled={!canManage}
-                />
-              </div>
-              <div>
-                <Label htmlFor="processing_time_hours">Processing Time (hours)</Label>
-                <Input
-                  id="processing_time_hours"
-                  type="number"
-                  value={bankTransferForm.processing_time_hours}
-                  onChange={(e) => setBankTransferForm({...bankTransferForm, processing_time_hours: e.target.value})}
-                  disabled={!canManage}
-                />
-              </div>
-            </div>
           </div>
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Transfer Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_primary_account"
-                  checked={bankTransferForm.is_primary_account}
-                  onCheckedChange={(checked) => setBankTransferForm({...bankTransferForm, is_primary_account: checked})}
-                  disabled={!canManage}
-                />
-                <Label htmlFor="is_primary_account">Primary Account</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="auto_verification_enabled"
-                  checked={bankTransferForm.auto_verification_enabled}
-                  onCheckedChange={(checked) => setBankTransferForm({...bankTransferForm, auto_verification_enabled: checked})}
-                  disabled={!canManage}
-                />
-                <Label htmlFor="auto_verification_enabled">Auto Verification</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="require_reference_number"
-                  checked={bankTransferForm.require_reference_number}
-                  onCheckedChange={(checked) => setBankTransferForm({...bankTransferForm, require_reference_number: checked})}
-                  disabled={!canManage}
-                />
-                <Label htmlFor="require_reference_number">Require Reference Number</Label>
-              </div>
-            </div>
             <div>
               <Label htmlFor="bank_transfer_instructions">Transfer Instructions</Label>
               <Textarea

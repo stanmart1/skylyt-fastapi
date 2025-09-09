@@ -28,10 +28,6 @@ class NotificationSettingsUpdate(BaseModel):
     system_notifications: Optional[bool] = None
     driver_notifications: Optional[bool] = None
     admin_notifications: Optional[bool] = None
-    notification_frequency: Optional[str] = None
-    quiet_hours_start: Optional[str] = None
-    quiet_hours_end: Optional[str] = None
-    timezone: Optional[str] = None
 
 class PaymentGatewaySettingsUpdateSimplified(BaseModel):
     stripe_public_key: Optional[str] = None
@@ -57,14 +53,6 @@ class BankTransferSettingsUpdateSimplified(BaseModel):
     bank_name: Optional[str] = None
     account_name: Optional[str] = None
     account_number: Optional[str] = None
-    is_primary_account: Optional[bool] = None
-    bank_address: Optional[str] = None
-    account_type: Optional[str] = None
-    currency: Optional[str] = None
-    transfer_fee: Optional[str] = None
-    processing_time_hours: Optional[str] = None
-    auto_verification_enabled: Optional[bool] = None
-    require_reference_number: Optional[bool] = None
     bank_transfer_instructions: Optional[str] = None
 
 class FeatureSettingsUpdate(BaseModel):
@@ -134,18 +122,9 @@ def get_settings(db: Session = Depends(get_db)):
         "system_notifications": getattr(settings, 'system_notifications', True),
         "driver_notifications": getattr(settings, 'driver_notifications', True),
         "admin_notifications": getattr(settings, 'admin_notifications', True),
-        "notification_frequency": getattr(settings, 'notification_frequency', 'immediate'),
-        "quiet_hours_start": getattr(settings, 'quiet_hours_start', '22:00'),
-        "quiet_hours_end": getattr(settings, 'quiet_hours_end', '08:00'),
-        "timezone": getattr(settings, 'timezone', 'UTC'),
-        "bank_address": getattr(settings, 'bank_address', None),
-        "account_type": getattr(settings, 'account_type', 'checking'),
-        "currency": getattr(settings, 'currency', 'USD'),
-        "transfer_fee": getattr(settings, 'transfer_fee', '0.00'),
-        "processing_time_hours": getattr(settings, 'processing_time_hours', '24'),
-        "auto_verification_enabled": getattr(settings, 'auto_verification_enabled', False),
-        "require_reference_number": getattr(settings, 'require_reference_number', True),
-        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None),
+
+
+        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None)
         "webhook_secret_stripe": None,  # Never expose secrets
         "webhook_secret_paystack": None,
         "webhook_secret_flutterwave": None,
@@ -279,11 +258,7 @@ def update_notification_settings(
         "payment_notifications": settings.payment_notifications,
         "system_notifications": settings.system_notifications,
         "driver_notifications": settings.driver_notifications,
-        "admin_notifications": settings.admin_notifications,
-        "notification_frequency": settings.notification_frequency,
-        "quiet_hours_start": settings.quiet_hours_start,
-        "quiet_hours_end": settings.quiet_hours_end,
-        "timezone": settings.timezone
+        "admin_notifications": settings.admin_notifications
     }}
 
 

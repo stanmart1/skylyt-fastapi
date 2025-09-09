@@ -351,60 +351,7 @@ export const NotificationSettings = () => {
               </div>
             </div>
 
-            {/* Notification Preferences */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Notification Preferences</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="notification_frequency">Notification Frequency</Label>
-                  <Select value={notificationForm.notification_frequency} onValueChange={(value) => setNotificationForm({...notificationForm, notification_frequency: value})} disabled={!canManage}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="immediate">Immediate</SelectItem>
-                      <SelectItem value="hourly">Hourly Digest</SelectItem>
-                      <SelectItem value="daily">Daily Digest</SelectItem>
-                      <SelectItem value="weekly">Weekly Digest</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select value={notificationForm.timezone} onValueChange={(value) => setNotificationForm({...notificationForm, timezone: value})} disabled={!canManage}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="Africa/Lagos">Africa/Lagos (WAT)</SelectItem>
-                      <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
-                      <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="quiet_hours_start">Quiet Hours Start</Label>
-                  <Input
-                    id="quiet_hours_start"
-                    type="time"
-                    value={notificationForm.quiet_hours_start}
-                    onChange={(e) => setNotificationForm({...notificationForm, quiet_hours_start: e.target.value})}
-                    disabled={!canManage}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="quiet_hours_end">Quiet Hours End</Label>
-                  <Input
-                    id="quiet_hours_end"
-                    type="time"
-                    value={notificationForm.quiet_hours_end}
-                    onChange={(e) => setNotificationForm({...notificationForm, quiet_hours_end: e.target.value})}
-                    disabled={!canManage}
-                  />
-                </div>
-              </div>
-            </div>
+
 
             {canManage && (
               <Button onClick={saveNotificationSettings} disabled={saving || loading}>
@@ -422,29 +369,7 @@ export const NotificationSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Notification Management Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Management</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Send Push Notification */}
-          <div className="space-y-4">
-            <h4 className="font-medium">Send Push Notification</h4>
-            <ErrorBoundary>
-              <NotificationSender />
-            </ErrorBoundary>
-          </div>
-          
-          {/* Notification Center */}
-          <div className="space-y-4">
-            <h4 className="font-medium">Notification Center</h4>
-            <ErrorBoundary>
-              <NotificationCenter />
-            </ErrorBoundary>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 };
