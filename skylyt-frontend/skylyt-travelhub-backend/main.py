@@ -314,70 +314,61 @@ from app.schemas.payment import PaymentUpdateRequest, RefundRequest
 @app.post("/api/v1/upload")
 async def upload_file(file: UploadFile = File(...), upload_type: str = "general", current_user = Depends(get_current_user)):
     """Upload file with security validation"""
+    import logging
     from os import path
     from uuid import uuid4
     from pathlib import Path
     
-    # Validate upload type
-    if upload_type not in ALLOWED_UPLOAD_FOLDERS:
-        raise HTTPException(status_code=400, detail="Invalid upload type")
+    logger = logging.getLogger(__name__)
     
-    # Validate file type and size
-    if file.content_type not in ALLOWED_FILE_TYPES:
-        raise HTTPException(status_code=400, detail="File type not allowed")
-    
-    # Validate file extension
-    file_extension = Path(file.filename).suffix.lower()
-    if file_extension not in ALLOWED_FILE_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="File extension not allowed")
-    
-    # Check file size before reading content
-    if file.size and file.size > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large")
-    
-    # Generate secure filename with proper validation
-    original_name = secure_filename(file.filename or 'upload')
-    secure_name = f"{uuid4()}{file_extension}"
-    
-    # Use /app/storage in production, uploads/ in dev
     try:
+        # Validate upload type
+        if upload_type not in ALLOWED_UPLOAD_FOLDERS:
+            raise HTTPException(status_code=400, detail="Invalid upload type")
+        
+        # Validate file type and size
+        if file.content_type not in ALLOWED_FILE_TYPES:
+            raise HTTPException(status_code=400, detail="File type not allowed")
+        
+        # Validate file extension
+        file_extension = Path(file.filename).suffix.lower()
+        if file_extension not in ALLOWED_FILE_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="File extension not allowed")
+        
+        # Check file size before reading content
+        if file.size and file.size > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File too large")
+        
+        # Generate secure filename
+        secure_name = f"{uuid4()}{file_extension}"
+        
+        # Determine storage directory
         storage_path = Path("/app/storage")
-        if storage_path.exists() or storage_path.parent.exists():
-            storage_path.mkdir(exist_ok=True)
+        if storage_path.exists():
             base_upload_dir = storage_path
+            logger.info("Using production storage: /app/storage")
         else:
             base_upload_dir = Path("uploads").resolve()
-    except PermissionError:
-        # Fallback to uploads if storage creation fails
-        base_upload_dir = Path("uploads").resolve()
-    
-    upload_dir = base_upload_dir / upload_type
-    try:
+            logger.info(f"Using dev storage: {base_upload_dir}")
+        
+        upload_dir = base_upload_dir / upload_type
         upload_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        raise HTTPException(status_code=500, detail="Storage directory permission denied")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
-    
-    file_path = upload_dir / secure_name
-    
-    # Ensure file path is within upload directory
-    try:
-        file_path = file_path.resolve()
-        if not str(file_path).startswith(str(base_upload_dir)):
-            raise HTTPException(status_code=400, detail="Invalid file path")
-    except (OSError, ValueError):
-        raise HTTPException(status_code=400, detail="Invalid file path")
-    
-    # Save file with error handling
-    try:
+        
+        file_path = upload_dir / secure_name
+        
+        # Save file
+        content = await file.read()
         with open(file_path, "wb") as buffer:
-            content = await file.read()
             buffer.write(content)
-    except (OSError, IOError) as e:
-        raise HTTPException(status_code=500, detail="Failed to save file")
+        
+        logger.info(f"File uploaded successfully: {file_path}")
     
-    return {"url": f"/uploads/{upload_type}/{secure_name}", "filename": secure_name}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @app.options("/{path:path}")
 async def options_handler(path: str):
