@@ -127,6 +127,8 @@ def search_hotels(
         # Format response with currency conversion
         from app.services.currency_service import CurrencyService
         
+        from app.models.hotel_image import HotelImage
+        
         hotel_list = []
         for hotel in hotels:
             base_price = Decimal(str(hotel.price_per_night))
@@ -143,6 +145,17 @@ def search_hotels(
             symbol = curr_obj.symbol if curr_obj else currency.upper()
             exchange_rate = CurrencyService.convert_currency(1.0, base_currency, currency.upper(), db)
             
+            # Get cover image from HotelImage table
+            cover_image = db.query(HotelImage).filter(
+                HotelImage.hotel_id == hotel.id,
+                HotelImage.is_cover == True
+            ).first()
+            
+            if not cover_image:
+                cover_image = db.query(HotelImage).filter(
+                    HotelImage.hotel_id == hotel.id
+                ).order_by(HotelImage.display_order).first()
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
@@ -154,7 +167,7 @@ def search_hotels(
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
                 "exchange_rate": exchange_rate,
-                "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_url": cover_image.image_url if cover_image else None,
                 "image_alt": f"{hotel.name} - Luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -186,6 +199,8 @@ def get_featured_hotels(
         
         from app.services.currency_service import CurrencyService
         
+        from app.models.hotel_image import HotelImage
+        
         hotel_list = []
         for hotel in hotels:
             base_price = Decimal(str(hotel.price_per_night))
@@ -198,6 +213,17 @@ def get_featured_hotels(
             curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
             symbol = curr_obj.symbol if curr_obj else currency.upper()
             
+            # Get cover image from HotelImage table
+            cover_image = db.query(HotelImage).filter(
+                HotelImage.hotel_id == hotel.id,
+                HotelImage.is_cover == True
+            ).first()
+            
+            if not cover_image:
+                cover_image = db.query(HotelImage).filter(
+                    HotelImage.hotel_id == hotel.id
+                ).order_by(HotelImage.display_order).first()
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
@@ -206,7 +232,7 @@ def get_featured_hotels(
                 "price": converted_price,
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
-                "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_url": cover_image.image_url if cover_image else None,
                 "image_alt": f"{hotel.name} - Featured luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -252,6 +278,14 @@ def get_hotel_details(hotel_id: str, db: Session = Depends(get_db)):
         if not hotel:
             raise HTTPException(status_code=404, detail="Hotel not found")
         
+        # Get all images from HotelImage table
+        from app.models.hotel_image import HotelImage
+        hotel_images = db.query(HotelImage).filter(
+            HotelImage.hotel_id == hotel.id
+        ).order_by(HotelImage.display_order).all()
+        
+        images = [img.image_url for img in hotel_images]
+        
         return {
             "id": hotel.id,
             "name": hotel.name,
@@ -259,7 +293,7 @@ def get_hotel_details(hotel_id: str, db: Session = Depends(get_db)):
             "star_rating": float(hotel.star_rating),
             "price_per_night": float(hotel.price_per_night),
             "description": hotel.description or "",
-            "images": hotel.images or [],
+            "images": images,
             "amenities": hotel.amenities or [],
             "room_count": getattr(hotel, 'room_count', 0),
             "is_available": getattr(hotel, 'is_available', True),
