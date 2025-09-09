@@ -340,13 +340,24 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     secure_name = f"{uuid4()}{file_extension}"
     
     # Use /app/storage in production, uploads/ in dev
-    if Path("/app/storage").exists():
-        base_upload_dir = Path("/app/storage")
-    else:
+    try:
+        storage_path = Path("/app/storage")
+        if storage_path.exists() or storage_path.parent.exists():
+            storage_path.mkdir(exist_ok=True)
+            base_upload_dir = storage_path
+        else:
+            base_upload_dir = Path("uploads").resolve()
+    except PermissionError:
+        # Fallback to uploads if storage creation fails
         base_upload_dir = Path("uploads").resolve()
     
     upload_dir = base_upload_dir / upload_type
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        upload_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        raise HTTPException(status_code=500, detail="Storage directory permission denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
     
     file_path = upload_dir / secure_name
     
