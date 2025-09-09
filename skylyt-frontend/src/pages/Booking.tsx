@@ -216,39 +216,17 @@ const Booking = () => {
   };
 
   const handlePaymentMethodSelect = async (method) => {
-    try {
-      const bookingPayload = {
-        booking_type: type,
-        booking_data: {
-          item_id: itemId,
-          guest_name: `${bookingData.firstName} ${bookingData.lastName}`,
-          guest_email: bookingData.email,
-          special_requests: bookingData.specialRequests,
-          pickup_location: bookingData.pickupLocation,
-          dropoff_location: bookingData.dropoffLocation,
-          number_of_guests: bookingData.numberOfGuests,
-          number_of_children: bookingData.numberOfChildren
-        },
-        start_date: new Date(bookingData.pickupDate).toISOString(),
-        end_date: new Date(bookingData.returnDate).toISOString(),
-        total_amount: finalTotal,
-        currency: 'NGN'
-      };
-
-      const booking = await apiService.request('/bookings', {
-        method: 'POST',
-        body: JSON.stringify(bookingPayload)
-      });
-      
-      window.location.href = `/payment?bookingId=${booking.id}&amount=${finalTotal}&method=${method}`;
-    } catch (error) {
-      console.error('Booking creation error:', error);
+    // Use existing booking ID from step 3, don't create a new booking
+    if (!bookingData.bookingId) {
       toast({
-        title: "Booking Failed",
-        description: "Unable to create booking. Please try again.",
+        title: "Error",
+        description: "No booking found. Please try again.",
         variant: "destructive",
       });
+      return;
     }
+    
+    window.location.href = `/payment?bookingId=${bookingData.bookingId}&amount=${finalTotal}&method=${method}`;
   };
 
   const isStepValid = () => {
