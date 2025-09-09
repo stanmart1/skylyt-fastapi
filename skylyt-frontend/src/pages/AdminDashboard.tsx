@@ -25,6 +25,7 @@ import { BankTransferSettings } from '@/pages/admin/BankTransferSettings';
 import { CurrencySettings } from '@/pages/admin/CurrencySettings';
 import { NotificationSettings } from '@/pages/admin/NotificationSettings';
 import { SecuritySettings } from '@/pages/admin/SecuritySettings';
+import { GoogleAnalyticsSettings } from '@/pages/admin/GoogleAnalyticsSettings';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiService } from '@/services/api';
 import { Input } from '@/components/ui/input';
@@ -586,6 +587,16 @@ const AdminDashboard = () => {
                           Security
                         </Button>
                       )}
+                      {hasPermission('settings.view_google_analytics') && (
+                        <Button
+                          variant={activeSettingsTab === 'google-analytics' ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => { setActiveTab('settings'); setActiveSettingsTab('google-analytics'); setSidebarOpen(false); }}
+                        >
+                          Google Analytics
+                        </Button>
+                      )}
 
 
                     </div>
@@ -875,6 +886,16 @@ const AdminDashboard = () => {
                       onClick={() => { setActiveTab('settings'); setActiveSettingsTab('security'); }}
                     >
                       Security
+                    </Button>
+                  )}
+                  {hasPermission('settings.view_google_analytics') && (
+                    <Button
+                      variant={activeSettingsTab === 'google-analytics' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="w-full justify-start text-sm"
+                      onClick={() => { setActiveTab('settings'); setActiveSettingsTab('google-analytics'); }}
+                    >
+                      Google Analytics
                     </Button>
                   )}
 
@@ -1434,6 +1455,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Currency Settings'}
                   {activeSettingsTab === 'notifications' && 'Notification Settings'}
                   {activeSettingsTab === 'security' && 'Security Settings'}
+                  {activeSettingsTab === 'google-analytics' && 'Google Analytics Settings'}
 
                   {!activeSettingsTab && 'Admin Settings'}
                 </h1>
@@ -1444,6 +1466,7 @@ const AdminDashboard = () => {
                   {activeSettingsTab === 'currency' && 'Manage currency rates and exchange settings'}
                   {activeSettingsTab === 'notifications' && 'Configure email and push notification settings'}
                   {activeSettingsTab === 'security' && 'Configure security and authentication settings'}
+                  {activeSettingsTab === 'google-analytics' && 'Configure Google Analytics tracking and reporting'}
 
                   {!activeSettingsTab && 'Configure system settings and preferences'}
                 </p>
@@ -1455,6 +1478,7 @@ const AdminDashboard = () => {
                 {activeSettingsTab === 'currency' && hasPermission('settings.view_currency') && <CurrencySettings />}
                 {activeSettingsTab === 'notifications' && hasPermission('settings.view_notification_config') && <NotificationSettings />}
                 {activeSettingsTab === 'security' && hasPermission('settings.view_security') && <SecuritySettings />}
+                {activeSettingsTab === 'google-analytics' && hasPermission('settings.view_google_analytics') && <GoogleAnalyticsSettings />}
 
                 {!activeSettingsTab && <SettingsManagement />}
               </ErrorBoundary>

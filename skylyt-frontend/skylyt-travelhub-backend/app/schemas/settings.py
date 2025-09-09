@@ -36,6 +36,13 @@ class BankTransferSettingsUpdate(BaseModel):
     is_primary_account: Optional[bool] = None
 
 
+class GoogleAnalyticsSettingsUpdate(BaseModel):
+    google_analytics_tracking_id: Optional[str] = None
+    google_analytics_measurement_id: Optional[str] = None
+    google_analytics_api_key: Optional[str] = None
+    google_analytics_enabled: Optional[bool] = None
+
+
 class SettingsResponse(BaseModel):
     id: int
     site_name: str
@@ -61,6 +68,9 @@ class SettingsResponse(BaseModel):
     smtp_username: Optional[str]
     from_email: Optional[str]
     email_notifications_enabled: Optional[bool]
+    google_analytics_tracking_id: Optional[str]
+    google_analytics_measurement_id: Optional[str]
+    google_analytics_enabled: Optional[bool]
     
     class Config:
         from_attributes = True

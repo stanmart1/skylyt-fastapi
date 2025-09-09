@@ -44,5 +44,11 @@ class Settings(BaseModel):
     resend_api_key = Column(String(255), nullable=True)
     email_notifications_enabled = Column(Boolean, default=True)
     
+    # Google Analytics Settings
+    google_analytics_tracking_id = Column(String(255), nullable=True)
+    google_analytics_measurement_id = Column(String(255), nullable=True)
+    google_analytics_api_key = Column(String(255), nullable=True)
+    google_analytics_enabled = Column(Boolean, default=False)
+    
     # Additional settings as JSON
     additional_settings = Column(JSON, nullable=True)

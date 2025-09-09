@@ -5,7 +5,8 @@ from app.core.dependencies import get_current_user
 from app.models.settings import Settings
 from app.schemas.settings import (
     GeneralSettingsUpdate, PaymentGatewaySettingsUpdate, 
-    SecuritySettingsUpdate, BankTransferSettingsUpdate, SettingsResponse
+    SecuritySettingsUpdate, BankTransferSettingsUpdate, 
+    GoogleAnalyticsSettingsUpdate, SettingsResponse
 )
 from pydantic import BaseModel
 from typing import Optional
@@ -60,7 +61,10 @@ def get_settings(db: Session = Depends(get_db)):
         "smtp_port": settings.smtp_port,
         "smtp_username": settings.smtp_username,
         "from_email": settings.from_email,
-        "email_notifications_enabled": settings.email_notifications_enabled
+        "email_notifications_enabled": settings.email_notifications_enabled,
+        "google_analytics_tracking_id": getattr(settings, 'google_analytics_tracking_id', None),
+        "google_analytics_measurement_id": getattr(settings, 'google_analytics_measurement_id', None),
+        "google_analytics_enabled": getattr(settings, 'google_analytics_enabled', False)
     }
     
     # Public keys are safe to expose (no authentication needed)
@@ -180,3 +184,33 @@ def update_notification_settings(
         "from_email": settings.from_email,
         "email_notifications_enabled": settings.email_notifications_enabled
     }}
+
+
+@router.put("/google-analytics")
+def update_google_analytics_settings(
+    settings_update: GoogleAnalyticsSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Update Google Analytics settings"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    settings = get_or_create_settings(db)
+    
+    update_data = settings_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        if hasattr(settings, field) and value is not None:
+            setattr(settings, field, value)
+    
+    db.commit()
+    db.refresh(settings)
+    
+    return {
+        "message": "Google Analytics settings updated successfully",
+        "settings": {
+            "google_analytics_tracking_id": settings.google_analytics_tracking_id,
+            "google_analytics_measurement_id": settings.google_analytics_measurement_id,
+            "google_analytics_enabled": settings.google_analytics_enabled
+        }
+    }
