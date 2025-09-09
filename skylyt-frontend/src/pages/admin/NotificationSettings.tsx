@@ -46,10 +46,7 @@ export const NotificationSettings = () => {
     smtp_password: '',
     from_email: '',
     resend_api_key: '',
-    onesignal_app_id: '',
-    onesignal_api_key: '',
-    email_notifications_enabled: true,
-    push_notifications_enabled: true
+    email_notifications_enabled: true
   });
 
   useEffect(() => {
@@ -71,10 +68,7 @@ export const NotificationSettings = () => {
         smtp_password: '',
         from_email: data.from_email || '',
         resend_api_key: '',
-        onesignal_app_id: data.onesignal_app_id || '',
-        onesignal_api_key: '',
-        email_notifications_enabled: data.email_notifications_enabled ?? true,
-        push_notifications_enabled: data.push_notifications_enabled ?? true
+        email_notifications_enabled: data.email_notifications_enabled ?? true
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -99,7 +93,6 @@ export const NotificationSettings = () => {
       const dataToSend = { ...notificationForm };
       if (!dataToSend.smtp_password) delete dataToSend.smtp_password;
       if (!dataToSend.resend_api_key) delete dataToSend.resend_api_key;
-      if (!dataToSend.onesignal_api_key) delete dataToSend.onesignal_api_key;
       
       console.log('Saving notification settings:', dataToSend);
       
@@ -114,8 +107,7 @@ export const NotificationSettings = () => {
       setNotificationForm(prev => ({
         ...prev,
         smtp_password: '',
-        resend_api_key: '',
-        onesignal_api_key: ''
+        resend_api_key: ''
       }));
       
       toast({
@@ -247,41 +239,7 @@ export const NotificationSettings = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Push Notification Settings
-              </h3>
-              <div>
-                <Label htmlFor="onesignal_app_id">OneSignal App ID</Label>
-                <Input
-                  id="onesignal_app_id"
-                  value={notificationForm.onesignal_app_id}
-                  onChange={(e) => setNotificationForm({...notificationForm, onesignal_app_id: e.target.value})}
-                  disabled={!canManage}
-                />
-              </div>
-              <div>
-                <Label htmlFor="onesignal_api_key">OneSignal API Key</Label>
-                <Input
-                  id="onesignal_api_key"
-                  type="password"
-                  value={notificationForm.onesignal_api_key}
-                  onChange={(e) => setNotificationForm({...notificationForm, onesignal_api_key: e.target.value})}
-                  placeholder="Enter to update"
-                  disabled={!canManage}
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="push_notifications_enabled"
-                  checked={notificationForm.push_notifications_enabled}
-                  onCheckedChange={(checked) => setNotificationForm({...notificationForm, push_notifications_enabled: checked})}
-                  disabled={!canManage}
-                />
-                <Label htmlFor="push_notifications_enabled">Enable Push Notifications</Label>
-              </div>
-            </div>
+
 
             {canManage && (
               <Button onClick={saveNotificationSettings} disabled={saving || loading}>

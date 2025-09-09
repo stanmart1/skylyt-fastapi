@@ -19,10 +19,7 @@ class NotificationSettingsUpdate(BaseModel):
     smtp_password: Optional[str] = None
     from_email: Optional[str] = None
     resend_api_key: Optional[str] = None
-    onesignal_app_id: Optional[str] = None
-    onesignal_api_key: Optional[str] = None
     email_notifications_enabled: Optional[bool] = None
-    push_notifications_enabled: Optional[bool] = None
 
 
 def get_or_create_settings(db: Session) -> Settings:
@@ -63,9 +60,7 @@ def get_settings(db: Session = Depends(get_db)):
         "smtp_port": settings.smtp_port,
         "smtp_username": settings.smtp_username,
         "from_email": settings.from_email,
-        "onesignal_app_id": settings.onesignal_app_id,
-        "email_notifications_enabled": settings.email_notifications_enabled,
-        "push_notifications_enabled": settings.push_notifications_enabled
+        "email_notifications_enabled": settings.email_notifications_enabled
     }
     
     # Public keys are safe to expose (no authentication needed)
@@ -183,7 +178,5 @@ def update_notification_settings(
         "smtp_port": settings.smtp_port,
         "smtp_username": settings.smtp_username,
         "from_email": settings.from_email,
-        "onesignal_app_id": settings.onesignal_app_id,
-        "email_notifications_enabled": settings.email_notifications_enabled,
-        "push_notifications_enabled": settings.push_notifications_enabled
+        "email_notifications_enabled": settings.email_notifications_enabled
     }}

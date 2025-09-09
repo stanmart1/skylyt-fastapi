@@ -42,10 +42,7 @@ class Settings(BaseModel):
     smtp_password = Column(String(255), nullable=True)
     from_email = Column(String(255), nullable=True)
     resend_api_key = Column(String(255), nullable=True)
-    onesignal_app_id = Column(String(255), nullable=True)
-    onesignal_api_key = Column(String(255), nullable=True)
     email_notifications_enabled = Column(Boolean, default=True)
-    push_notifications_enabled = Column(Boolean, default=True)
     
     # Additional settings as JSON
     additional_settings = Column(JSON, nullable=True)
