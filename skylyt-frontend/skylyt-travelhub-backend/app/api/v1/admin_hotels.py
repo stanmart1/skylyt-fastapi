@@ -83,7 +83,7 @@ def update_hotel(
             hotel.images = [value] if value else []
         else:
             backend_field = field_mapping.get(field, field)
-            if hasattr(hotel, backend_field):
+            if hasattr(hotel, backend_field) and not backend_field.endswith('_id'):
                 setattr(hotel, backend_field, value)
     
     db.commit()
