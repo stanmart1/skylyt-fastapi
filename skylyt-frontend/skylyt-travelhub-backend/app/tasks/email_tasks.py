@@ -125,11 +125,11 @@ def send_password_reset_email(self, email: str, reset_token: str, user_name: str
     """Send password reset email"""
     try:
         template = template_env.get_template("password_reset.html")
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        reset_url = f"https://skylytluxury.com/reset-password?token={reset_token}"
         
         html_content = template.render(
             user_name=user_name,
-            reset_url=reset_url
+            reset_link=reset_url
         )
         
         subject = "Password Reset Request - Skylyt TravelHub"
