@@ -705,13 +705,6 @@ const Booking = () => {
                   />
                 </div>
 
-                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                  <div className="flex items-center text-green-700 text-sm">
-                    <Check className="h-4 w-4 mr-2" />
-                    Free cancellation up to 24 hours before {type === 'car' ? 'pickup' : 'check-in'}
-                  </div>
-                </div>
-
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="flex items-center text-blue-700 text-sm">
                     <Clock className="h-4 w-4 mr-2" />

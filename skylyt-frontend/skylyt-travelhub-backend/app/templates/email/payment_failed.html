@@ -36,11 +36,9 @@
             
             <p>Please try again or contact our support team for assistance.</p>
             
-            {% if payment.frontend_url %}
-            <a href="{{ payment.frontend_url }}/payment?booking={{ payment.booking_reference }}" class="retry-button">
+            <a href="https://skylytluxury.com/payment?booking={{ payment.booking_reference }}" class="retry-button">
                 Retry Payment
             </a>
-            {% endif %}
             
             <p>Best regards,<br>Skylyt TravelHub Team</p>
         </div>

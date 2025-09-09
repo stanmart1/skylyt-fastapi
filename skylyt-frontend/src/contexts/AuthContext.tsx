@@ -104,7 +104,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
-      await apiService.register(userData);
+      const response: TokenResponse = await apiService.register(userData);
+      
+      // Auto-login after successful registration
+      apiService.setToken(response.access_token);
+      setUser(response.user);
+      
       return { success: true };
     } catch (error: any) {
       console.error('Registration failed:', sanitizeForLogging(error));

@@ -71,10 +71,11 @@ const Register = () => {
       
       if (result.success) {
         toast({
-          title: "Registration successful!",
-          description: "Your account has been created. Please log in with your new credentials.",
+          title: "Welcome to Skylyt Luxury!",
+          description: "Your account has been created successfully. Check your email for a welcome message.",
         });
-        navigate(`/login${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`);
+        // Navigate to dashboard since user is now logged in
+        navigate(returnTo || '/dashboard');
       } else {
         toast({
           title: "Registration failed",

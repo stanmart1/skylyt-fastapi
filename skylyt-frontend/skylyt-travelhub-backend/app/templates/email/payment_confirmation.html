@@ -123,17 +123,17 @@
                     <tr>
                         {% if payment.is_failed %}
                         <td style="padding-right: 8px;">
-                            <a href="{{ frontend_url }}/payment" style="background: linear-gradient(to right, #dc2626, #b91c1c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 140px; text-align: center;">Retry Payment</a>
+                            <a href="https://skylytluxury.com/payment" style="background: linear-gradient(to right, #dc2626, #b91c1c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 140px; text-align: center;">Retry Payment</a>
                         </td>
                         <td style="padding-left: 8px;">
-                            <a href="{{ frontend_url }}/contact" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0; min-width: 140px; text-align: center;">Get Help</a>
+                            <a href="https://skylytluxury.com/contact" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0; min-width: 140px; text-align: center;">Get Help</a>
                         </td>
                         {% else %}
                         <td style="padding-right: 8px;">
-                            <a href="{{ frontend_url }}/booking/{{ payment.booking_id or booking_id }}" style="background: linear-gradient(to right, #f97316, #ea580c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 140px; text-align: center;">View Booking</a>
+                            <a href="https://skylytluxury.com/booking/{{ payment.booking_id or booking_id }}" style="background: linear-gradient(to right, #f97316, #ea580c); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 140px; text-align: center;">View Booking</a>
                         </td>
                         <td style="padding-left: 8px;">
-                            <a href="{{ frontend_url }}/booking/{{ payment.booking_id or booking_id }}" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0; min-width: 140px; text-align: center;">Get Receipt</a>
+                            <a href="https://skylytluxury.com/booking/{{ payment.booking_id or booking_id }}" style="background: transparent; color: #475569; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; border: 2px solid #e2e8f0; min-width: 140px; text-align: center;">Get Receipt</a>
                         </td>
                         {% endif %}
                     </tr>
