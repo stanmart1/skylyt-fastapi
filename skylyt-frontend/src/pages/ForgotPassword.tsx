@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import api from '@/services/api';
+import { apiService as api } from '@/services/api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -30,7 +30,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.forgotPassword(email);
       setIsSubmitted(true);
       toast({
         title: "Reset Email Sent",

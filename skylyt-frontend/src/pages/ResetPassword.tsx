@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import api from '@/services/api';
+import { apiService as api } from '@/services/api';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -86,10 +86,7 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
-      await api.post('/auth/reset-password', {
-        token,
-        new_password: password
-      });
+      await api.resetPassword(token, password);
       
       setIsSuccess(true);
       toast({
