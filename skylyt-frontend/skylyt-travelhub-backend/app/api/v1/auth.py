@@ -21,6 +21,14 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     try:
         user = AuthService.register_user(db, user_data)
         
+        # Create welcome notification
+        from app.services.notification_service import NotificationService
+        NotificationService.create_welcome_notification(
+            db=db,
+            user_id=user.id,
+            user_name=f"{user.first_name} {user.last_name}"
+        )
+        
         # Send welcome email immediately
         try:
             email_sent = email_service.send_welcome_email(user.email, f"{user.first_name} {user.last_name}")
@@ -160,19 +168,72 @@ def forgot_password(request: PasswordReset, db: Session = Depends(get_db)):
     
     try:
         user = db.query(User).filter(User.email == request.email).first()
-        if user:
+        if user and user.is_active:
             reset_token = token_urlsafe(32)
+            user.set_reset_token(reset_token, expires_in_hours=1)
+            db.commit()
+            
             # Send password reset email
-            email_service.send_password_reset(request.email, reset_token, f"{user.first_name} {user.last_name}")
-    except Exception:
+            email_sent = email_service.send_password_reset(
+                request.email, 
+                reset_token, 
+                f"{user.first_name} {user.last_name}"
+            )
+            
+            if email_sent:
+                logger.info(f"Password reset email sent to {request.email}")
+            else:
+                logger.error(f"Failed to send password reset email to {request.email}")
+                
+    except Exception as e:
+        logger.error(f"Error in forgot password: {e}")
         pass  # Don't reveal if user exists
     
     return {"message": "Password reset email sent if account exists"}
 
 
 @router.post("/reset-password")
-def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
+def reset_password(request: dict, db: Session = Depends(get_db)):
     """Reset password with token"""
+    from app.models.user import User
+    from passlib.context import CryptContext
+    
+    token = request.get("token")
+    new_password = request.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token and new password are required"
+        )
+    
+    # Find user with valid reset token
+    user = db.query(User).filter(User.reset_token == token).first()
+    
+    if not user or not user.is_reset_token_valid(token):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Validate password strength
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+    
+    # Hash new password
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    user.hashed_password = pwd_context.hash(new_password)
+    
+    # Clear reset token
+    user.clear_reset_token()
+    
+    db.commit()
+    
+    logger.info(f"Password reset successful for user {user.email}")
+    
     return {"message": "Password reset successful"}
 
 

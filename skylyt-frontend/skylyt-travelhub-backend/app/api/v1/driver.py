@@ -233,6 +233,17 @@ async def update_trip_status(
             driver.is_available = True
             driver.total_trips += 1
         
+        # Create notification for customer about trip status update
+        if booking.user_id:
+            from app.services.notification_service import NotificationService
+            NotificationService.create_trip_status_notification(
+                db=db,
+                customer_user_id=booking.user_id,
+                booking_reference=booking.booking_reference,
+                trip_status=status_data.trip_status,
+                driver_name=driver.name
+            )
+        
         db.commit()
         db.refresh(booking)
         db.refresh(driver)

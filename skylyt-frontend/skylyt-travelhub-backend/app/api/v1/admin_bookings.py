@@ -383,6 +383,21 @@ async def assign_driver_to_booking(
         # Set driver as busy
         driver.is_available = False
         
+        # Create notification for driver
+        from app.models.notification import Notification
+        from app.models.user import User
+        
+        # Find user associated with driver (by email)
+        driver_user = db.query(User).filter(User.email == driver.email).first()
+        if driver_user:
+            notification = Notification(
+                user_id=driver_user.id,
+                title="New Trip Assignment",
+                message=f"You have been assigned to booking {booking.booking_reference}. Customer: {booking.customer_name}",
+                type="info"
+            )
+            db.add(notification)
+        
         db.commit()
         db.refresh(booking)
         db.refresh(driver)

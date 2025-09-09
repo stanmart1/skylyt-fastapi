@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,18 +50,18 @@ const BookingManagement = () => {
     fetchDrivers();
   }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useMemo(() => (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
+  }, []);
 
-  const getBookingIcon = (type: string) => {
+  const getBookingIcon = useMemo(() => (type: string) => {
     return type === 'hotel' ? Hotel : Car;
-  };
+  }, []);
 
   const handleEditBooking = (booking: Booking) => {
     setEditingBooking(booking);
@@ -147,13 +147,13 @@ const BookingManagement = () => {
     }
   };
 
-  const handleSelectBooking = (bookingId: number) => {
+  const handleSelectBooking = useCallback((bookingId: number) => {
     setSelectedBookings(prev => 
       prev.includes(bookingId) 
         ? prev.filter(id => id !== bookingId)
         : [...prev, bookingId]
     );
-  };
+  }, []);
 
   const handleSelectAll = () => {
     if (selectedBookings.length === bookings.length) {
@@ -183,30 +183,32 @@ const BookingManagement = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Booking Management
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={selectedBookings.length === bookings.length && bookings.length > 0}
-              onChange={handleSelectAll}
-              className="w-4 h-4"
-            />
-            <button
-              onClick={handleSelectAll}
-              className="px-3 py-1 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-teal-600 rounded hover:from-blue-700 hover:to-teal-700 transition-colors"
-            >
-              Select All ({selectedBookings.length} selected)
-            </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedBookings.length === bookings.length && bookings.length > 0}
+                onChange={handleSelectAll}
+                className="w-4 h-4"
+              />
+              <button
+                onClick={handleSelectAll}
+                className="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-teal-600 rounded hover:from-blue-700 hover:to-teal-700 transition-colors touch-manipulation"
+              >
+                Select All ({selectedBookings.length} selected)
+              </button>
+            </div>
             {selectedBookings.length > 0 && (
               <Button 
                 variant="destructive" 
                 size="sm" 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 ml-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <Trash className="h-4 w-4" />
                 Delete Selected ({selectedBookings.length})
@@ -229,55 +231,63 @@ const BookingManagement = () => {
               const isSelected = selectedBookings.includes(booking.id);
               return (
                 <div key={booking.id} className={`border rounded-lg p-4 ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleSelectBooking(booking.id)}
-                        className="w-4 h-4 mt-1"
+                        className="w-4 h-4 mt-1 flex-shrink-0"
                       />
-                      <Icon className="h-5 w-5 text-blue-600 mt-1" />
-                      <div>
-                        <h3 className="font-semibold">
+                      <Icon className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold truncate">
                           Booking #{booking.id}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          Type: {booking.booking_type}
-                        </p>
-                        {(booking as any).driver_name && (
-                          <p className="text-sm text-gray-600">
-                            Driver: {(booking as any).driver_name}
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <p>Type: {booking.booking_type}</p>
+                          {(booking as any).driver_name && (
+                            <p className="truncate">Driver: {(booking as any).driver_name}</p>
+                          )}
+                          <p>
+                            Amount: <PriceDisplay 
+                              amount={booking.total_amount} 
+                              currency={booking.currency}
+                              isNGNStored={true}
+                            />
                           </p>
-                        )}
-                        <p className="text-sm text-gray-600">
-                          Amount: <PriceDisplay 
-                            amount={booking.total_amount} 
-                            currency={booking.currency}
-                            isNGNStored={true}
-                          />
-                        </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(booking.status)}>
+                    
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:flex-shrink-0">
+                      <Badge className={`${getStatusColor(booking.status)} text-center`}>
                         {booking.status}
                       </Badge>
-                      {hasPermission('bookings.update') && (
-                        <Button variant="outline" size="sm" onClick={() => handleEditBooking(booking)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {hasPermission('bookings.delete') && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeleteBooking(booking.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
+                      <div className="flex gap-2">
+                        {hasPermission('bookings.update') && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleEditBooking(booking)}
+                            className="flex-1 sm:flex-none"
+                          >
+                            <Edit className="h-3 w-3 sm:mr-0 mr-1" />
+                            <span className="sm:hidden">Edit</span>
+                          </Button>
+                        )}
+                        {hasPermission('bookings.delete') && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
+                            onClick={() => handleDeleteBooking(booking.id)}
+                          >
+                            <Trash2 className="h-3 w-3 sm:mr-0 mr-1" />
+                            <span className="sm:hidden">Delete</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -289,16 +299,16 @@ const BookingManagement = () => {
       
       {/* Edit Booking Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-full max-w-md mx-4 sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Booking Details #{editingBooking?.id}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
             {/* Booking Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium text-gray-600">Booking Reference</Label>
-                <p className="text-sm">{editingBooking?.booking_reference}</p>
+                <p className="text-sm break-all">{editingBooking?.booking_reference}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-600">Booking Type</Label>
@@ -331,19 +341,19 @@ const BookingManagement = () => {
             </div>
 
             {/* Customer Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium text-gray-600">Customer Name</Label>
                 <p className="text-sm">{editingBooking?.customer_name || 'N/A'}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-600">Customer Email</Label>
-                <p className="text-sm">{editingBooking?.customer_email || 'N/A'}</p>
+                <p className="text-sm break-all">{editingBooking?.customer_email || 'N/A'}</p>
               </div>
             </div>
 
             {/* Booking Details */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Select value={editForm.status} onValueChange={(value) => setEditForm({...editForm, status: value})}>
@@ -395,11 +405,11 @@ const BookingManagement = () => {
               <p className="text-sm">{editingBooking?.special_requests || 'None'}</p>
             </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSaveBooking}>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button onClick={handleSaveBooking} className="w-full sm:w-auto">
                 Save Changes
               </Button>
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
             </div>
@@ -410,4 +420,5 @@ const BookingManagement = () => {
   );
 };
 
-export { BookingManagement };
+const BookingManagementMemo = React.memo(BookingManagement);
+export { BookingManagementMemo as BookingManagement };

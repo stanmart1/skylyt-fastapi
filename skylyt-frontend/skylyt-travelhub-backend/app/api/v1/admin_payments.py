@@ -1,13 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.core.dependencies import get_current_user
 from app.core.database import get_db
 from app.services.payment_service import PaymentService
 from app.tasks.email_tasks import send_payment_confirmation_email
 import logging
+from decimal import Decimal
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+class ManualPaymentCreate(BaseModel):
+    booking_id: int
+    amount: float
+    payment_method: str
+    payment_reference: str
+    notes: str = ""
+    status: str = "completed"
 
 @router.put("/admin/payments/{payment_id}/verify")
 async def verify_payment_admin(
@@ -128,3 +138,55 @@ async def reject_payment_admin(
         db.rollback()
         logger.error(f"Failed to reject payment {payment_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to reject payment")
+
+@router.post("/admin/payments/manual")
+async def create_manual_payment(
+    payment_data: ManualPaymentCreate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create manual payment record for admin"""
+    if not (current_user.is_admin() or current_user.is_superadmin()):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        from app.models.payment import Payment
+        from app.models.booking import Booking
+        
+        booking = db.query(Booking).filter(Booking.id == payment_data.booking_id).first()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        payment = Payment(
+            booking_id=payment_data.booking_id,
+            amount=Decimal(str(payment_data.amount)),
+            currency=booking.currency,
+            payment_method=payment_data.payment_method,
+            payment_reference=payment_data.payment_reference,
+            status=payment_data.status,
+            transaction_id=payment_data.payment_reference
+        )
+        
+        db.add(payment)
+        
+        if payment_data.status == "completed":
+            booking.payment_status = "completed"
+            booking.status = "confirmed"
+        
+        db.commit()
+        db.refresh(payment)
+        
+        return {
+            "message": "Manual payment record created successfully",
+            "payment_id": payment.id,
+            "booking_id": booking.id,
+            "amount": float(payment.amount),
+            "status": payment.status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create manual payment: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create manual payment record")

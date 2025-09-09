@@ -53,7 +53,9 @@ const Booking = () => {
     expiryDate: '',
     cvv: '',
     cardName: '',
-    bookingId: null
+    bookingId: null,
+    numberOfGuests: 1,
+    numberOfChildren: 0
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
@@ -185,7 +187,9 @@ const Booking = () => {
             guest_email: bookingData.email,
             special_requests: bookingData.specialRequests,
             pickup_location: bookingData.pickupLocation,
-            dropoff_location: bookingData.dropoffLocation
+            dropoff_location: bookingData.dropoffLocation,
+            number_of_guests: bookingData.numberOfGuests,
+            number_of_children: bookingData.numberOfChildren
           },
           start_date: new Date(bookingData.pickupDate).toISOString(),
           end_date: new Date(bookingData.returnDate).toISOString(),
@@ -221,7 +225,9 @@ const Booking = () => {
           guest_email: bookingData.email,
           special_requests: bookingData.specialRequests,
           pickup_location: bookingData.pickupLocation,
-          dropoff_location: bookingData.dropoffLocation
+          dropoff_location: bookingData.dropoffLocation,
+          number_of_guests: bookingData.numberOfGuests,
+          number_of_children: bookingData.numberOfChildren
         },
         start_date: new Date(bookingData.pickupDate).toISOString(),
         end_date: new Date(bookingData.returnDate).toISOString(),
@@ -413,6 +419,36 @@ const Booking = () => {
                       />
                     </div>
                   )}
+                  {type === 'hotel' && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="numberOfGuests">Number of Guests</Label>
+                        <select
+                          id="numberOfGuests"
+                          value={bookingData.numberOfGuests}
+                          onChange={(e) => handleInputChange('numberOfGuests', parseInt(e.target.value))}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                            <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <Label htmlFor="numberOfChildren">Number of Children</Label>
+                        <select
+                          id="numberOfChildren"
+                          value={bookingData.numberOfChildren}
+                          onChange={(e) => handleInputChange('numberOfChildren', parseInt(e.target.value))}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {[0, 1, 2, 3, 4, 5, 6].map(num => (
+                            <option key={num} value={num}>{num} {num === 1 ? 'Child' : 'Children'}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
                     <Textarea
@@ -444,6 +480,12 @@ const Booking = () => {
                       <p><strong>{type === 'car' ? 'Return' : 'Check-out'}:</strong> {bookingData.returnDate}</p>
                       <p><strong>State:</strong> {bookingData.state}</p>
                       <p><strong>Location:</strong> {bookingData.pickupLocation}</p>
+                      {type === 'hotel' && (
+                        <>
+                          <p><strong>Guests:</strong> {bookingData.numberOfGuests}</p>
+                          <p><strong>Children:</strong> {bookingData.numberOfChildren}</p>
+                        </>
+                      )}
                       {bookingData.specialRequests && (
                         <p><strong>Special Requests:</strong> {bookingData.specialRequests}</p>
                       )}

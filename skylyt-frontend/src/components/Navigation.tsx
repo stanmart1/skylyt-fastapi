@@ -176,6 +176,8 @@ const Navigation = () => {
             )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 -m-2 touch-manipulation"
+              aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -188,71 +190,83 @@ const Navigation = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsMenuOpen(false)} />
           <div className="fixed right-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-end p-4 border-b">
+              <div className="flex items-center justify-end p-4 border-b flex-shrink-0">
                 <button onClick={() => setIsMenuOpen(false)}>
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="flex-1 p-4 space-y-2">
-                <div className="px-3 py-2 mb-4">
-                  <CurrencySelector />
-                </div>
-                <div className="space-y-1">
-                  <Link to="/" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    Home
-                  </Link>
-                  <Link to="/cars" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    Cars
-                  </Link>
-                  <Link to="/hotels" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    Hotels
-                  </Link>
-                  <Link to="/about" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    About
-                  </Link>
-                  <Link to="/contact" className="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    Contact
-                  </Link>
-                </div>
-                {isAuthenticated && (
-                  <div className="border-t pt-4 mt-4">
-                    <p className="text-xs font-medium text-gray-500 mb-3 px-3">Account</p>
-                    <div className="space-y-1">
-                      <Link to="/dashboard" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                        <User className="h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                      {(hasRole('admin') || hasRole('superadmin')) && (
-                        <Link to="/admin" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                          <Settings className="h-4 w-4" />
-                          <span>Admin Dashboard</span>
-                        </Link>
-                      )}
-                      {hasRole('driver') && (
-                        <Link to="/driver-dashboard" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" onClick={() => setIsMenuOpen(false)}>
-                          <Car className="h-4 w-4" />
-                          <span>Driver Dashboard</span>
-                        </Link>
-                      )}
-                    </div>
+              
+              {/* Scrollable content area */}
+              <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div className="p-4 space-y-2">
+                  <div className="px-3 py-2 mb-4">
+                    <CurrencySelector />
                   </div>
-                )}
+                  
+                  <div className="space-y-1">
+                    <Link to="/" className="flex items-center px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                      Home
+                    </Link>
+                    {features.car_rental_enabled && (
+                      <Link to="/cars" className="flex items-center px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                        Cars
+                      </Link>
+                    )}
+                    {features.hotel_booking_enabled && (
+                      <Link to="/hotels" className="flex items-center px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                        Hotels
+                      </Link>
+                    )}
+                    <Link to="/about" className="flex items-center px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                      About
+                    </Link>
+                    <Link to="/contact" className="flex items-center px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                      Contact
+                    </Link>
+                  </div>
+                  
+                  {isAuthenticated && (
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-xs font-medium text-gray-500 mb-3 px-3">Account</p>
+                      <div className="space-y-1">
+                        <Link to="/dashboard" className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                          <User className="h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                        {(hasRole('admin') || hasRole('superadmin')) && (
+                          <Link to="/admin" className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                            <Settings className="h-4 w-4" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        )}
+                        {hasRole('driver') && (
+                          <Link to="/driver-dashboard" className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors touch-manipulation" onClick={() => setIsMenuOpen(false)}>
+                            <Car className="h-4 w-4" />
+                            <span>Driver Dashboard</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="p-4 border-t bg-gray-50">
+              
+              {/* Fixed bottom section */}
+              <div className="p-4 border-t bg-gray-50 flex-shrink-0">
                 {isAuthenticated ? (
-                  <Button onClick={handleLogout} variant="outline" className="w-full flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+                  <Button onClick={handleLogout} variant="outline" className="w-full flex items-center justify-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 py-3 touch-manipulation">
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </Button>
                 ) : (
-                  <div>
+                  <div className="space-y-3">
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
+                      <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 py-3 touch-manipulation">
                         Login
                       </Button>
                     </Link>
-                    <Link to="/register" onClick={() => setIsMenuOpen(false)} className="block mt-4">
-                      <Button className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 py-3 touch-manipulation">
                         Register
                       </Button>
                     </Link>

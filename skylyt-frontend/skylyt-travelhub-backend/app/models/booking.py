@@ -47,6 +47,7 @@ class Booking(BaseModel):
     check_in_date = Column(DateTime, nullable=True)
     check_out_date = Column(DateTime, nullable=True)
     number_of_guests = Column(Integer, nullable=True)
+    children_count = Column(Integer, nullable=True, default=0)
     special_requests = Column(String(1000), nullable=True)
     
     # Financial

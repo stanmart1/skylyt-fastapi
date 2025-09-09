@@ -10,7 +10,6 @@ import logging
 import re
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
-
 from app.core.config import settings as config_settings
 from app.core.database import engine
 from app.models import Base

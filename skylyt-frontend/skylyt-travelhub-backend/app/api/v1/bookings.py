@@ -49,6 +49,16 @@ def create_booking(
         db.commit()
         db.refresh(booking)
         
+        # Create in-app notification for authenticated users
+        if current_user:
+            from app.services.notification_service import NotificationService
+            NotificationService.create_booking_confirmation_notification(
+                db=db,
+                user_id=current_user.id,
+                booking_reference=booking.booking_reference,
+                booking_type=booking.booking_type
+            )
+        
         # Send confirmation email immediately
         try:
             customer_email = guest_data.get('guest_email', '') if not current_user else current_user.email

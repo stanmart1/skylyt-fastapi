@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime, timedelta
 from .base import BaseModel
 
 
@@ -18,6 +19,10 @@ class User(BaseModel):
     # Notification preferences
     email_notifications = Column(Boolean, default=True, nullable=False)
     sms_notifications = Column(Boolean, default=False, nullable=False)
+    
+    # Password reset
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expires = Column(DateTime, nullable=True)
     
     # Relationships
     bookings = relationship("Booking", back_populates="user")
@@ -47,3 +52,21 @@ class User(BaseModel):
     def is_admin(self) -> bool:
         """Check if user is admin or superadmin"""
         return any(role.name in ["admin", "superadmin"] and role.is_active for role in self.roles)
+    
+    def set_reset_token(self, token: str, expires_in_hours: int = 1):
+        """Set password reset token with expiration"""
+        self.reset_token = token
+        self.reset_token_expires = datetime.utcnow() + timedelta(hours=expires_in_hours)
+    
+    def clear_reset_token(self):
+        """Clear password reset token"""
+        self.reset_token = None
+        self.reset_token_expires = None
+    
+    def is_reset_token_valid(self, token: str) -> bool:
+        """Check if reset token is valid and not expired"""
+        if not self.reset_token or not self.reset_token_expires:
+            return False
+        if self.reset_token != token:
+            return False
+        return datetime.utcnow() < self.reset_token_expires

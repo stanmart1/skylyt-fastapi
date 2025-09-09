@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, Star, CheckCircle, XCircle, Clock, Search, Filter, MapPin, Navigation, Eye, X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
+import { useDebounce } from '@/hooks/useDebounce';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeForLogging, sanitizeForJson } from '@/utils/sanitize';
@@ -53,7 +54,7 @@ interface Trip {
   created_at: string;
 }
 
-export const DriverManagement: React.FC = () => {
+const DriverManagement: React.FC = () => {
   const { toast } = useToast();
   const { hasPermission } = useAuth();
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -120,9 +121,11 @@ export const DriverManagement: React.FC = () => {
     dateTo: ''
   });
 
+  const debouncedSearch = useDebounce(filters.search, 300);
+
   useEffect(() => {
     fetchDrivers();
-  }, [filters]);
+  }, [debouncedSearch, filters.is_active, filters.is_available]);
 
   useEffect(() => {
     if (assignmentModal.open) {
@@ -456,18 +459,18 @@ export const DriverManagement: React.FC = () => {
     return 'Busy';
   };
 
-  const renderStars = (rating: number) => {
+  const renderStars = useMemo(() => (rating: number) => {
     return [...Array(5)].map((_, i) => (
       <Star
         key={i}
         className={`h-3 w-3 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
       />
     ));
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
         {deleteMode ? (
           <>
             <Button
@@ -476,6 +479,7 @@ export const DriverManagement: React.FC = () => {
                 setDeleteMode(false);
                 setSelectedDrivers(new Set());
               }}
+              className="w-full sm:w-auto"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -484,6 +488,7 @@ export const DriverManagement: React.FC = () => {
               <Button
                 variant="destructive"
                 onClick={handleBulkDelete}
+                className="w-full sm:w-auto"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Selected ({selectedDrivers.size})
@@ -495,11 +500,12 @@ export const DriverManagement: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => setDeleteMode(true)}
+              className="w-full sm:w-auto"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Driver
             </Button>
-            <Button onClick={handleAddDriver}>
+            <Button onClick={handleAddDriver} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add New Driver
             </Button>
@@ -516,8 +522,8 @@ export const DriverManagement: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search drivers..."
@@ -552,6 +558,7 @@ export const DriverManagement: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={() => setFilters({ search: '', is_active: '', is_available: '' })}
+              className="w-full"
             >
               Clear Filters
             </Button>
@@ -583,61 +590,65 @@ export const DriverManagement: React.FC = () => {
             <div className="space-y-4">
               {drivers.map((driver) => (
                 <div key={driver.id} className={`border rounded-lg p-4 ${deleteMode ? 'hover:bg-gray-50' : ''}`}>
-                  <div className="flex items-start justify-between">
-                    {deleteMode && (
-                      <div className="flex items-center mr-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedDrivers.has(driver.id)}
-                          onChange={() => toggleDriverSelection(driver.id)}
-                          className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{driver.name}</h3>
-                        <Badge className={`${getStatusColor(driver.is_active, driver.is_available)} text-xs`}>
-                          {getStatusText(driver.is_active, driver.is_available)}
-                        </Badge>
-                        {driver.rating > 0 && (
-                          <div className="flex items-center gap-1">
-                            {renderStars(Math.round(driver.rating))}
-                            <span className="text-sm text-gray-600">({driver.rating.toFixed(1)})</span>
+                  <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      {deleteMode && (
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedDrivers.has(driver.id)}
+                            onChange={() => toggleDriverSelection(driver.id)}
+                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                          <h3 className="font-semibold text-lg truncate">{driver.name}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={`${getStatusColor(driver.is_active, driver.is_available)} text-xs`}>
+                              {getStatusText(driver.is_active, driver.is_available)}
+                            </Badge>
+                            {driver.rating > 0 && (
+                              <div className="flex items-center gap-1">
+                                {renderStars(Math.round(driver.rating))}
+                                <span className="text-sm text-gray-600">({driver.rating.toFixed(1)})</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{driver.email}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{driver.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Driver's License: {driver.license_number}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>{driver.total_trips} trips</span>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Mail className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{driver.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 flex-shrink-0" />
+                            <span>{driver.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Calendar className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">License: {driver.license_number}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                            <span>{driver.total_trips} trips</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                     {!deleteMode && (
-                      <div className="flex flex-col gap-2 ml-4">
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:flex-wrap lg:flex-nowrap lg:min-w-[140px]">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewDetails(driver)}
-                          className="text-blue-600 hover:text-blue-700"
+                          className="text-blue-600 hover:text-blue-700 w-full sm:w-auto lg:w-full"
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
+                          <Eye className="h-4 w-4 lg:mr-1" />
+                          <span className="hidden sm:inline lg:inline">View Details</span>
                         </Button>
                         {hasPermission('content.manage_drivers') && (
                           <>
@@ -645,26 +656,27 @@ export const DriverManagement: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleEditDriver(driver)}
+                              className="w-full sm:w-auto lg:w-full"
                             >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
+                              <Edit className="h-4 w-4 lg:mr-1" />
+                              <span className="hidden sm:inline lg:inline">Edit</span>
                             </Button>
                             
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleToggleAvailability(driver.id, driver.is_available)}
-                              className={driver.is_available ? 'text-yellow-600' : 'text-green-600'}
+                              className={`${driver.is_available ? 'text-yellow-600' : 'text-green-600'} w-full sm:w-auto lg:w-full`}
                             >
                               {driver.is_available ? (
                                 <>
-                                  <Clock className="h-4 w-4 mr-1" />
-                                  Set Busy
+                                  <Clock className="h-4 w-4 lg:mr-1" />
+                                  <span className="hidden sm:inline lg:inline">Set Busy</span>
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Set Available
+                                  <CheckCircle className="h-4 w-4 lg:mr-1" />
+                                  <span className="hidden sm:inline lg:inline">Set Available</span>
                                 </>
                               )}
                             </Button>
@@ -673,21 +685,21 @@ export const DriverManagement: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleViewTrips(driver)}
-                              className="text-blue-600 hover:text-blue-700"
+                              className="text-blue-600 hover:text-blue-700 w-full sm:w-auto lg:w-full"
                             >
-                              <Navigation className="h-4 w-4 mr-1" />
-                              View Trips
+                              <Navigation className="h-4 w-4 lg:mr-1" />
+                              <span className="hidden sm:inline lg:inline">View Trips</span>
                             </Button>
                             
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleAssignToBooking(driver)}
-                              className="text-green-600 hover:text-green-700"
+                              className="text-green-600 hover:text-green-700 w-full sm:w-auto lg:w-full"
                               disabled={!driver.is_active || !driver.is_available}
                             >
-                              <User className="h-4 w-4 mr-1" />
-                              Assign to Booking
+                              <User className="h-4 w-4 lg:mr-1" />
+                              <span className="hidden sm:inline lg:inline">Assign</span>
                             </Button>
                             
                             <Button
@@ -698,10 +710,10 @@ export const DriverManagement: React.FC = () => {
                                 driverId: driver.id,
                                 driverName: driver.name
                               })}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 w-full sm:w-auto lg:w-full"
                             >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
+                              <Trash2 className="h-4 w-4 lg:mr-1" />
+                              <span className="hidden sm:inline lg:inline">Delete</span>
                             </Button>
                           </>
                         )}
@@ -1226,3 +1238,6 @@ export const DriverManagement: React.FC = () => {
     </div>
   );
 };
+
+export const DriverManagementMemo = React.memo(DriverManagement);
+export { DriverManagementMemo as DriverManagement };

@@ -105,9 +105,20 @@ async def _process_payment_internal(
         if not result.get('success'):
             raise HTTPException(status_code=400, detail=result.get('error', 'Payment creation failed'))
         
-        # Send payment confirmation or failure email
+        # Send payment confirmation email and create notification if payment was successful
         if result.get('success') and result.get('payment_id'):
             try:
+                # Create in-app notification for authenticated users
+                if booking.user_id:
+                    from app.services.notification_service import NotificationService
+                    NotificationService.create_payment_confirmation_notification(
+                        db=db,
+                        user_id=booking.user_id,
+                        booking_reference=booking.booking_reference,
+                        amount=float(booking.total_amount),
+                        currency=booking.currency
+                    )
+                
                 email_service.send_payment_confirmation(
                     booking.customer_email,
                     {

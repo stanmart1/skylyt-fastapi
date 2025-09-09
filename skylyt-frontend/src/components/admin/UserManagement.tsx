@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/api';
 import { sanitizeForLogging } from '@/utils/sanitize';
 
-export const UserManagement = () => {
+const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -54,7 +54,7 @@ export const UserManagement = () => {
     fetchData();
   }, [getUsers]);
 
-  const handleRoleChange = async (userId: number, roleId: number) => {
+  const handleRoleChange = useCallback(async (userId: number, roleId: number) => {
     try {
       await updateUserRole(userId, roleId);
       // Refresh users list
@@ -63,7 +63,7 @@ export const UserManagement = () => {
     } catch (error) {
       // Error handled in hook
     }
-  };
+  }, [updateUserRole, getUsers]);
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
@@ -175,14 +175,14 @@ export const UserManagement = () => {
     }
   };
 
-  const getRoleColor = (roleName: string) => {
+  const getRoleColor = useMemo(() => (roleName: string) => {
     switch (roleName) {
       case 'superadmin': return 'bg-red-100 text-red-800';
       case 'admin': return 'bg-purple-100 text-purple-800';
       case 'accountant': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -210,13 +210,13 @@ export const UserManagement = () => {
     <>
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             User Management
           </CardTitle>
           {hasPermission('users.create') && (
-            <Button onClick={() => setAddModalOpen(true)}>
+            <Button onClick={() => setAddModalOpen(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -226,57 +226,68 @@ export const UserManagement = () => {
       <CardContent>
         <div className="space-y-4">
           {users.map((user) => (
-            <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{user.full_name}</h3>
-                  <p className="text-sm text-gray-600">{user.email}</p>
-                  <div className="flex gap-1 mt-1">
-                    {user.roles.map((role) => (
-                      <Badge key={role.id} className={getRoleColor(role.name)}>
-                        {role.name}
-                      </Badge>
-                    ))}
+            <div key={user.id} className="border rounded-lg p-4">
+              {/* Mobile-first responsive layout */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Users className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold truncate">{user.full_name}</h3>
+                    <p className="text-sm text-gray-600 truncate">{user.email}</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {user.roles.map((role) => (
+                        <Badge key={role.id} className={`${getRoleColor(role.name)} text-xs`}>
+                          {role.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {hasPermission('users.manage_roles') && (
-                  <Select onValueChange={(value) => handleRoleChange(user.id, Number(value))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Change Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id.toString()}>
-                          {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {hasPermission('users.update') && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditUser(user)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                )}
-                {hasPermission('users.delete') && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
+                
+                {/* Responsive action buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 min-w-0">
+                  {hasPermission('users.manage_roles') && (
+                    <Select onValueChange={(value) => handleRoleChange(user.id, Number(value))}>
+                      <SelectTrigger className="w-full sm:w-32">
+                        <SelectValue placeholder="Change Role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    {hasPermission('users.update') && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Edit className="h-3 w-3 sm:mr-0 mr-1" />
+                        <span className="sm:hidden">Edit</span>
+                      </Button>
+                    )}
+                    {hasPermission('users.delete') && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
+                      >
+                        <Trash2 className="h-3 w-3 sm:mr-0 mr-1" />
+                        <span className="sm:hidden">Delete</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -286,26 +297,28 @@ export const UserManagement = () => {
 
     {/* Edit User Modal */}
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <DialogContent>
+      <DialogContent className="w-full max-w-md mx-4 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="first_name">First Name</Label>
-            <Input
-              id="first_name"
-              value={editForm.first_name}
-              onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="last_name">Last Name</Label>
-            <Input
-              id="last_name"
-              value={editForm.last_name}
-              onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="first_name">First Name</Label>
+              <Input
+                id="first_name"
+                value={editForm.first_name}
+                onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input
+                id="last_name"
+                value={editForm.last_name}
+                onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+              />
+            </div>
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
@@ -326,9 +339,9 @@ export const UserManagement = () => {
               placeholder="Leave blank to keep current password"
             />
           </div>
-          <div className="flex gap-2 pt-4">
-            <Button onClick={handleSaveUser}>Save Changes</Button>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button onClick={handleSaveUser} className="w-full sm:w-auto">Save Changes</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
           </div>
         </div>
       </DialogContent>
@@ -336,28 +349,30 @@ export const UserManagement = () => {
 
     {/* Add User Modal */}
     <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-      <DialogContent>
+      <DialogContent className="w-full max-w-md mx-4 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="add_first_name">First Name</Label>
-            <Input
-              id="add_first_name"
-              value={addForm.first_name}
-              onChange={(e) => setAddForm({...addForm, first_name: e.target.value})}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="add_last_name">Last Name</Label>
-            <Input
-              id="add_last_name"
-              value={addForm.last_name}
-              onChange={(e) => setAddForm({...addForm, last_name: e.target.value})}
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="add_first_name">First Name</Label>
+              <Input
+                id="add_first_name"
+                value={addForm.first_name}
+                onChange={(e) => setAddForm({...addForm, first_name: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="add_last_name">Last Name</Label>
+              <Input
+                id="add_last_name"
+                value={addForm.last_name}
+                onChange={(e) => setAddForm({...addForm, last_name: e.target.value})}
+                required
+              />
+            </div>
           </div>
           <div>
             <Label htmlFor="add_email">Email</Label>
@@ -394,11 +409,11 @@ export const UserManagement = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2 pt-4">
-            <Button onClick={handleAddUser} disabled={creating}>
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button onClick={handleAddUser} disabled={creating} className="w-full sm:w-auto">
               {creating ? 'Creating...' : 'Create User'}
             </Button>
-            <Button variant="outline" onClick={() => setAddModalOpen(false)} disabled={creating}>
+            <Button variant="outline" onClick={() => setAddModalOpen(false)} disabled={creating} className="w-full sm:w-auto">
               Cancel
             </Button>
           </div>
@@ -408,3 +423,6 @@ export const UserManagement = () => {
     </>
   );
 };
+
+export const UserManagementMemo = React.memo(UserManagement);
+export { UserManagementMemo as UserManagement };

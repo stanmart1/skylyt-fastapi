@@ -118,7 +118,8 @@ class EmailService:
             "password_reset",
             {
                 "user_name": html.escape(user_name),
-                "reset_link": f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+                "reset_link": f"https://skylytluxury.com/reset-password?token={reset_token}",
+                "reset_token": reset_token
             },
             "Password Reset Request - Skylyt TravelHub"
         )

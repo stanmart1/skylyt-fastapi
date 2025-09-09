@@ -44,6 +44,14 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [editForm, setEditForm] = useState({ status: '', transaction_id: '' });
   const [updating, setUpdating] = useState(false);
+  const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
+  const [addPaymentForm, setAddPaymentForm] = useState({
+    booking_id: '',
+    amount: '',
+    payment_method: 'bank_transfer',
+    payment_reference: '',
+    notes: ''
+  });
   const { hasPermission } = useAuth();
   const { currency } = useCurrency();
 
@@ -165,6 +173,37 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
     }
   };
 
+  const handleAddPayment = async () => {
+    try {
+      setUpdating(true);
+      await apiService.request('/admin/payments/manual', {
+        method: 'POST',
+        body: JSON.stringify({
+          booking_id: parseInt(addPaymentForm.booking_id),
+          amount: parseFloat(addPaymentForm.amount),
+          payment_method: addPaymentForm.payment_method,
+          payment_reference: addPaymentForm.payment_reference,
+          notes: addPaymentForm.notes,
+          status: 'completed'
+        })
+      });
+      await fetchPayments();
+      setAddPaymentModalOpen(false);
+      setAddPaymentForm({
+        booking_id: '',
+        amount: '',
+        payment_method: 'bank_transfer',
+        payment_reference: '',
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Failed to add payment:', error);
+      alert('Failed to add payment record. Please try again.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
@@ -196,12 +235,20 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            {bookingType === 'hotel' ? 'Hotel Payment Records' : 
-             bookingType === 'car' ? 'Car Payment Records' : 
-             'Payment Records'}
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              {bookingType === 'hotel' ? 'Hotel Payment Records' : 
+               bookingType === 'car' ? 'Car Payment Records' : 
+               'Payment Records'}
+            </CardTitle>
+            {hasPermission('payments.create') && (
+              <Button onClick={() => setAddPaymentModalOpen(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Payment Record
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -349,6 +396,78 @@ const PaymentManagement = ({ bookingType }: PaymentManagementProps = {}) => {
                 {updating ? 'Updating...' : 'Update Payment'}
               </Button>
               <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Payment Modal */}
+      <Dialog open={addPaymentModalOpen} onOpenChange={setAddPaymentModalOpen}>
+        <DialogContent className="w-full max-w-md mx-4 sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Manual Payment Record</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="booking_id">Booking ID</Label>
+              <Input
+                id="booking_id"
+                type="number"
+                value={addPaymentForm.booking_id}
+                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, booking_id: e.target.value })}
+                placeholder="Enter booking ID"
+              />
+            </div>
+            <div>
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={addPaymentForm.amount}
+                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, amount: e.target.value })}
+                placeholder="Enter payment amount"
+              />
+            </div>
+            <div>
+              <Label htmlFor="payment_method">Payment Method</Label>
+              <select
+                id="payment_method"
+                value={addPaymentForm.payment_method}
+                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, payment_method: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="cash">Cash</option>
+                <option value="check">Check</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="payment_reference">Payment Reference</Label>
+              <Input
+                id="payment_reference"
+                value={addPaymentForm.payment_reference}
+                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, payment_reference: e.target.value })}
+                placeholder="Enter payment reference"
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Input
+                id="notes"
+                value={addPaymentForm.notes}
+                onChange={(e) => setAddPaymentForm({ ...addPaymentForm, notes: e.target.value })}
+                placeholder="Additional notes"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <Button onClick={handleAddPayment} disabled={updating || !addPaymentForm.booking_id || !addPaymentForm.amount} className="w-full sm:w-auto">
+                {updating ? 'Adding...' : 'Add Payment'}
+              </Button>
+              <Button variant="outline" onClick={() => setAddPaymentModalOpen(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
             </div>
