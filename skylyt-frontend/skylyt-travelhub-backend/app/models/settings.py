@@ -58,69 +58,14 @@ class Settings(BaseModel):
     # Google Analytics Settings
     google_analytics_tracking_id = Column(String(255), nullable=True)
     google_analytics_measurement_id = Column(String(255), nullable=True)
-    google_analytics_api_key = Column(String(255), nullable=True)
     google_analytics_enabled = Column(Boolean, default=False)
     
-    # General Settings Extensions
-    site_logo = Column(String(500), nullable=True)
-    favicon = Column(String(500), nullable=True)
-    default_language = Column(String(10), default='en')
-    default_timezone = Column(String(50), default='UTC')
-    site_keywords = Column(Text, nullable=True)
-    social_facebook = Column(String(255), nullable=True)
-    social_twitter = Column(String(255), nullable=True)
-    social_instagram = Column(String(255), nullable=True)
-    social_linkedin = Column(String(255), nullable=True)
-    terms_url = Column(String(255), nullable=True)
-    privacy_url = Column(String(255), nullable=True)
-    support_url = Column(String(255), nullable=True)
-    company_address = Column(Text, nullable=True)
-    company_registration = Column(String(255), nullable=True)
-    vat_number = Column(String(255), nullable=True)
-    
-    # Security Settings Extensions
-    password_require_uppercase = Column(Boolean, default=True)
-    password_require_lowercase = Column(Boolean, default=True)
-    password_require_numbers = Column(Boolean, default=True)
-    password_require_symbols = Column(Boolean, default=False)
-    account_lockout_duration = Column(String(10), default='30')
-    password_expiry_days = Column(String(10), default='90')
-    force_password_change = Column(Boolean, default=False)
-    allow_password_reset = Column(Boolean, default=True)
-    captcha_enabled = Column(Boolean, default=False)
-    ip_whitelist_enabled = Column(Boolean, default=False)
-    ip_whitelist = Column(Text, nullable=True)
-    ssl_required = Column(Boolean, default=True)
-    cookie_secure = Column(Boolean, default=True)
-    session_cookie_httponly = Column(Boolean, default=True)
-    
-    # Payment Settings Extensions
-    payment_currency = Column(String(10), default='USD')
-    minimum_payment_amount = Column(String(20), default='1.00')
-    maximum_payment_amount = Column(String(20), default='10000.00')
-    payment_processing_fee = Column(String(10), default='2.9')
-    auto_capture_payments = Column(Boolean, default=True)
-    refund_policy_days = Column(String(10), default='30')
-    partial_refunds_enabled = Column(Boolean, default=True)
+    # Webhook secrets
     webhook_secret_stripe = Column(String(255), nullable=True)
     webhook_secret_paystack = Column(String(255), nullable=True)
     webhook_secret_flutterwave = Column(String(255), nullable=True)
-    payment_retry_attempts = Column(String(10), default='3')
-    payment_timeout_minutes = Column(String(10), default='15')
     
-    # Bank Transfer Extensions
-    routing_number = Column(String(50), nullable=True)
-    swift_code = Column(String(20), nullable=True)
-    iban = Column(String(50), nullable=True)
-    bank_address = Column(Text, nullable=True)
-    account_type = Column(String(20), default='checking')
-    currency = Column(String(10), default='USD')
-    minimum_transfer_amount = Column(String(20), default='10.00')
-    maximum_transfer_amount = Column(String(20), default='50000.00')
-    transfer_fee = Column(String(20), default='0.00')
-    processing_time_hours = Column(String(10), default='24')
-    auto_verification_enabled = Column(Boolean, default=False)
-    require_reference_number = Column(Boolean, default=True)
+    # Bank Transfer Settings
     bank_transfer_instructions = Column(Text, nullable=True)
     
     # Feature Settings
@@ -142,6 +87,3 @@ class Settings(BaseModel):
     maintenance_notifications = Column(Boolean, default=True)
     feature_announcements = Column(Boolean, default=True)
     beta_features_enabled = Column(Boolean, default=False)
-    
-    # Additional settings as JSON
-    additional_settings = Column(JSON, nullable=True)

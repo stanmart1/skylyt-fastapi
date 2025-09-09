@@ -124,13 +124,13 @@ def get_settings(db: Session = Depends(get_db)):
         "admin_notifications": getattr(settings, 'admin_notifications', True),
 
 
-        "bank_transfer_instructions": getattr(settings, 'bank_transfer_instructions', None),
+        "bank_transfer_instructions": settings.bank_transfer_instructions,
         "webhook_secret_stripe": None,  # Never expose secrets
         "webhook_secret_paystack": None,
         "webhook_secret_flutterwave": None,
-        "google_analytics_tracking_id": getattr(settings, 'google_analytics_tracking_id', None),
-        "google_analytics_measurement_id": getattr(settings, 'google_analytics_measurement_id', None),
-        "google_analytics_enabled": getattr(settings, 'google_analytics_enabled', False)
+        "google_analytics_tracking_id": settings.google_analytics_tracking_id,
+        "google_analytics_measurement_id": settings.google_analytics_measurement_id,
+        "google_analytics_enabled": settings.google_analytics_enabled
     }
     
     # Public keys are safe to expose (no authentication needed)
