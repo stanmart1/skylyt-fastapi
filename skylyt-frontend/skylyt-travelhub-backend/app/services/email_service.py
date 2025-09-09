@@ -159,3 +159,29 @@ class EmailService:
             {"driver": driver_data, "booking": booking_data, "is_driver_assignment": True},
             f"New Trip Assignment - {booking_data.get('booking_reference', 'N/A')}"
         )
+    
+    def send_contact_form_notification(self, contact_email: str, form_data: Dict[str, Any]) -> bool:
+        """Send contact form submission notification to admin"""
+        try:
+            # Create simple HTML email content
+            html_content = f"""
+            <html>
+            <body>
+                <h2>New Contact Form Submission</h2>
+                <p><strong>Name:</strong> {html.escape(form_data.get('name', ''))}</p>
+                <p><strong>Email:</strong> {html.escape(form_data.get('email', ''))}</p>
+                <p><strong>Subject:</strong> {html.escape(form_data.get('subject', ''))}</p>
+                <p><strong>Message:</strong></p>
+                <p>{html.escape(form_data.get('message', ''))}</p>
+            </body>
+            </html>
+            """
+            
+            return self._send_email(
+                contact_email,
+                f"Contact Form: {form_data.get('subject', 'New Message')}",
+                html_content
+            )
+        except Exception as e:
+            logger.error(f"Failed to send contact form notification: {str(e)}")
+            return False

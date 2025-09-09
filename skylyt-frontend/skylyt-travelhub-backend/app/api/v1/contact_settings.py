@@ -118,10 +118,22 @@ async def submit_contact_message(
         db.commit()
         db.refresh(contact_message)
         
-        # Send email notification (optional)
+        # Send email notification to contact email
         try:
-            from app.services.email_service import send_contact_notification
-            await send_contact_notification(message_data.dict())
+            # Get contact email from settings
+            contact_settings = db.query(ContactSettings).first()
+            contact_email = contact_settings.contact_email if contact_settings else None
+            
+            if contact_email:
+                from app.services.email_service import EmailService
+                email_service = EmailService()
+                email_service.send_contact_form_notification(
+                    contact_email,
+                    message_data.dict()
+                )
+            else:
+                logger = logging.getLogger(__name__)
+                logger.warning("No contact email configured for form notifications")
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.warning(f"Failed to send email notification: {e}")
