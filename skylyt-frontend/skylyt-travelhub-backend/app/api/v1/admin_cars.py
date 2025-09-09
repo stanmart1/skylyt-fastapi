@@ -113,9 +113,22 @@ def update_car(
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
     
+    # Handle timestamp fields that might be empty strings
+    timestamp_fields = ['insurance_expiry', 'registration_expiry', 'roadworthiness_expiry']
+    
     for field, value in car_data.items():
         if hasattr(car, field):
-            setattr(car, field, value)
+            if field in timestamp_fields:
+                # Convert empty strings to None for timestamp fields
+                if value == '' or value is None:
+                    setattr(car, field, None)
+                else:
+                    try:
+                        setattr(car, field, datetime.fromisoformat(value))
+                    except (ValueError, TypeError):
+                        setattr(car, field, None)
+            else:
+                setattr(car, field, value)
     
     db.commit()
     db.refresh(car)

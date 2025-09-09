@@ -34,8 +34,9 @@ COPY --from=builder /usr/local /usr/local
 # Copy application code
 COPY --from=builder /app /app
 
-# Create non-root user and give ownership of /app
+# Create non-root user, storage directory, and give ownership of /app
 RUN useradd --create-home --shell /bin/bash app \
+    && mkdir -p /app/storage \
     && chown -R app:app /app
 USER app
 
