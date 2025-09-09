@@ -30,7 +30,10 @@ async def upload_hotel_images(
         raise HTTPException(status_code=404, detail="Hotel not found")
     
     uploaded_images = []
-    upload_dir = Path("uploads/hotels")
+    if Path("/app/storage").exists():
+        upload_dir = Path("/app/storage/hotels")
+    else:
+        upload_dir = Path("uploads/hotels")
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     for file in files:
@@ -150,7 +153,10 @@ async def upload_hotel_image_from_url(
             raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
         
         # Save file
-        upload_dir = Path("uploads/hotels")
+        if Path("/app/storage").exists():
+            upload_dir = Path("/app/storage/hotels")
+        else:
+            upload_dir = Path("uploads/hotels")
         upload_dir.mkdir(parents=True, exist_ok=True)
         
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
@@ -239,8 +245,11 @@ def delete_hotel_image(
         if '..' in filename or '/' in filename or '\\' in filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
         
-        # Construct safe path
-        base_path = Path("uploads/hotels").resolve()
+        # Construct safe path - check both locations
+        if Path("/app/storage").exists():
+            base_path = Path("/app/storage/hotels")
+        else:
+            base_path = Path("uploads/hotels").resolve()
         file_path = base_path / filename
         
         # Ensure resolved path is within uploads directory

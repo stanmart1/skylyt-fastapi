@@ -10,8 +10,11 @@ logger = logging.getLogger(__name__)
 class FileUploadService:
     
     def __init__(self, upload_dir: str = "uploads/payment_proofs"):
-        self.upload_dir = upload_dir
-        os.makedirs(upload_dir, exist_ok=True)
+        if os.path.exists("/app/storage"):
+            self.upload_dir = upload_dir.replace("uploads/", "/app/storage/")
+        else:
+            self.upload_dir = upload_dir
+        os.makedirs(self.upload_dir, exist_ok=True)
     
     def save_payment_proof(self, file: UploadFile, transfer_reference: str) -> Dict[str, Any]:
         """Save uploaded payment proof file"""

@@ -30,7 +30,10 @@ async def upload_car_images(
         raise HTTPException(status_code=404, detail="Car not found")
     
     uploaded_images = []
-    upload_dir = Path("uploads/cars")
+    if Path("/app/storage").exists():
+        upload_dir = Path("/app/storage/cars")
+    else:
+        upload_dir = Path("uploads/cars")
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     for file in files:
@@ -148,7 +151,10 @@ async def upload_car_image_from_url(
             raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
         
         # Save file
-        upload_dir = Path("uploads/cars")
+        if Path("/app/storage").exists():
+            upload_dir = Path("/app/storage/cars")
+        else:
+            upload_dir = Path("uploads/cars")
         upload_dir.mkdir(parents=True, exist_ok=True)
         
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
@@ -235,7 +241,10 @@ def delete_car_image(
         if '..' in filename or '/' in filename or '\\' in filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
         
-        base_path = Path("uploads/cars").resolve()
+        if Path("/app/storage").exists():
+            base_path = Path("/app/storage/cars")
+        else:
+            base_path = Path("uploads/cars").resolve()
         file_path = base_path / filename
         
         file_path = file_path.resolve()

@@ -245,8 +245,12 @@ async def serve_image(folder: str, filename: str):
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
     
-    # Construct safe file path
-    base_path = Path("uploads").resolve()
+    # Check production storage first, then dev uploads
+    if Path("/app/storage").exists():
+        base_path = Path("/app/storage")
+    else:
+        base_path = Path("uploads").resolve()
+    
     file_path = base_path / folder / filename
     
     # Ensure the resolved path is within uploads directory
@@ -335,8 +339,12 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     original_name = secure_filename(file.filename or 'upload')
     secure_name = f"{uuid4()}{file_extension}"
     
-    # Create upload directory if it doesn't exist
-    base_upload_dir = Path("uploads").resolve()
+    # Use /app/storage in production, uploads/ in dev
+    if Path("/app/storage").exists():
+        base_upload_dir = Path("/app/storage")
+    else:
+        base_upload_dir = Path("uploads").resolve()
+    
     upload_dir = base_upload_dir / upload_type
     upload_dir.mkdir(parents=True, exist_ok=True)
     
