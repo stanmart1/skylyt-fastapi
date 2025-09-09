@@ -60,9 +60,7 @@ class SettingsResponse(BaseModel):
     smtp_port: Optional[int]
     smtp_username: Optional[str]
     from_email: Optional[str]
-    onesignal_app_id: Optional[str]
     email_notifications_enabled: Optional[bool]
-    push_notifications_enabled: Optional[bool]
     
     class Config:
         from_attributes = True
