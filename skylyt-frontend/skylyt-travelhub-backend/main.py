@@ -245,13 +245,22 @@ async def serve_image(folder: str, filename: str):
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
     
-    # Check production storage first, then dev uploads
-    if Path("/app/storage").exists():
-        base_path = Path("/app/storage")
+    # Check both storage locations
+    storage_path = Path("/app/storage")
+    if storage_path.exists():
+        base_path = storage_path
+        file_path = base_path / folder / filename
+        
+        # If file doesn't exist in storage, try uploads as fallback
+        if not file_path.exists():
+            fallback_path = Path("uploads").resolve()
+            fallback_file = fallback_path / folder / filename
+            if fallback_file.exists():
+                base_path = fallback_path
+                file_path = fallback_file
     else:
         base_path = Path("uploads").resolve()
-    
-    file_path = base_path / folder / filename
+        file_path = base_path / folder / filename
     
     # Ensure the resolved path is within uploads directory
     try:

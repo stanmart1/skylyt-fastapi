@@ -224,19 +224,17 @@ export const HotelManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleHotelImagesUpload = async (files: File[]): Promise<string[]> => {
+  const handleHotelImagesUpload = async (files: File[], hotelId: string): Promise<string[]> => {
     setUploadingHotelImages(true);
     try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_type', 'hotels');
-        const response = await apiService.uploadFile(formData);
-        return response.url;
+      const formData = new FormData();
+      formData.append('hotel_id', hotelId);
+      files.forEach(file => {
+        formData.append('files', file);
       });
       
-      const imageUrls = await Promise.all(uploadPromises);
-      return imageUrls;
+      const response = await apiService.uploadHotelImages(formData);
+      return response.images?.map((img: any) => img.url) || [];
     } catch (error) {
       console.error('Failed to upload images:', error);
       toast({
@@ -258,15 +256,9 @@ export const HotelManagement: React.FC = () => {
         features: hotelForm.features.split(',').map(f => f.trim()).filter(f => f)
       };
       
-      // Upload images if selected
-      if (hotelImageFiles.length > 0) {
-        const imageUrls = await handleHotelImagesUpload(hotelImageFiles);
-        if (imageUrls.length > 0) {
-          finalHotelData.image_url = imageUrls[0]; // Set primary image
-          finalHotelData.images = imageUrls; // Set all images
-        }
-      }
+      let hotelId = editingHotel?.id;
       
+      // Create/update hotel first
       if (editingHotel) {
         await apiService.request(`/admin/hotels/${editingHotel.id}`, { method: 'PUT', body: JSON.stringify(finalHotelData) });
         toast({
@@ -275,12 +267,18 @@ export const HotelManagement: React.FC = () => {
           variant: 'success'
         });
       } else {
-        await apiService.request('/admin/hotels', { method: 'POST', body: JSON.stringify(finalHotelData) });
+        const newHotel = await apiService.request('/admin/hotels', { method: 'POST', body: JSON.stringify(finalHotelData) });
+        hotelId = newHotel.id;
         toast({
           title: 'Success',
           description: 'Hotel added successfully',
           variant: 'success'
         });
+      }
+      
+      // Upload images if selected
+      if (hotelImageFiles.length > 0 && hotelId) {
+        await handleHotelImagesUpload(hotelImageFiles, hotelId);
       }
       await fetchHotels();
       await fetchStats();

@@ -30,11 +30,20 @@ async def upload_car_images(
         raise HTTPException(status_code=404, detail="Car not found")
     
     uploaded_images = []
-    if Path("/app/storage").exists():
-        upload_dir = Path("/app/storage/cars")
+    
+    # Determine storage directory
+    storage_path = Path("/app/storage")
+    if storage_path.exists():
+        upload_dir = storage_path / "cars"
     else:
         upload_dir = Path("uploads/cars")
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        upload_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        raise HTTPException(status_code=500, detail="Storage directory permission denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
     
     for file in files:
         # Validate file type
@@ -151,11 +160,18 @@ async def upload_car_image_from_url(
             raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
         
         # Save file
-        if Path("/app/storage").exists():
-            upload_dir = Path("/app/storage/cars")
+        storage_path = Path("/app/storage")
+        if storage_path.exists():
+            upload_dir = storage_path / "cars"
         else:
             upload_dir = Path("uploads/cars")
-        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            upload_dir.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            raise HTTPException(status_code=500, detail="Storage directory permission denied")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to create storage directory: {str(e)}")
         
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
         unique_filename = f"{uuid.uuid4()}{file_extension}"
