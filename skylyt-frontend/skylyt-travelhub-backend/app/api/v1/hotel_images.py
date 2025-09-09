@@ -53,16 +53,6 @@ async def upload_hotel_images(
         if '..' in unique_filename or '/' in unique_filename or '\\' in unique_filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
         
-        file_path = upload_dir / unique_filename
-        
-        # Ensure file path is within upload directory
-        try:
-            file_path = file_path.resolve()
-            if not str(file_path).startswith(str(upload_dir.resolve())):
-                raise HTTPException(status_code=400, detail="Invalid file path")
-        except (OSError, ValueError):
-            raise HTTPException(status_code=400, detail="Invalid file path")
-        
         # Get storage path and save file
         file_path = StorageManager.get_upload_path("hotels", unique_filename)
         with open(file_path, "wb") as f:
@@ -150,12 +140,10 @@ async def upload_hotel_image_from_url(
         if len(response.content) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
         
-        # Save file using centralized storage
-        file_path = StorageManager.get_upload_path("hotels", unique_filename)
-        
+        # Generate filename and save file using centralized storage
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
         unique_filename = f"{uuid.uuid4()}{file_extension}"
-        file_path = upload_dir / unique_filename
+        file_path = StorageManager.get_upload_path("hotels", unique_filename)
         
         with open(file_path, "wb") as f:
             f.write(response.content)

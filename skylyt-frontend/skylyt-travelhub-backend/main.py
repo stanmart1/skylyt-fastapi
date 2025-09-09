@@ -31,6 +31,7 @@ from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
+from app.core.storage import StorageManager
 
 # Setup logging
 setup_logging()
