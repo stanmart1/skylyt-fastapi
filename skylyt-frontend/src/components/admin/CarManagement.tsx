@@ -108,6 +108,7 @@ export const CarManagement: React.FC = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<any>(null);
+  const [carImages, setCarImages] = useState<any[]>([]);
   const [carForm, setCarForm] = useState({
     name: '',
     make: '',
@@ -223,10 +224,11 @@ export const CarManagement: React.FC = () => {
     });
     setDocumentFiles({});
     setCarImageFiles([]);
+    setCarImages([]);
     setIsModalOpen(true);
   };
 
-  const handleEditCar = (car: CarData) => {
+  const handleEditCar = async (car: CarData) => {
     setEditingCar(car);
     setCarForm({
       name: car.name,
@@ -250,25 +252,29 @@ export const CarManagement: React.FC = () => {
     });
     setDocumentFiles({});
     setCarImageFiles([]);
+    
+    // Fetch car images
+    try {
+      const images = await apiService.getCarImages(car.id);
+      setCarImages(images.images || []);
+    } catch (error) {
+      setCarImages([]);
+    }
+    
     setIsModalOpen(true);
   };
 
-  const handleCarImagesUpload = async (files: File[]): Promise<string[]> => {
+  const handleCarImagesUpload = async (files: File[], carId: string): Promise<string[]> => {
     setUploadingCarImages(true);
-    const uploadedUrls: string[] = [];
-    
     try {
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_type', 'cars');
-        
-        const response = await apiService.uploadFile(formData);
-        if (response.url) {
-          uploadedUrls.push(response.url);
-        }
-      }
-      return uploadedUrls;
+      const formData = new FormData();
+      formData.append('car_id', carId);
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await apiService.uploadCarImages(formData);
+      return response.images?.map((img: any) => img.url) || [];
     } catch (error) {
       console.error('Failed to upload images:', error);
       toast({
@@ -276,7 +282,7 @@ export const CarManagement: React.FC = () => {
         description: 'Failed to upload images',
         variant: 'error'
       });
-      return uploadedUrls;
+      return [];
     } finally {
       setUploadingCarImages(false);
     }
@@ -289,11 +295,19 @@ export const CarManagement: React.FC = () => {
         features: carForm.features.split(',').map(f => f.trim()).filter(f => f)
       };
       
-      if (carImageFiles.length > 0) {
-        const uploadedUrls = await handleCarImagesUpload(carImageFiles);
-        if (uploadedUrls.length > 0) {
-          finalCarData.images = uploadedUrls;
-        }
+      let carId = editingCar?.id;
+      
+      // Create/update car first
+      if (editingCar) {
+        await apiService.request(`/admin/cars/${editingCar.id}`, { method: 'PUT', body: JSON.stringify(finalCarData) });
+      } else {
+        const newCar = await apiService.request('/admin/cars', { method: 'POST', body: JSON.stringify(finalCarData) });
+        carId = newCar.id;
+      }
+      
+      // Upload images if selected
+      if (carImageFiles.length > 0 && carId) {
+        await handleCarImagesUpload(carImageFiles, carId);
       }
       
       // Upload documents
@@ -321,21 +335,11 @@ export const CarManagement: React.FC = () => {
         finalCarData.roadworthiness_doc_url = response.url;
       }
       
-      if (editingCar) {
-        await apiService.request(`/admin/cars/${editingCar.id}`, { method: 'PUT', body: JSON.stringify(finalCarData) });
-        toast({
-          title: 'Success',
-          description: 'Car updated successfully',
-          variant: 'success'
-        });
-      } else {
-        await apiService.request('/admin/cars', { method: 'POST', body: JSON.stringify(finalCarData) });
-        toast({
-          title: 'Success',
-          description: 'Car added successfully',
-          variant: 'success'
-        });
-      }
+      toast({
+        title: 'Success',
+        description: editingCar ? 'Car updated successfully' : 'Car added successfully',
+        variant: 'success'
+      });
       await fetchCars();
       await fetchStats();
       setIsModalOpen(false);
@@ -575,7 +579,7 @@ export const CarManagement: React.FC = () => {
                   <CardContent className="p-4 sm:p-6">
                     {car.image_url ? (
                       <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
-                        <img src={car.image_url} alt={car.name} className="w-full h-full object-cover" />
+                        <img src={apiService.getImageUrl(car.image_url)} alt={car.name} className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full h-32 mb-4 bg-gray-100 rounded-lg">
@@ -884,7 +888,43 @@ export const CarManagement: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="car_images" className="text-sm font-medium">Car Images</Label>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+              <div className="space-y-3 mt-1">
+                {/* Existing Images */}
+                {carImages.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2">Current Images:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {carImages.map((image, index) => (
+                        <div key={image.id} className="relative">
+                          <img 
+                            src={apiService.getImageUrl(image.image_url)} 
+                            alt={`Car image ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-1 right-1 h-6 w-6 p-0"
+                            onClick={async () => {
+                              try {
+                                await apiService.deleteCarImage(image.id);
+                                setCarImages(carImages.filter(img => img.id !== image.id));
+                                toast({ title: 'Success', description: 'Image deleted', variant: 'success' });
+                              } catch (error) {
+                                toast({ title: 'Error', description: 'Failed to delete image', variant: 'error' });
+                              }
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Upload New Images */}
                 <input
                   id="car_images"
                   type="file"
@@ -900,9 +940,14 @@ export const CarManagement: React.FC = () => {
                   disabled={uploadingCarImages}
                   className="w-full sm:w-auto"
                 >
-                  {uploadingCarImages ? 'Uploading...' : 'Choose Images'}
+                  {uploadingCarImages ? 'Uploading...' : 'Add More Images'}
                 </Button>
-                {carImageFiles.length > 0 && <span className="text-sm text-gray-600">{carImageFiles.length} files selected</span>}
+                {carImageFiles.length > 0 && (
+                  <div className="text-xs sm:text-sm text-gray-600 p-2 bg-gray-50 rounded">
+                    {carImageFiles.length} new image(s) selected: {carImageFiles.map(f => f.name).slice(0, 3).join(', ')}
+                    {carImageFiles.length > 3 && ` and ${carImageFiles.length - 3} more...`}
+                  </div>
+                )}
               </div>
             </div>
             <div>
