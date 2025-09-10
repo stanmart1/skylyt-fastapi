@@ -181,20 +181,15 @@ async def upload_proof_of_payment(
         if not booking:
             raise HTTPException(status_code=404, detail=f"Booking with ID {booking_id} not found")
         
-        # Create secure upload directory
-        upload_dir = Path("uploads/payment_proofs")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
         # Generate unique filename with timestamp
         import time
         timestamp = int(time.time())
         file_extension = Path(secure_name).suffix
         unique_filename = f"{booking_id}_{timestamp}_{uuid.uuid4()}{file_extension}"
-        file_path = upload_dir / unique_filename
         
-        # Ensure file path is within upload directory (prevent path traversal)
-        if not str(file_path.resolve()).startswith(str(upload_dir.resolve())):
-            raise HTTPException(status_code=400, detail="Invalid file path")
+        # Use centralized storage
+        from app.core.storage import StorageManager
+        file_path = StorageManager.get_upload_path("payment_proofs", unique_filename)
         
         # Read and validate file content
         content = await file.read()
@@ -233,7 +228,7 @@ async def upload_proof_of_payment(
         return {
             "success": True,
             "message": "Proof of payment uploaded successfully",
-            "file_path": f"/uploads/payment_proofs/{unique_filename}",
+            "file_path": StorageManager.get_serve_url("payment_proofs", unique_filename),
             "payment_id": result.get("payment_id") if isinstance(result, dict) else None
         }
     except HTTPException:
@@ -595,13 +590,15 @@ def get_proof_of_payment(
         raise HTTPException(status_code=404, detail="Proof of payment not found")
     
     try:
-        file_path = Path(payment.proof_of_payment_url)
-        upload_dir = Path("uploads/payment_proofs")
+        # Extract filename from URL
+        filename = os.path.basename(payment.proof_of_payment_url)
         
-        # Ensure file path is within upload directory (prevent path traversal)
-        try:
-            file_path.resolve().relative_to(upload_dir.resolve())
-        except ValueError:
+        # Use centralized storage
+        from app.core.storage import StorageManager
+        file_path = StorageManager.get_storage_path("payment_proofs") / filename
+        
+        # Validate path
+        if ".." in filename or "/" in filename or "\\" in filename:
             logger.warning(f"Path traversal attempt detected for payment {payment_id}")
             raise HTTPException(status_code=403, detail="Access denied")
         
