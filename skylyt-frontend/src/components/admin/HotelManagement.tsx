@@ -451,7 +451,7 @@ export const HotelManagement: React.FC = () => {
               <CardContent className="p-4 sm:p-6">
                 {hotel.image_url ? (
                   <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
-                    <img src={hotel.image_url} alt={hotel.name} className="w-full h-full object-cover" />
+                    <img src={apiService.getImageUrl(hotel.image_url)} alt={hotel.name} className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-full h-32 mb-4 bg-gray-100 rounded-lg">
