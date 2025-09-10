@@ -38,10 +38,10 @@ async def upload_car_images(
         if file.content_type not in ["image/jpeg", "image/png"]:
             raise HTTPException(status_code=400, detail=f"Invalid file type: {file.filename}. Only JPEG and PNG allowed.")
         
-        # Validate file size (5MB)
+        # Validate file size (10MB)
         content = await file.read()
-        if len(content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail=f"File too large: {file.filename}. Maximum 5MB allowed.")
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail=f"File too large: {file.filename}. Maximum 10MB allowed.")
         
         # Generate unique filename
         file_extension = Path(file.filename).suffix.lower()
@@ -52,16 +52,6 @@ async def upload_car_images(
         # Validate filename
         if '..' in unique_filename or '/' in unique_filename or '\\' in unique_filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
-        
-        file_path = upload_dir / unique_filename
-        
-        # Ensure file path is within upload directory
-        try:
-            file_path = file_path.resolve()
-            if not str(file_path).startswith(str(upload_dir.resolve())):
-                raise HTTPException(status_code=400, detail="Invalid file path")
-        except (OSError, ValueError):
-            raise HTTPException(status_code=400, detail="Invalid file path")
         
         # Get storage path and save file
         file_path = StorageManager.get_upload_path("cars", unique_filename)
@@ -145,15 +135,13 @@ async def upload_car_image_from_url(
             raise HTTPException(status_code=400, detail="Invalid image type. Only JPEG and PNG allowed.")
         
         # Validate size
-        if len(response.content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
+        if len(response.content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Image too large. Maximum 10MB allowed.")
         
-        # Save file using centralized storage
-        file_path = StorageManager.get_upload_path("cars", unique_filename)
-        
+        # Generate filename and save file using centralized storage
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
         unique_filename = f"{uuid.uuid4()}{file_extension}"
-        file_path = upload_dir / unique_filename
+        file_path = StorageManager.get_upload_path("cars", unique_filename)
         
         with open(file_path, "wb") as f:
             f.write(response.content)
