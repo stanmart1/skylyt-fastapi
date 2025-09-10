@@ -23,7 +23,7 @@ def get_all_hotels(
         "rating": float(hotel.star_rating),
         "price": float(hotel.price_per_night),
         "room_count": hotel.room_count,
-        "image_url": hotel.images[0] if hotel.images and isinstance(hotel.images, list) and len(hotel.images) > 0 else None,
+        "image_url": hotel.hotel_images[0].image_url if hotel.hotel_images else (hotel.images[0] if hotel.images and isinstance(hotel.images, list) and len(hotel.images) > 0 else None),
         "is_featured": getattr(hotel, 'is_featured', False),
         "amenities": hotel.amenities or [],
         "features": hotel.features or [],

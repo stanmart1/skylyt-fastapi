@@ -78,6 +78,7 @@ export const HotelManagement: React.FC = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<HotelData | null>(null);
+  const [hotelImages, setHotelImages] = useState<any[]>([]);
   const [hotelForm, setHotelForm] = useState({
     name: '',
     location: '',
@@ -196,10 +197,11 @@ export const HotelManagement: React.FC = () => {
       is_available: true
     });
     setHotelImageFiles([]);
+    setHotelImages([]);
     setIsModalOpen(true);
   };
 
-  const handleEditHotel = (hotel: any) => {
+  const handleEditHotel = async (hotel: any) => {
     setEditingHotel(hotel);
     setHotelForm({
       name: hotel.name || '',
@@ -221,6 +223,15 @@ export const HotelManagement: React.FC = () => {
       is_available: hotel.is_available !== undefined ? hotel.is_available : true
     });
     setHotelImageFiles([]);
+    
+    // Fetch hotel images
+    try {
+      const images = await apiService.getHotelImages(hotel.id);
+      setHotelImages(images.images || []);
+    } catch (error) {
+      setHotelImages([]);
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -560,7 +571,43 @@ export const HotelManagement: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="hotel_images" className="text-sm font-medium">Hotel Images</Label>
-              <div className="space-y-2 mt-1">
+              <div className="space-y-3 mt-1">
+                {/* Existing Images */}
+                {hotelImages.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2">Current Images:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {hotelImages.map((image, index) => (
+                        <div key={image.id} className="relative">
+                          <img 
+                            src={apiService.getImageUrl(image.image_url)} 
+                            alt={`Hotel image ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-1 right-1 h-6 w-6 p-0"
+                            onClick={async () => {
+                              try {
+                                await apiService.deleteHotelImage(image.id);
+                                setHotelImages(hotelImages.filter(img => img.id !== image.id));
+                                toast({ title: 'Success', description: 'Image deleted', variant: 'success' });
+                              } catch (error) {
+                                toast({ title: 'Error', description: 'Failed to delete image', variant: 'error' });
+                              }
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Upload New Images */}
                 <input
                   id="hotel_images"
                   type="file"
@@ -576,11 +623,11 @@ export const HotelManagement: React.FC = () => {
                   disabled={uploadingHotelImages}
                   className="w-full sm:w-auto"
                 >
-                  {uploadingHotelImages ? 'Uploading...' : 'Choose Images'}
+                  {uploadingHotelImages ? 'Uploading...' : 'Add More Images'}
                 </Button>
                 {hotelImageFiles.length > 0 && (
                   <div className="text-xs sm:text-sm text-gray-600 p-2 bg-gray-50 rounded">
-                    {hotelImageFiles.length} image(s) selected: {hotelImageFiles.map(f => f.name).slice(0, 3).join(', ')}
+                    {hotelImageFiles.length} new image(s) selected: {hotelImageFiles.map(f => f.name).slice(0, 3).join(', ')}
                     {hotelImageFiles.length > 3 && ` and ${hotelImageFiles.length - 3} more...`}
                   </div>
                 )}
