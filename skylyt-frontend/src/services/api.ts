@@ -693,7 +693,9 @@ class ApiService {
   getImageUrl(imagePath: string): string {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) return imagePath;
-    return `${import.meta.env.VITE_API_BASE_URL}${imagePath.startsWith('/') ? imagePath : '/' + imagePath}`;
+    // Remove /api/v1 prefix for uploads since they're served directly
+    const cleanPath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+    return `${import.meta.env.VITE_API_BASE_URL}${cleanPath}`;
   }
 }
 
