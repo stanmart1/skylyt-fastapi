@@ -52,6 +52,11 @@ async def lifespan(app: FastAPI):
     # Startup
     Base.metadata.create_all(bind=engine)
     
+    # Ensure storage directories exist
+    StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
+    for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:
+        StorageManager.ensure_directory(StorageManager.get_storage_path(category))
+    
     # Initialize Dragonfly connection
     try:
         RedisService.get_client()
