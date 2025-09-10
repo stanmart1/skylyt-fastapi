@@ -693,7 +693,10 @@ class ApiService {
   getImageUrl(imagePath: string): string {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) return imagePath;
-    // Remove /api/v1 prefix for uploads since they're served directly
+    // Handle uploads specifically - they're served without /api/v1 prefix
+    if (imagePath.startsWith('/uploads/')) {
+      return `https://api.skylytluxury.com${imagePath}`;
+    }
     const cleanPath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
     return `${import.meta.env.VITE_API_BASE_URL}${cleanPath}`;
   }
