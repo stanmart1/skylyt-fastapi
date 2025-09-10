@@ -38,10 +38,10 @@ async def upload_hotel_images(
         if file.content_type not in ["image/jpeg", "image/png"]:
             raise HTTPException(status_code=400, detail=f"Invalid file type: {file.filename}. Only JPEG and PNG allowed.")
         
-        # Validate file size (5MB)
+        # Validate file size (10MB)
         content = await file.read()
-        if len(content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail=f"File too large: {file.filename}. Maximum 5MB allowed.")
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail=f"File too large: {file.filename}. Maximum 10MB allowed.")
         
         # Generate unique filename with safe extension
         file_extension = Path(file.filename).suffix.lower()
@@ -137,8 +137,8 @@ async def upload_hotel_image_from_url(
             raise HTTPException(status_code=400, detail="Invalid image type. Only JPEG and PNG allowed.")
         
         # Validate size
-        if len(response.content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Image too large. Maximum 5MB allowed.")
+        if len(response.content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Image too large. Maximum 10MB allowed.")
         
         # Generate filename and save file using centralized storage
         file_extension = ".jpg" if "jpeg" in content_type else ".png"
