@@ -251,7 +251,7 @@ def update_security_settings(
     
     update_data = settings_update.dict(exclude_unset=True)
     for field, value in update_data.items():
-        if hasattr(settings, field) and value is not None:
+        if hasattr(settings, field):
             setattr(settings, field, value)
     
     db.commit()
