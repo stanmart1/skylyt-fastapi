@@ -203,6 +203,11 @@ def update_general_settings(
         setattr(settings, field, value)
     
     db.commit()
+    
+    # Clear settings cache
+    from app.utils.cache_manager import cache_manager
+    cache_manager.delete("system_settings")
+    
     return {"message": "General settings updated successfully"}
 
 
@@ -224,6 +229,11 @@ def update_payment_gateway_settings(
             setattr(settings, field, value)
     
     db.commit()
+    
+    # Clear settings cache
+    from app.utils.cache_manager import cache_manager
+    cache_manager.delete("system_settings")
+    
     return {"message": "Payment gateway settings updated successfully"}
 
 
@@ -245,6 +255,11 @@ def update_security_settings(
             setattr(settings, field, value)
     
     db.commit()
+    
+    # Clear settings cache
+    from app.utils.cache_manager import cache_manager
+    cache_manager.delete("system_settings")
+    
     return {"message": "Security settings updated successfully"}
 
 
@@ -266,6 +281,11 @@ def update_bank_transfer_settings(
             setattr(settings, field, value)
     
     db.commit()
+    
+    # Clear settings cache
+    from app.utils.cache_manager import cache_manager
+    cache_manager.delete("system_settings")
+    
     return {"message": "Bank transfer settings updated successfully"}
 
 
