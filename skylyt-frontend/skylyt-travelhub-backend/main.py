@@ -134,7 +134,20 @@ app.openapi = lambda: custom_openapi(app)
 
 # Remove CSP completely for docs pages
 @app.middleware("http")
-async def remove_csp_for_docs(request, call_next):
+async def fast_options_handler(request, call_next):
+    # Handle OPTIONS requests immediately without processing through other middleware
+    if request.method == "OPTIONS":
+        from fastapi.responses import Response
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "86400"
+            }
+        )
+    
     response = await call_next(request)
     if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
         # Remove ALL CSP headers completely

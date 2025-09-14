@@ -20,6 +20,11 @@ class MonitoringMiddleware:
     
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
+            # Skip monitoring for OPTIONS requests to improve performance
+            if scope.get("method") == "OPTIONS":
+                await self.app(scope, receive, send)
+                return
+                
             request = Request(scope, receive)
             start_time = time.time()
             
@@ -54,8 +59,9 @@ class MonitoringMiddleware:
                     if len(self.metrics["response_times"]) > 1000:
                         self.metrics["response_times"] = self.metrics["response_times"][-1000:]
                     
-                    # Log request details
-                    self._log_request(request, status_code, response_time)
+                    # Log slow requests only
+                    if response_time > 5.0:  # Only log requests > 5 seconds
+                        logger.warning(f"Slow request: {method} {request.url.path} took {response_time:.2f}s")
                     
                     # Track errors
                     if status_code >= 400:

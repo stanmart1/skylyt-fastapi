@@ -14,6 +14,11 @@ class DatabaseMiddleware:
             await self.app(scope, receive, send)
             return
 
+        # Skip database middleware for OPTIONS requests
+        if scope.get("method") == "OPTIONS":
+            await self.app(scope, receive, send)
+            return
+
         request = Request(scope, receive)
         
         try:
