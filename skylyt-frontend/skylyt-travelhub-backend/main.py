@@ -28,7 +28,7 @@ from app.middleware.dynamic_rate_limit import DynamicRateLimitMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo, health_check, rate_limit_test
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo, health_check, rate_limit_test, cache
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
@@ -249,6 +249,7 @@ app.include_router(contact_settings.router, prefix="/api/v1", tags=["Contact Set
 app.include_router(about_settings.router, prefix="/api/v1", tags=["About Settings"])
 app.include_router(seo.router, prefix="/api/v1", tags=["SEO"])
 app.include_router(rate_limit_test.router, prefix="/api/v1", tags=["Rate Limit"])
+app.include_router(cache.router, prefix="/api/v1", tags=["Cache"])
 
 
 # Simple image serving endpoint without security middleware

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Shield, Save } from 'lucide-react';
+import { Shield, Save, Trash2 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const SecuritySettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
   const { updateSettings } = useSettings();
   const { toast } = useToast();
   const { hasPermission } = useAuth();
@@ -120,6 +121,27 @@ export const SecuritySettings = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const clearCache = async () => {
+    setClearingCache(true);
+    try {
+      const { apiService } = await import('@/services/api');
+      await apiService.request('/cache/clear', { method: 'POST' });
+      
+      toast({
+        title: "Success",
+        description: "Cache cleared successfully. Please refresh the page."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear cache",
+        variant: "destructive"
+      });
+    } finally {
+      setClearingCache(false);
     }
   };
 
@@ -347,10 +369,20 @@ export const SecuritySettings = () => {
           </div>
           
           {canManage && (
-            <Button onClick={saveSecuritySettings} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : 'Save Security Settings'}
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={saveSecuritySettings} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Saving...' : 'Save Security Settings'}
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={clearCache} 
+                disabled={clearingCache}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {clearingCache ? 'Clearing...' : 'Clear Cache'}
+              </Button>
+            </div>
           )}
           
           {!canManage && (
