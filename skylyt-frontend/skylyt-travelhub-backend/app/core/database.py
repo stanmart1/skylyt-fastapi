@@ -7,21 +7,22 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Database engine optimized for containers
+# Database engine with aggressive connection recovery
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=3600,  # 1 hour
-    pool_timeout=30,  # 30 seconds
-    pool_size=5,  # Container-friendly
-    max_overflow=10,  # Max 15 total connections
-    echo=False,  # Disable SQL logging
+    pool_recycle=300,  # 5 minutes - much shorter
+    pool_timeout=10,  # 10 seconds - fail fast
+    pool_size=3,  # Minimal connections
+    max_overflow=2,  # Max 5 total connections
+    echo=False,
     connect_args={
-        "connect_timeout": 10,
-        "keepalives_idle": 30,
-        "keepalives_interval": 10,
-        "keepalives_count": 5,
-        "application_name": "skylyt_api"
+        "connect_timeout": 5,
+        "keepalives_idle": 600,  # 10 minutes
+        "keepalives_interval": 30,
+        "keepalives_count": 3,
+        "application_name": "skylyt_api",
+        "sslmode": "prefer"  # Handle SSL issues gracefully
     } if "postgresql" in settings.DATABASE_URL else {}
 )
 
@@ -43,10 +44,13 @@ def set_postgresql_search_path(dbapi_connection, connection_record):
         cursor.execute("SET search_path TO public")
         cursor.close()
 
-# Minimal connection event handlers
+# Aggressive connection recovery
 @event.listens_for(engine, "invalidate")
 def receive_invalidate(dbapi_connection, connection_record, exception):
-    logger.error(f"Connection invalidated, error: {exception}")
+    logger.error(f"Connection invalidated, disposing pool: {exception}")
+    # Force immediate pool disposal on SSL errors
+    if "SSL" in str(exception) or "EOF" in str(exception):
+        engine.dispose()
 
 def get_db():
     db = SessionLocal()

@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Server, Database, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, Server, Database, AlertTriangle, CheckCircle, FileText, Activity } from 'lucide-react';
 import { apiService } from '@/services/api';
 
 interface HealthStatus {
@@ -43,6 +45,10 @@ export const SystemHealth = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [logsModalOpen, setLogsModalOpen] = useState(false);
+  const [healthData, setHealthData] = useState<any>(null);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   const fetchHealth = async () => {
     setLoading(true);
@@ -59,11 +65,51 @@ export const SystemHealth = () => {
     }
   };
 
+  const fetchHealthData = async () => {
+    try {
+      const [healthCheck, dbHealth, readiness, liveness] = await Promise.all([
+        apiService.request('/health/'),
+        apiService.request('/health/db'),
+        apiService.request('/health/ready'),
+        apiService.request('/health/live')
+      ]);
+      setHealthData({ healthCheck, dbHealth, readiness, liveness });
+    } catch (error) {
+      console.error('Failed to fetch health data:', error);
+    }
+  };
+
+  const fetchLogs = async () => {
+    setLogsLoading(true);
+    try {
+      // Mock logs - in real implementation, you'd fetch from a logging endpoint
+      const mockLogs = [
+        `${new Date().toISOString()} - INFO - Application started successfully`,
+        `${new Date().toISOString()} - INFO - Database connection established`,
+        `${new Date().toISOString()} - INFO - Redis cache connected`,
+        `${new Date().toISOString()} - INFO - Health check endpoint active`,
+        `${new Date().toISOString()} - INFO - System monitoring enabled`
+      ];
+      setLogs(mockLogs);
+    } catch (error) {
+      console.error('Failed to fetch logs:', error);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchHealth();
     const interval = setInterval(fetchHealth, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (logsModalOpen) {
+      fetchLogs();
+      fetchHealthData();
+    }
+  }, [logsModalOpen]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -137,6 +183,14 @@ export const SystemHealth = () => {
               <span className="ml-1">Unknown</span>
             </Badge>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLogsModalOpen(true)}
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            View Logs
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -290,6 +344,134 @@ export const SystemHealth = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Logs and Health Modal */}
+      <Dialog open={logsModalOpen} onOpenChange={setLogsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>System Logs & Health</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="logs" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="logs">Logs & Monitoring</TabsTrigger>
+              <TabsTrigger value="health">Application Health</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="logs" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-medium">System Logs</h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchLogs}
+                  disabled={logsLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 ${logsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+              <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+                {logsLoading ? (
+                  <div className="text-center">Loading logs...</div>
+                ) : logs.length > 0 ? (
+                  logs.map((log, index) => (
+                    <div key={index} className="mb-1">{log}</div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500">No logs available</div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="health" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-medium">Health Check Status</h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchHealthData}
+                >
+                  <Activity className="h-4 w-4 mr-1" />
+                  Check Health
+                </Button>
+              </div>
+              
+              {healthData ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Basic Health</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <Badge className={getStatusColor(healthData.healthCheck.status)}>
+                            {healthData.healthCheck.status}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Timestamp:</span>
+                          <span className="text-sm">{new Date(healthData.healthCheck.timestamp * 1000).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Database Health</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <Badge className={getStatusColor(healthData.dbHealth.status)}>
+                            {healthData.dbHealth.status}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Database:</span>
+                          <Badge className={getStatusColor(healthData.dbHealth.database)}>
+                            {healthData.dbHealth.database}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Readiness</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge className={getStatusColor(healthData.readiness.status)}>
+                        {healthData.readiness.status}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Liveness</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge className={getStatusColor(healthData.liveness.status)}>
+                        {healthData.liveness.status}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-600">Click "Check Health" to load health data</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

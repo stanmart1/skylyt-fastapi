@@ -28,6 +28,9 @@ class Settings(BaseModel):
     session_timeout = Column(String(10), default="30")
     two_factor_enabled = Column(Boolean, default=False)
     login_attempts_limit = Column(String(10), default="5")
+    api_rate_limit_enabled = Column(Boolean, default=True)
+    api_rate_limit_requests = Column(String(10), default="100")
+    api_rate_limit_window = Column(String(10), default="60")
     
     # Bank Transfer Settings
     bank_name = Column(String(255), nullable=True)

@@ -27,7 +27,7 @@ from app.middleware.db_monitoring import DatabaseMonitoringMiddleware
 from app.monitoring.error_tracking import ErrorHandlingMiddleware, error_tracker
 from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
-from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo
+from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo, health_check
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
@@ -203,6 +203,7 @@ app.include_router(payments.router, prefix="/api/v1", tags=["Payments"])
 app.include_router(bank_accounts.router, prefix="/api/v1", tags=["Bank Accounts"])
 app.include_router(rbac.router, prefix="/api/v1", tags=["RBAC"])
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
+app.include_router(health_check.router, prefix="/api/v1", tags=["Health Check"])
 app.include_router(notifications.router, prefix="/api/v1", tags=["Notifications"])
 app.include_router(admin_cars.router, prefix="/api/v1", tags=["Admin Cars"])
 app.include_router(admin_hotels.router, prefix="/api/v1", tags=["Admin Hotels"])

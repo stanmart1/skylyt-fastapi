@@ -42,7 +42,10 @@ export const SecuritySettings = () => {
     password_min_length: '8',
     session_timeout: '30',
     two_factor_enabled: false,
-    login_attempts_limit: '5'
+    login_attempts_limit: '5',
+    api_rate_limit_enabled: true,
+    api_rate_limit_requests: '100',
+    api_rate_limit_window: '60'
   });
 
   useEffect(() => {
@@ -58,7 +61,10 @@ export const SecuritySettings = () => {
         password_min_length: data.password_min_length || '8',
         session_timeout: data.session_timeout || '30',
         two_factor_enabled: data.two_factor_enabled || false,
-        login_attempts_limit: data.login_attempts_limit || '5'
+        login_attempts_limit: data.login_attempts_limit || '5',
+        api_rate_limit_enabled: data.api_rate_limit_enabled ?? true,
+        api_rate_limit_requests: data.api_rate_limit_requests || '100',
+        api_rate_limit_window: data.api_rate_limit_window || '60'
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -176,6 +182,52 @@ export const SecuritySettings = () => {
               disabled={!canManage}
             />
             <Label htmlFor="two_factor_enabled">Enable Two-Factor Authentication</Label>
+          </div>
+          
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold">API Rate Limiting</h3>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="api_rate_limit_enabled"
+                checked={securityForm.api_rate_limit_enabled}
+                onCheckedChange={(checked) => setSecurityForm({...securityForm, api_rate_limit_enabled: checked})}
+                disabled={!canManage}
+              />
+              <Label htmlFor="api_rate_limit_enabled">Enable API Rate Limiting</Label>
+            </div>
+            
+            {securityForm.api_rate_limit_enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                <div>
+                  <Label htmlFor="api_rate_limit_requests">Requests per Window</Label>
+                  <Input
+                    id="api_rate_limit_requests"
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={securityForm.api_rate_limit_requests}
+                    onChange={(e) => setSecurityForm({...securityForm, api_rate_limit_requests: e.target.value})}
+                    disabled={!canManage}
+                    placeholder="100"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="api_rate_limit_window">Time Window (seconds)</Label>
+                  <Input
+                    id="api_rate_limit_window"
+                    type="number"
+                    min="1"
+                    max="3600"
+                    value={securityForm.api_rate_limit_window}
+                    onChange={(e) => setSecurityForm({...securityForm, api_rate_limit_window: e.target.value})}
+                    disabled={!canManage}
+                    placeholder="60"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           {canManage && (

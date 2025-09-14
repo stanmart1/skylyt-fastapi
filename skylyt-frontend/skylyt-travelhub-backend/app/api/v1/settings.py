@@ -48,6 +48,9 @@ class SecuritySettingsUpdateSimplified(BaseModel):
     session_timeout: Optional[str] = None
     two_factor_enabled: Optional[bool] = None
     login_attempts_limit: Optional[str] = None
+    api_rate_limit_enabled: Optional[bool] = None
+    api_rate_limit_requests: Optional[str] = None
+    api_rate_limit_window: Optional[str] = None
 
 class BankTransferSettingsUpdateSimplified(BaseModel):
     bank_name: Optional[str] = None
@@ -105,6 +108,9 @@ def get_settings(db: Session = Depends(get_db)):
         "session_timeout": settings.session_timeout,
         "two_factor_enabled": settings.two_factor_enabled,
         "login_attempts_limit": settings.login_attempts_limit,
+        "api_rate_limit_enabled": getattr(settings, 'api_rate_limit_enabled', True),
+        "api_rate_limit_requests": getattr(settings, 'api_rate_limit_requests', '100'),
+        "api_rate_limit_window": getattr(settings, 'api_rate_limit_window', '60'),
         "paypal_sandbox": settings.paypal_sandbox,
         "bank_name": settings.bank_name,
         "account_name": settings.account_name,
