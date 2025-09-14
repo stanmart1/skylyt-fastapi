@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/clear")
 def clear_cache(current_user = Depends(get_current_user)):
-    """Clear all DragonflyDB cache"""
+    """Clear all DragonflyDB cache and force logout"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
@@ -16,7 +16,10 @@ def clear_cache(current_user = Depends(get_current_user)):
         redis_client = RedisService.get_client()
         redis_client.flushall()
         logger.info(f"Cache cleared by user: {current_user.email}")
-        return {"message": "Cache cleared successfully"}
+        return {
+            "message": "Cache cleared successfully", 
+            "force_logout": True
+        }
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
         raise HTTPException(status_code=500, detail="Failed to clear cache")

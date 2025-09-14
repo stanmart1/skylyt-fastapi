@@ -128,19 +128,24 @@ export const SecuritySettings = () => {
     setClearingCache(true);
     try {
       const { apiService } = await import('@/services/api');
-      await apiService.request('/cache/clear', { method: 'POST' });
+      const response = await apiService.request('/cache/clear', { method: 'POST' });
       
       toast({
         title: "Success",
-        description: "Cache cleared successfully. Please refresh the page."
+        description: "Cache cleared successfully. Logging out..."
       });
+      
+      // Force logout and redirect
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to clear cache",
         variant: "destructive"
       });
-    } finally {
       setClearingCache(false);
     }
   };
