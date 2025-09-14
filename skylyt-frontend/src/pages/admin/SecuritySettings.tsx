@@ -65,7 +65,7 @@ export const SecuritySettings = () => {
   const fetchSettings = async () => {
     try {
       const { apiService } = await import('@/services/api');
-      const data = await apiService.request('/settings/');
+      const data = await apiService.request(`/settings/?t=${Date.now()}`);
       
       setSecurityForm({
         password_min_length: data.password_min_length || '8',

@@ -110,14 +110,6 @@ def get_or_create_settings(db: Session) -> Settings:
 @router.get("/", response_model=SettingsResponse)
 def get_settings(db: Session = Depends(get_db)):
     """Get current system settings - public access for basic settings"""
-    from app.utils.cache_manager import cache_manager
-    
-    # Use cache for settings (5 minute cache)
-    cache_key = "system_settings"
-    cached_settings = cache_manager.get(cache_key)
-    if cached_settings:
-        return cached_settings
-    
     settings = get_or_create_settings(db)
     
     # Return settings without sensitive data for non-superadmins
@@ -181,8 +173,6 @@ def get_settings(db: Session = Depends(get_db)):
         "paypal_client_id": settings.paypal_client_id
     })
     
-    # Cache the response
-    cache_manager.set(cache_key, response_data, 300)  # 5 minute cache
     return response_data
 
 
