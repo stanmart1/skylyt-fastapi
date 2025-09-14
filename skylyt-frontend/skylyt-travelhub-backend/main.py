@@ -339,10 +339,10 @@ async def upload_file(file: UploadFile = File(...), upload_type: str = "general"
     secure_name = f"{uuid4()}{file_extension}"
     file_path = StorageManager.get_upload_path(upload_type, secure_name)
     
-    # Save file
-    content = await file.read()
+    # Save file with streaming to avoid memory issues
     with open(file_path, "wb") as buffer:
-        buffer.write(content)
+        while chunk := await file.read(8192):  # 8KB chunks
+            buffer.write(chunk)
     
     return {"url": StorageManager.get_serve_url(upload_type, secure_name), "filename": secure_name}
 
