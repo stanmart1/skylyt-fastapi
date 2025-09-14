@@ -106,8 +106,8 @@ export const SecuritySettings = () => {
         body: JSON.stringify(securityForm)
       });
       
-      const updatedSettings = await apiService.request('/settings/');
-      updateSettings(updatedSettings);
+      // Refresh settings from server
+      await fetchSettings();
       
       toast({
         title: "Success",
