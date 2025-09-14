@@ -43,9 +43,18 @@ export const SecuritySettings = () => {
     session_timeout: '30',
     two_factor_enabled: false,
     login_attempts_limit: '5',
-    api_rate_limit_enabled: true,
-    api_rate_limit_requests: '100',
-    api_rate_limit_window: '60'
+    general_rate_limit_enabled: true,
+    general_rate_limit_requests: '100',
+    general_rate_limit_window: '60',
+    auth_rate_limit_enabled: true,
+    auth_rate_limit_requests: '5',
+    auth_rate_limit_window: '60',
+    booking_rate_limit_enabled: true,
+    booking_rate_limit_requests: '20',
+    booking_rate_limit_window: '60',
+    admin_rate_limit_enabled: true,
+    admin_rate_limit_requests: '30',
+    admin_rate_limit_window: '600'
   });
 
   useEffect(() => {
@@ -62,9 +71,18 @@ export const SecuritySettings = () => {
         session_timeout: data.session_timeout || '30',
         two_factor_enabled: data.two_factor_enabled || false,
         login_attempts_limit: data.login_attempts_limit || '5',
-        api_rate_limit_enabled: data.api_rate_limit_enabled ?? true,
-        api_rate_limit_requests: data.api_rate_limit_requests || '100',
-        api_rate_limit_window: data.api_rate_limit_window || '60'
+        general_rate_limit_enabled: data.general_rate_limit_enabled ?? true,
+        general_rate_limit_requests: data.general_rate_limit_requests || '100',
+        general_rate_limit_window: data.general_rate_limit_window || '60',
+        auth_rate_limit_enabled: data.auth_rate_limit_enabled ?? true,
+        auth_rate_limit_requests: data.auth_rate_limit_requests || '5',
+        auth_rate_limit_window: data.auth_rate_limit_window || '60',
+        booking_rate_limit_enabled: data.booking_rate_limit_enabled ?? true,
+        booking_rate_limit_requests: data.booking_rate_limit_requests || '20',
+        booking_rate_limit_window: data.booking_rate_limit_window || '60',
+        admin_rate_limit_enabled: data.admin_rate_limit_enabled ?? true,
+        admin_rate_limit_requests: data.admin_rate_limit_requests || '30',
+        admin_rate_limit_window: data.admin_rate_limit_window || '600'
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -184,50 +202,148 @@ export const SecuritySettings = () => {
             <Label htmlFor="two_factor_enabled">Enable Two-Factor Authentication</Label>
           </div>
           
-          <div className="space-y-4 border-t pt-4">
+          <div className="space-y-6 border-t pt-4">
             <h3 className="text-lg font-semibold">API Rate Limiting</h3>
             
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="api_rate_limit_enabled"
-                checked={securityForm.api_rate_limit_enabled}
-                onCheckedChange={(checked) => setSecurityForm({...securityForm, api_rate_limit_enabled: checked})}
-                disabled={!canManage}
-              />
-              <Label htmlFor="api_rate_limit_enabled">Enable API Rate Limiting</Label>
-            </div>
-            
-            {securityForm.api_rate_limit_enabled && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
-                <div>
-                  <Label htmlFor="api_rate_limit_requests">Requests per Window</Label>
-                  <Input
-                    id="api_rate_limit_requests"
-                    type="number"
-                    min="1"
-                    max="10000"
-                    value={securityForm.api_rate_limit_requests}
-                    onChange={(e) => setSecurityForm({...securityForm, api_rate_limit_requests: e.target.value})}
-                    disabled={!canManage}
-                    placeholder="100"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="api_rate_limit_window">Time Window (seconds)</Label>
-                  <Input
-                    id="api_rate_limit_window"
-                    type="number"
-                    min="1"
-                    max="3600"
-                    value={securityForm.api_rate_limit_window}
-                    onChange={(e) => setSecurityForm({...securityForm, api_rate_limit_window: e.target.value})}
-                    disabled={!canManage}
-                    placeholder="60"
-                  />
-                </div>
+            {/* General Browsing/Search */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="general_rate_limit_enabled"
+                  checked={securityForm.general_rate_limit_enabled}
+                  onCheckedChange={(checked) => setSecurityForm({...securityForm, general_rate_limit_enabled: checked})}
+                  disabled={!canManage}
+                />
+                <Label htmlFor="general_rate_limit_enabled">General Browsing/Search</Label>
               </div>
-            )}
+              {securityForm.general_rate_limit_enabled && (
+                <div className="grid grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <Label>Requests</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.general_rate_limit_requests}
+                      onChange={(e) => setSecurityForm({...securityForm, general_rate_limit_requests: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                  <div>
+                    <Label>Window (seconds)</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.general_rate_limit_window}
+                      onChange={(e) => setSecurityForm({...securityForm, general_rate_limit_window: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Authentication */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="auth_rate_limit_enabled"
+                  checked={securityForm.auth_rate_limit_enabled}
+                  onCheckedChange={(checked) => setSecurityForm({...securityForm, auth_rate_limit_enabled: checked})}
+                  disabled={!canManage}
+                />
+                <Label htmlFor="auth_rate_limit_enabled">Authentication</Label>
+              </div>
+              {securityForm.auth_rate_limit_enabled && (
+                <div className="grid grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <Label>Requests</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.auth_rate_limit_requests}
+                      onChange={(e) => setSecurityForm({...securityForm, auth_rate_limit_requests: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                  <div>
+                    <Label>Window (seconds)</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.auth_rate_limit_window}
+                      onChange={(e) => setSecurityForm({...securityForm, auth_rate_limit_window: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Booking/Payment */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="booking_rate_limit_enabled"
+                  checked={securityForm.booking_rate_limit_enabled}
+                  onCheckedChange={(checked) => setSecurityForm({...securityForm, booking_rate_limit_enabled: checked})}
+                  disabled={!canManage}
+                />
+                <Label htmlFor="booking_rate_limit_enabled">Booking/Payment</Label>
+              </div>
+              {securityForm.booking_rate_limit_enabled && (
+                <div className="grid grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <Label>Requests</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.booking_rate_limit_requests}
+                      onChange={(e) => setSecurityForm({...securityForm, booking_rate_limit_requests: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                  <div>
+                    <Label>Window (seconds)</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.booking_rate_limit_window}
+                      onChange={(e) => setSecurityForm({...securityForm, booking_rate_limit_window: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Admin/Management */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="admin_rate_limit_enabled"
+                  checked={securityForm.admin_rate_limit_enabled}
+                  onCheckedChange={(checked) => setSecurityForm({...securityForm, admin_rate_limit_enabled: checked})}
+                  disabled={!canManage}
+                />
+                <Label htmlFor="admin_rate_limit_enabled">Admin/Management</Label>
+              </div>
+              {securityForm.admin_rate_limit_enabled && (
+                <div className="grid grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <Label>Requests</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.admin_rate_limit_requests}
+                      onChange={(e) => setSecurityForm({...securityForm, admin_rate_limit_requests: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                  <div>
+                    <Label>Window (seconds)</Label>
+                    <Input
+                      type="number"
+                      value={securityForm.admin_rate_limit_window}
+                      onChange={(e) => setSecurityForm({...securityForm, admin_rate_limit_window: e.target.value})}
+                      disabled={!canManage}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {canManage && (

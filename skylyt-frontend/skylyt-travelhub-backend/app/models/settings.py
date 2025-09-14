@@ -28,9 +28,26 @@ class Settings(BaseModel):
     session_timeout = Column(String(10), default="30")
     two_factor_enabled = Column(Boolean, default=False)
     login_attempts_limit = Column(String(10), default="5")
-    api_rate_limit_enabled = Column(Boolean, default=True)
-    api_rate_limit_requests = Column(String(10), default="100")
-    api_rate_limit_window = Column(String(10), default="60")
+    
+    # Rate Limiting - General
+    general_rate_limit_enabled = Column(Boolean, default=True)
+    general_rate_limit_requests = Column(String(10), default="100")
+    general_rate_limit_window = Column(String(10), default="60")
+    
+    # Rate Limiting - Authentication
+    auth_rate_limit_enabled = Column(Boolean, default=True)
+    auth_rate_limit_requests = Column(String(10), default="5")
+    auth_rate_limit_window = Column(String(10), default="60")
+    
+    # Rate Limiting - Booking/Payment
+    booking_rate_limit_enabled = Column(Boolean, default=True)
+    booking_rate_limit_requests = Column(String(10), default="20")
+    booking_rate_limit_window = Column(String(10), default="60")
+    
+    # Rate Limiting - Admin
+    admin_rate_limit_enabled = Column(Boolean, default=True)
+    admin_rate_limit_requests = Column(String(10), default="30")
+    admin_rate_limit_window = Column(String(10), default="600")
     
     # Bank Transfer Settings
     bank_name = Column(String(255), nullable=True)
