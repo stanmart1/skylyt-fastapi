@@ -15,8 +15,17 @@ router = APIRouter()
 
 @router.get("/currencies", response_model=List[CurrencyResponse])
 def get_currencies(db: Session = Depends(get_db)):
-    """Get all active currencies"""
+    """Get all active currencies with caching"""
+    from app.utils.cache_manager import cache_manager
+    
+    # Use cache for currencies (10 minute cache)
+    cache_key = "active_currencies"
+    cached_currencies = cache_manager.get(cache_key)
+    if cached_currencies:
+        return cached_currencies
+    
     currencies = CurrencyService.get_active_currencies(db)
+    cache_manager.set(cache_key, currencies, 600)  # 10 minute cache
     return currencies
 
 

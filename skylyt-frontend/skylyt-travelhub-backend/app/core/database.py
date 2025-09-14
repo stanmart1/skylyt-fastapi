@@ -3,18 +3,19 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 import logging
+import time
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Database engine with aggressive connection recovery
+# Database engine with production-ready connection pool
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=300,  # 5 minutes - much shorter
-    pool_timeout=10,  # 10 seconds - fail fast
-    pool_size=3,  # Minimal connections
-    max_overflow=2,  # Max 5 total connections
+    pool_recycle=1800,  # 30 minutes
+    pool_timeout=30,  # 30 seconds timeout
+    pool_size=10,  # Base connections
+    max_overflow=20,  # Max 30 total connections
     echo=False,
     connect_args={
         "connect_timeout": 5,
@@ -44,6 +45,17 @@ def set_postgresql_search_path(dbapi_connection, connection_record):
         cursor.execute("SET search_path TO public")
         cursor.close()
 
+# Query performance monitoring
+@event.listens_for(engine, "before_cursor_execute")
+def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    context._query_start_time = time.time()
+
+@event.listens_for(engine, "after_cursor_execute")
+def receive_after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    total = time.time() - context._query_start_time
+    if total > 1.0:  # Log queries taking > 1 second
+        logger.warning(f"Slow query ({total:.2f}s): {statement[:200]}...")
+
 # Aggressive connection recovery
 @event.listens_for(engine, "invalidate")
 def receive_invalidate(dbapi_connection, connection_record, exception):
@@ -58,7 +70,13 @@ def get_db():
         yield db
     except Exception as e:
         logger.error(f"Database session error: {e}")
-        db.rollback()
+        try:
+            db.rollback()
+        except Exception:
+            pass  # Ignore rollback errors
         raise
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            pass  # Ignore close errors

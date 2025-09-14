@@ -47,19 +47,31 @@ async def get_recent_activity(
     current_user = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    """Get recent activity for admin dashboard"""
+    """Get recent activity for admin dashboard with caching"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
+        from app.utils.cache_manager import cache_manager
+        
+        # Use cache for recent activity (2 minute cache)
+        cache_key = f"recent_activity_{activity_type or 'all'}"
+        cached_activity = cache_manager.get(cache_key)
+        if cached_activity:
+            return cached_activity
+        
         from sqlalchemy import desc
         activities = []
         
         from app.models.user import User
         
-        # Recent user registrations only (real data from database)
+        # Recent user registrations only (optimized query)
         if not activity_type or activity_type == "user":
-            recent_users = db.query(User).order_by(desc(User.created_at)).limit(10).all()
+            recent_users = db.query(User.id, User.first_name, User.last_name, User.created_at, User.is_active)\
+                            .order_by(desc(User.created_at))\
+                            .limit(10)\
+                            .all()
+            
             for user in recent_users:
                 activities.append({
                     "id": f"user_{user.id}",
@@ -70,12 +82,12 @@ async def get_recent_activity(
                     "status": "active" if user.is_active else "inactive"
                 })
         
-        # Sort by timestamp (most recent first)
-        activities.sort(key=lambda x: x["timestamp"], reverse=True)
+        result = {"activities": activities[:10]}
+        cache_manager.set(cache_key, result, 120)  # 2 minute cache
+        return result
         
-        return {"activities": activities[:10]}
     except Exception as e:
-        # Return empty activities if there's an error
+        logging.error(f"Error in recent activity: {e}")
         return {"activities": []}
 
 @router.get("/admin/car-stats")
