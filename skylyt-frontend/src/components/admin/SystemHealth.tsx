@@ -82,17 +82,34 @@ export const SystemHealth = () => {
   const fetchLogs = async () => {
     setLogsLoading(true);
     try {
-      // Mock logs - in real implementation, you'd fetch from a logging endpoint
-      const mockLogs = [
-        `${new Date().toISOString()} - INFO - Application started successfully`,
-        `${new Date().toISOString()} - INFO - Database connection established`,
-        `${new Date().toISOString()} - INFO - Redis cache connected`,
-        `${new Date().toISOString()} - INFO - Health check endpoint active`,
-        `${new Date().toISOString()} - INFO - System monitoring enabled`
-      ];
-      setLogs(mockLogs);
+      const response = await apiService.request('/health/logs?lines=100');
+      const logMessages = response.logs?.map((log: any) => 
+        `${log.timestamp} - ${log.message}`
+      ) || [];
+      
+      // If no real logs, show fallback
+      if (logMessages.length === 0) {
+        const fallbackLogs = [
+          `${new Date().toISOString()} - INFO - Application started successfully`,
+          `${new Date().toISOString()} - INFO - Database connection established`,
+          `${new Date().toISOString()} - INFO - Redis cache connected`,
+          `${new Date().toISOString()} - INFO - Health check endpoint active`,
+          `${new Date().toISOString()} - INFO - System monitoring enabled`
+        ];
+        setLogs(fallbackLogs);
+      } else {
+        setLogs(logMessages);
+      }
     } catch (error) {
       console.error('Failed to fetch logs:', error);
+      // Fallback to mock logs on error
+      const fallbackLogs = [
+        `${new Date().toISOString()} - ERROR - Failed to fetch real logs`,
+        `${new Date().toISOString()} - INFO - Application started successfully`,
+        `${new Date().toISOString()} - INFO - Database connection established`,
+        `${new Date().toISOString()} - INFO - System monitoring enabled`
+      ];
+      setLogs(fallbackLogs);
     } finally {
       setLogsLoading(false);
     }

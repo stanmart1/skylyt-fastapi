@@ -59,9 +59,13 @@ class MonitoringMiddleware:
                     if len(self.metrics["response_times"]) > 1000:
                         self.metrics["response_times"] = self.metrics["response_times"][-1000:]
                     
-                    # Log slow requests only
-                    if response_time > 5.0:  # Only log requests > 5 seconds
+                    # Log requests for monitoring
+                    if response_time > 1.0:  # Log requests > 1 second
                         logger.warning(f"Slow request: {method} {request.url.path} took {response_time:.2f}s")
+                    elif status_code >= 400:
+                        logger.error(f"Error request: {method} {request.url.path} - {status_code}")
+                    elif method != 'OPTIONS':  # Skip OPTIONS for cleaner logs
+                        logger.info(f"Request: {method} {request.url.path} - {status_code} ({response_time:.3f}s)")
                     
                     # Track errors
                     if status_code >= 400:
