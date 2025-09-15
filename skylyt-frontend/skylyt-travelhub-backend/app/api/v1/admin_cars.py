@@ -342,11 +342,14 @@ def get_car_stats(
         for p in all_payments:
             print(f"Payment {p.id}: status={p.status}, amount={p.amount}, date={p.created_at}")
         
-        # Try different status values
+        # Use safe parameterized query with predefined values
+        allowed_statuses = ['completed', 'COMPLETED', 'success', 'SUCCESS']
+        booking_type = 'car'
+        
         today_revenue = db.query(func.sum(Payment.amount)).join(Booking).filter(
             and_(
-                Booking.booking_type == 'car',
-                Payment.status.in_(['completed', 'COMPLETED', 'success', 'SUCCESS'])
+                Booking.booking_type == booking_type,
+                Payment.status.in_(allowed_statuses)
             )
         ).scalar() or 0
         

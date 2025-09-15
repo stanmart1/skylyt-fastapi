@@ -1,6 +1,5 @@
 import redis
 import json
-import pickle
 from typing import Any, Optional, Union, Dict
 from datetime import timedelta
 import hashlib
@@ -17,11 +16,8 @@ class CacheManager:
             if value is None:
                 return None
             
-            # Try to deserialize as JSON first, then pickle
-            try:
-                return json.loads(value)
-            except json.JSONDecodeError:
-                return pickle.loads(value)
+            # Only use safe JSON deserialization
+            return json.loads(value.decode('utf-8'))
         except Exception:
             return None
     
@@ -33,11 +29,8 @@ class CacheManager:
     ) -> bool:
         """Set value in cache"""
         try:
-            # Try to serialize as JSON first, then pickle
-            try:
-                serialized = json.dumps(value)
-            except (TypeError, ValueError):
-                serialized = pickle.dumps(value)
+            # Only use safe JSON serialization
+            serialized = json.dumps(value, default=str)
             
             if expire:
                 if isinstance(expire, timedelta):

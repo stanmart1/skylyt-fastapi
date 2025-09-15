@@ -14,6 +14,7 @@ from app.core.config import settings as config_settings
 from app.core.database import engine
 from app.models import Base
 from app.middleware import SecurityMiddleware, MonitoringMiddleware, setup_cors
+from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.database import DatabaseMiddleware
 from app.middleware.maintenance import MaintenanceMiddleware
 from app.middleware.performance import PerformanceMiddleware

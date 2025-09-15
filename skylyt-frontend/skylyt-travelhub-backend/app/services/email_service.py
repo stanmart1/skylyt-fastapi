@@ -22,12 +22,21 @@ class EmailService:
         self.base_url = "https://api.resend.com"
         self.from_email = settings.FROM_EMAIL
         
-        # Setup Jinja2 for email templates with security
+        # Setup Jinja2 for email templates with enhanced security
         template_dir = Path(__file__).parent.parent / "templates" / "email"
         self.jinja_env = Environment(
             loader=FileSystemLoader(template_dir),
-            autoescape=select_autoescape(['html', 'xml'])
+            autoescape=select_autoescape(['html', 'xml']),
+            # Disable dangerous features
+            enable_async=False,
+            # Remove potentially dangerous globals
+            finalize=lambda x: x if x is not None else ''
         )
+        # Remove dangerous built-ins
+        self.jinja_env.globals.pop('range', None)
+        self.jinja_env.globals.pop('lipsum', None)
+        self.jinja_env.globals.pop('cycler', None)
+        self.jinja_env.globals.pop('joiner', None)
     
     def _send_email(self, to_email: str, subject: str, html_content: str) -> bool:
         """Send email using Resend API"""
@@ -62,11 +71,36 @@ class EmailService:
             logger.error(f"Email sending failed: {str(e)}")
             return False
     
+    def _sanitize_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Sanitize template context to prevent code injection"""
+        sanitized = {}
+        for key, value in context.items():
+            if isinstance(value, str):
+                # Escape HTML in string values
+                sanitized[key] = html.escape(value)
+            elif isinstance(value, dict):
+                # Recursively sanitize nested dictionaries
+                sanitized[key] = self._sanitize_context(value)
+            elif isinstance(value, list):
+                # Sanitize list items
+                sanitized[key] = [html.escape(str(item)) if isinstance(item, str) else item for item in value]
+            else:
+                # Keep other types as-is (numbers, booleans, etc.)
+                sanitized[key] = value
+        return sanitized
+    
     def _send_templated_email(self, to_email: str, template_name: str, context: Dict[str, Any], subject: str) -> bool:
         """Helper method to send templated emails"""
         try:
+            # Validate template name to prevent path traversal
+            if ".." in template_name or "/" in template_name or "\\" in template_name:
+                logger.error(f"Invalid template name: {template_name}")
+                return False
+            
             template = self.jinja_env.get_template(f"{template_name}.html")
-            html_content = template.render(**context)
+            # Sanitize context to prevent code injection
+            safe_context = self._sanitize_context(context)
+            html_content = template.render(**safe_context)
             return self._send_email(to_email, subject, html_content)
         except Exception as e:
             logger.error(f"Failed to send {template_name} email: {str(e)}")
@@ -77,7 +111,7 @@ class EmailService:
         return self._send_templated_email(
             to_email,
             "welcome",
-            {"user_name": html.escape(user_name), "frontend_url": settings.FRONTEND_URL},
+            {"user_name": user_name, "frontend_url": settings.FRONTEND_URL},
             "Welcome to Skylyt Luxury!"
         )
     
@@ -114,7 +148,7 @@ class EmailService:
             to_email,
             "password_reset",
             {
-                "user_name": html.escape(user_name),
+                "user_name": user_name,
                 "reset_link": f"https://skylytluxury.com/reset-password?token={reset_token}",
                 "reset_token": reset_token
             },

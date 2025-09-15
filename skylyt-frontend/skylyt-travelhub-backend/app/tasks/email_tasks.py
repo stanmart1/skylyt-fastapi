@@ -6,7 +6,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+import html
 from app.core.config import settings
 from app.utils.logger import get_logger
 
@@ -27,10 +28,32 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-# Email templates
+# Email templates with enhanced security
 template_env = Environment(
-    loader=FileSystemLoader("app/templates/email")
+    loader=FileSystemLoader("app/templates/email"),
+    autoescape=select_autoescape(['html', 'xml']),
+    enable_async=False,
+    finalize=lambda x: x if x is not None else ''
 )
+# Remove dangerous built-ins
+template_env.globals.pop('range', None)
+template_env.globals.pop('lipsum', None)
+template_env.globals.pop('cycler', None)
+template_env.globals.pop('joiner', None)
+
+def sanitize_context(context: Dict) -> Dict:
+    """Sanitize template context to prevent code injection"""
+    sanitized = {}
+    for key, value in context.items():
+        if isinstance(value, str):
+            sanitized[key] = html.escape(value)
+        elif isinstance(value, dict):
+            sanitized[key] = sanitize_context(value)
+        elif isinstance(value, list):
+            sanitized[key] = [html.escape(str(item)) if isinstance(item, str) else item for item in value]
+        else:
+            sanitized[key] = value
+    return sanitized
 
 class EmailService:
     def __init__(self):
@@ -99,7 +122,8 @@ def send_booking_confirmation_email(self, booking_data: Dict):
     """Send booking confirmation email"""
     try:
         template = template_env.get_template("booking_confirmation.html")
-        html_content = template.render(booking=booking_data)
+        safe_context = sanitize_context({"booking": booking_data})
+        html_content = template.render(**safe_context)
         
         subject = f"Booking Confirmation - {booking_data['booking_reference']}"
         
@@ -127,10 +151,11 @@ def send_password_reset_email(self, email: str, reset_token: str, user_name: str
         template = template_env.get_template("password_reset.html")
         reset_url = f"https://skylytluxury.com/reset-password?token={reset_token}"
         
-        html_content = template.render(
-            user_name=user_name,
-            reset_link=reset_url
-        )
+        safe_context = sanitize_context({
+            "user_name": user_name,
+            "reset_link": reset_url
+        })
+        html_content = template.render(**safe_context)
         
         subject = "Password Reset Request - Skylyt TravelHub"
         
@@ -156,7 +181,8 @@ def send_welcome_email(self, email: str, user_name: str):
     """Send welcome email to new users"""
     try:
         template = template_env.get_template("welcome.html")
-        html_content = template.render(user_name=user_name)
+        safe_context = sanitize_context({"user_name": user_name})
+        html_content = template.render(**safe_context)
         
         subject = "Welcome to Skylyt TravelHub!"
         
@@ -182,7 +208,8 @@ def send_payment_confirmation_email(self, payment_data: Dict):
     """Send payment confirmation email"""
     try:
         template = template_env.get_template("payment_confirmation.html")
-        html_content = template.render(payment=payment_data)
+        safe_context = sanitize_context({"payment": payment_data})
+        html_content = template.render(**safe_context)
         
         subject = f"Payment Confirmation - {payment_data['transaction_id']}"
         
@@ -208,7 +235,8 @@ def send_booking_status_update_email(self, booking_data: Dict):
     """Send booking status update email"""
     try:
         template = template_env.get_template("booking_confirmation.html")
-        html_content = template.render(booking=booking_data)
+        safe_context = sanitize_context({"booking": booking_data})
+        html_content = template.render(**safe_context)
         
         subject = f"Booking Update - {booking_data['booking_reference']}"
         
@@ -234,11 +262,12 @@ def send_driver_assignment_email(self, driver_data: Dict, booking_data: Dict):
     """Send driver assignment notification email"""
     try:
         template = template_env.get_template("booking_confirmation.html")
-        html_content = template.render(
-            booking=booking_data,
-            driver=driver_data,
-            is_driver_assignment=True
-        )
+        safe_context = sanitize_context({
+            "booking": booking_data,
+            "driver": driver_data,
+            "is_driver_assignment": True
+        })
+        html_content = template.render(**safe_context)
         
         subject = f"New Trip Assignment - {booking_data['booking_reference']}"
         
@@ -263,10 +292,17 @@ def send_driver_assignment_email(self, driver_data: Dict, booking_data: Dict):
 def send_bulk_promotional_email(email_list: List[str], template_name: str, context: Dict):
     """Send bulk promotional emails"""
     try:
-        template = template_env.get_template(f"{template_name}.html")
-        html_content = template.render(**context)
+        # Validate template name to prevent path traversal
+        if ".." in template_name or "/" in template_name or "\\" in template_name:
+            logger.error(f"Invalid template name: {template_name}")
+            raise ValueError("Invalid template name")
         
-        subject = context.get("subject", "Special Offer from Skylyt TravelHub")
+        template = template_env.get_template(f"{template_name}.html")
+        # Sanitize context to prevent code injection
+        safe_context = sanitize_context(context)
+        html_content = template.render(**safe_context)
+        
+        subject = safe_context.get("subject", "Special Offer from Skylyt TravelHub")
         
         results = []
         for email in email_list:

@@ -49,12 +49,24 @@ async def upload_car_images(
             file_extension = '.jpg'
         unique_filename = f"{uuid.uuid4()}{file_extension}"
         
-        # Validate filename
-        if '..' in unique_filename or '/' in unique_filename or '\\' in unique_filename:
+        # Validate and sanitize filename to prevent path traversal
+        from app.utils.security import sanitize_filename
+        safe_filename = sanitize_filename(unique_filename)
+        
+        if '..' in safe_filename or '/' in safe_filename or '\\' in safe_filename:
             raise HTTPException(status_code=400, detail="Invalid filename")
         
-        # Get storage path and save file
-        file_path = StorageManager.get_upload_path("cars", unique_filename)
+        # Get storage path and save file with additional validation
+        file_path = StorageManager.get_upload_path("cars", safe_filename)
+        
+        # Ensure the resolved path is within the cars directory
+        cars_base_path = StorageManager.get_storage_path("cars")
+        try:
+            resolved_path = file_path.resolve()
+            if not str(resolved_path).startswith(str(cars_base_path.resolve())):
+                raise HTTPException(status_code=400, detail="Invalid file path")
+        except (OSError, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid file path")
         with open(file_path, "wb") as f:
             f.write(content)
         
@@ -64,14 +76,14 @@ async def upload_car_images(
         # Create database record
         car_image = CarImage(
             car_id=car_id,
-            image_url=f"/uploads/cars/{unique_filename}",
+            image_url=f"/uploads/cars/{safe_filename}",
             display_order=max_order + 1
         )
         db.add(car_image)
         uploaded_images.append({
             "id": car_image.id,
             "filename": file.filename,
-            "url": car_image.image_url
+            "url": f"/uploads/cars/{safe_filename}"
         })
     
     db.commit()

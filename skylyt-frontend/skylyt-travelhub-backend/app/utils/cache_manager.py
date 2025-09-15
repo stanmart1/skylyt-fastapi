@@ -1,6 +1,5 @@
 import redis
 import json
-import pickle
 from typing import Any, Optional, Union
 from functools import wraps
 from app.core.config import settings
@@ -13,14 +12,17 @@ class CacheManager:
     def get(self, key: str) -> Optional[Any]:
         try:
             data = self.redis_client.get(key)
-            return pickle.loads(data) if data else None
+            if data:
+                return json.loads(data.decode('utf-8'))
+            return None
         except:
             return None
     
     def set(self, key: str, value: Any, ttl: int = None) -> bool:
         try:
             ttl = ttl or self.default_ttl
-            self.redis_client.setex(key, ttl, pickle.dumps(value))
+            serialized_data = json.dumps(value, default=str)
+            self.redis_client.setex(key, ttl, serialized_data)
             return True
         except:
             return False

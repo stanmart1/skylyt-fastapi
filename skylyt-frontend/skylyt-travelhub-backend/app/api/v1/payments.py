@@ -590,16 +590,29 @@ def get_proof_of_payment(
         raise HTTPException(status_code=404, detail="Proof of payment not found")
     
     try:
-        # Extract filename from URL
-        filename = os.path.basename(payment.proof_of_payment_url)
+        # Extract and sanitize filename from URL
+        from app.utils.security import sanitize_filename
+        raw_filename = os.path.basename(payment.proof_of_payment_url)
+        filename = sanitize_filename(raw_filename)
         
-        # Use centralized storage
-        from app.core.storage import StorageManager
-        file_path = StorageManager.get_storage_path("payment_proofs") / filename
-        
-        # Validate path
-        if ".." in filename or "/" in filename or "\\" in filename:
+        # Additional validation for path traversal
+        if ".." in filename or "/" in filename or "\\" in filename or not filename:
             logger.warning(f"Path traversal attempt detected for payment {payment_id}")
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Use centralized storage with path validation
+        from app.core.storage import StorageManager
+        base_path = StorageManager.get_storage_path("payment_proofs")
+        file_path = base_path / filename
+        
+        # Ensure the resolved path is within the payment_proofs directory
+        try:
+            resolved_path = file_path.resolve()
+            if not str(resolved_path).startswith(str(base_path.resolve())):
+                logger.warning(f"Path traversal attempt detected for payment {payment_id}: {resolved_path}")
+                raise HTTPException(status_code=403, detail="Access denied")
+        except (OSError, ValueError):
+            logger.warning(f"Invalid path for payment {payment_id}: {file_path}")
             raise HTTPException(status_code=403, detail="Access denied")
         
         if not file_path.exists():

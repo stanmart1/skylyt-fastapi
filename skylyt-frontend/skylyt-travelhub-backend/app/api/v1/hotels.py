@@ -83,10 +83,12 @@ def search_hotels(
         # Build query
         query = db.query(Hotel)
         
-        # Apply filters
+        # Apply filters with safe parameterized queries
         search_location = destination or city
         if search_location:
-            query = query.filter(Hotel.location.ilike(f"%{search_location}%"))
+            # Use parameterized query to prevent SQL injection
+            safe_location = str(search_location).replace('%', '\%').replace('_', '\_')
+            query = query.filter(Hotel.location.ilike(f"%{safe_location}%"))
         if min_price:
             query = query.filter(Hotel.price_per_night >= min_price)
         if max_price:
@@ -97,25 +99,30 @@ def search_hotels(
         if min_rating:
             query = query.filter(Hotel.star_rating >= min_rating)
         
-        # Filter by amenities
+        # Filter by amenities with input validation
         if amenities:
-            amenity_list = [a.strip() for a in amenities.split(',') if a.strip()]
+            # Validate and sanitize amenity input
+            amenity_list = [a.strip()[:50] for a in amenities.split(',') if a.strip() and a.strip().isalnum()]
             if amenity_list:
                 for amenity in amenity_list:
+                    # Use safe parameterized query
                     query = query.filter(Hotel.amenities.op('?')(amenity))
         
-        # Apply sorting
+        # Apply sorting with whitelist validation
         if sort_by:
+            # Whitelist of allowed sort fields to prevent injection
+            allowed_sort_fields = ['price', 'name', 'location', 'star_rating', 'created_at']
+            
             if sort_by.startswith('-'):
                 sort_field = sort_by[1:]
                 if sort_field == 'price':
                     query = query.order_by(desc(Hotel.price_per_night))
-                elif hasattr(Hotel, sort_field):
+                elif sort_field in allowed_sort_fields and hasattr(Hotel, sort_field):
                     query = query.order_by(desc(getattr(Hotel, sort_field)))
             else:
                 if sort_by == 'price':
                     query = query.order_by(asc(Hotel.price_per_night))
-                elif hasattr(Hotel, sort_by):
+                elif sort_by in allowed_sort_fields and hasattr(Hotel, sort_by):
                     query = query.order_by(asc(getattr(Hotel, sort_by)))
         
         # Get total count

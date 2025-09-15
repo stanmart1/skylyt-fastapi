@@ -1,8 +1,21 @@
 import re
 import logging
+import html
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+def sanitize_filename(filename: str) -> str:
+    """Sanitize filename to prevent path traversal"""
+    # Remove path separators and dangerous characters
+    filename = re.sub(r'[<>:"/\\|?*]', '', filename)
+    filename = filename.replace('..', '')
+    return filename.strip()
+
+def escape_html(text: str) -> str:
+    """Escape HTML in user input"""
+    return html.escape(text) if text else text
 
 def sanitize_log_input(input_value: Any) -> str:
     """Sanitize input for logging to prevent log injection attacks"""

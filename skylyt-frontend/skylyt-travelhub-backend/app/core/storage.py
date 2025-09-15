@@ -32,9 +32,12 @@ class StorageManager:
     @classmethod
     def get_upload_path(cls, category: str, filename: str) -> Path:
         """Get full upload path for file"""
+        from app.utils.security import sanitize_filename
+        # Sanitize filename to prevent path traversal
+        safe_filename = sanitize_filename(filename)
         storage_dir = cls.get_storage_path(category)
         cls.ensure_directory(storage_dir)
-        return storage_dir / filename
+        return storage_dir / safe_filename
     
     @classmethod
     def get_serve_url(cls, category: str, filename: str) -> str:
