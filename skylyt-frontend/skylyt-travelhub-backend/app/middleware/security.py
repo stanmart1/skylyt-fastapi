@@ -81,6 +81,36 @@ class SecurityMiddleware:
     def set_ip_whitelist(self, ips: List[str]):
         self.allowed_ips = ips
 
+# Security headers middleware
+class SecurityHeadersMiddleware:
+    def __init__(self, app):
+        self.app = app
+    
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            async def send_wrapper(message):
+                if message["type"] == "http.response.start":
+                    headers = dict(message.get("headers", []))
+                    
+                    # Security headers
+                    security_headers = {
+                        b"X-Content-Type-Options": b"nosniff",
+                        b"X-Frame-Options": b"DENY",
+                        b"X-XSS-Protection": b"1; mode=block",
+                        b"Strict-Transport-Security": b"max-age=31536000; includeSubDomains",
+                        b"Referrer-Policy": b"strict-origin-when-cross-origin",
+                        b"Permissions-Policy": b"geolocation=(), microphone=(), camera=()"
+                    }
+                    
+                    headers.update(security_headers)
+                    message["headers"] = list(headers.items())
+                
+                await send(message)
+            
+            await self.app(scope, receive, send_wrapper)
+        else:
+            await self.app(scope, receive, send)
+
 # Request logging middleware
 class RequestLoggingMiddleware:
     def __init__(self, app):
