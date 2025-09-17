@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=1800,  # 30 minutes
-    pool_timeout=30,  # 30 seconds timeout
-    pool_size=10,  # Base connections
-    max_overflow=20,  # Max 30 total connections
+    pool_recycle=300,  # 5 minutes
+    pool_timeout=60,  # 60 seconds timeout
+    pool_size=25,  # Base connections
+    max_overflow=15,  # Max 40 total connections
     echo=False,
     connect_args={
         "connect_timeout": 5,
