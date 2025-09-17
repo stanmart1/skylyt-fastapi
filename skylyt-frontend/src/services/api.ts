@@ -44,11 +44,19 @@ class ApiService {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
+    // Enhanced timeout and retry configuration
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    const requestOptions: RequestInit = {
+      ...options,
+      headers,
+      signal: controller.signal,
+    };
+
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
+      const response = await this.fetchWithRetry(url, requestOptions, 3);
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMessage = 'API request failed';
@@ -68,6 +76,9 @@ class ApiService {
             case 404:
               errorMessage = 'Resource not found';
               break;
+            case 408:
+              errorMessage = 'Request timeout - please try again';
+              break;
             case 422:
               errorMessage = 'Invalid data provided';
               break;
@@ -77,8 +88,14 @@ class ApiService {
             case 500:
               errorMessage = 'Server error - please try again later';
               break;
+            case 502:
+              errorMessage = 'Bad gateway - server temporarily unavailable';
+              break;
             case 503:
               errorMessage = 'Service temporarily unavailable';
+              break;
+            case 504:
+              errorMessage = 'Gateway timeout - please try again';
               break;
             default:
               errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -89,11 +106,63 @@ class ApiService {
 
       return response.json();
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to server. Please check if the backend is running.');
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - please check your connection and try again');
+        }
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          throw new Error('Unable to connect to server. Please check your connection and try again.');
+        }
       }
       throw error;
     }
+  }
+
+  private async fetchWithRetry(
+    url: string, 
+    options: RequestInit, 
+    maxRetries: number
+  ): Promise<Response> {
+    let lastError: Error;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, options);
+        
+        // Don't retry on client errors (4xx), only on server errors (5xx) and network issues
+        if (response.ok || (response.status >= 400 && response.status < 500)) {
+          return response;
+        }
+        
+        // Server error - retry if we have attempts left
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt), 5000); // Exponential backoff, max 5s
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        return response;
+        
+      } catch (error) {
+        lastError = error as Error;
+        
+        // Don't retry on abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw error;
+        }
+        
+        // Retry on network errors if we have attempts left
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+    }
+    
+    throw lastError!;
   }
 
   async formRequest<T>(

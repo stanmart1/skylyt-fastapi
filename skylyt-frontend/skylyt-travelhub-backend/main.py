@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timezone
 from werkzeug.utils import secure_filename
 from app.core.config import settings as config_settings
-from app.core.database import engine
+from app.core.database import engine, reset_connection_pool, check_database_health
 from app.models import Base
 from app.middleware import SecurityMiddleware, MonitoringMiddleware, setup_cors
 from app.middleware.security import SecurityHeadersMiddleware
@@ -34,9 +34,13 @@ from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, ad
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
 from app.core.storage import StorageManager
+from app.services.performance_monitor import performance_monitor
 
 # Setup logging
 setup_logging()
+
+# Performance monitoring logger
+perf_logger = logging.getLogger("performance")
 
 # Constants
 ALLOWED_UPLOAD_FOLDERS = ["general", "hotels", "cars", "payment_proofs", "documents"]
@@ -52,39 +56,104 @@ from app.utils.validators import validate_financial_data, VALID_BOOKING_STATUSES
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    Base.metadata.create_all(bind=engine)
+    startup_logger = logging.getLogger("startup")
+    startup_logger.info("Starting Skylyt Luxury API...")
     
-    # Ensure storage directories exist
-    StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
-    for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:
-        StorageManager.ensure_directory(StorageManager.get_storage_path(category))
-    
-    # Initialize Dragonfly connection
     try:
-        RedisService.get_client()
-        logging.info("Dragonfly initialized successfully")
-    except Exception as e:
-        logging.warning(f"Dragonfly initialization failed: {e}")
-    
-    await cache_warmer.warm_static_data()
-    
-    # Initialize default currencies
-    from app.services.currency_service import CurrencyService
-    from app.core.database import SessionLocal
-    db = None
-    try:
-        db = SessionLocal()
-        CurrencyService.seed_default_currencies(db)
-    except Exception as e:
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to initialize currencies: {e}")
-    finally:
-        if db:
+        # Check database health before starting
+        db_health = check_database_health()
+        if db_health['status'] != 'healthy':
+            startup_logger.error(f"Database health check failed: {db_health}")
+            raise Exception("Database not healthy")
+        
+        startup_logger.info(f"Database connected successfully in {db_health['connection_time']}ms")
+        
+        # Create database tables
+        Base.metadata.create_all(bind=engine)
+        startup_logger.info("Database tables created/verified")
+        
+        # Ensure storage directories exist
+        StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
+        for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:
+            StorageManager.ensure_directory(StorageManager.get_storage_path(category))
+        startup_logger.info("Storage directories initialized")
+        
+        # Initialize Redis/Dragonfly connection with retry
+        redis_attempts = 3
+        for attempt in range(redis_attempts):
+            try:
+                redis_client = RedisService.get_client()
+                if redis_client:
+                    startup_logger.info("Redis/Dragonfly initialized successfully")
+                    break
+                else:
+                    startup_logger.warning(f"Redis connection attempt {attempt + 1} failed")
+            except Exception as e:
+                startup_logger.warning(f"Redis initialization attempt {attempt + 1} failed: {e}")
+                if attempt == redis_attempts - 1:
+                    startup_logger.error("Redis initialization failed after all attempts, continuing without cache")
+        
+        # Warm cache with static data
+        try:
+            await cache_warmer.warm_static_data()
+            startup_logger.info("Cache warmed with static data")
+        except Exception as e:
+            startup_logger.warning(f"Cache warming failed: {e}")
+        
+        # Initialize default currencies
+        from app.services.currency_service import CurrencyService
+        from app.core.database import SessionLocal
+        db = None
+        try:
+            db = SessionLocal()
+            CurrencyService.seed_default_currencies(db)
+            startup_logger.info("Default currencies initialized")
+        except Exception as e:
+            startup_logger.error(f"Failed to initialize currencies: {e}")
+        finally:
+            if db:
+                db.close()
+        
+        # Log startup performance metrics
+        try:
+            from app.core.database import SessionLocal
+            db = SessionLocal()
+            startup_metrics = performance_monitor.get_performance_summary(db)
+            perf_logger.info(f"Startup performance: {startup_metrics}")
             db.close()
+        except Exception as e:
+            startup_logger.warning(f"Failed to get startup metrics: {e}")
+        
+        startup_logger.info("✅ Skylyt Luxury API started successfully")
+        
+    except Exception as e:
+        startup_logger.error(f"❌ Failed to start application: {e}")
+        raise
     
     yield
+    
     # Shutdown
-    pass
+    shutdown_logger = logging.getLogger("shutdown")
+    shutdown_logger.info("Shutting down Skylyt Luxury API...")
+    
+    try:
+        # Reset connection pool to ensure clean shutdown
+        reset_connection_pool()
+        shutdown_logger.info("Database connections closed")
+        
+        # Close Redis connections
+        try:
+            redis_client = RedisService.get_client()
+            if redis_client:
+                redis_client.close()
+                shutdown_logger.info("Redis connections closed")
+        except Exception as e:
+            shutdown_logger.warning(f"Error closing Redis connections: {e}")
+        
+        shutdown_logger.info("✅ Shutdown completed successfully")
+        
+    except Exception as e:
+        shutdown_logger.error(f"❌ Error during shutdown: {e}")
 
 app = FastAPI(
     title="Skylyt Luxury API",
@@ -426,6 +495,36 @@ async def test_admin(db: Session = Depends(get_db)):
             "roles_count": len(admin_user.roles)
         }
     return {"exists": False}
+
+@app.get("/api/v1/performance/metrics")
+async def get_performance_metrics(db: Session = Depends(get_db)):
+    """Get comprehensive performance metrics"""
+    try:
+        metrics = performance_monitor.get_comprehensive_metrics(db)
+        return metrics
+    except Exception as e:
+        logger.error(f"Error getting performance metrics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get performance metrics")
+
+@app.get("/api/v1/performance/summary")
+async def get_performance_summary(db: Session = Depends(get_db)):
+    """Get performance summary"""
+    try:
+        summary = performance_monitor.get_performance_summary(db)
+        return summary
+    except Exception as e:
+        logger.error(f"Error getting performance summary: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get performance summary")
+
+@app.post("/api/v1/performance/reset-pool")
+async def reset_database_pool():
+    """Reset database connection pool (admin only)"""
+    try:
+        success = reset_connection_pool()
+        return {"success": success, "message": "Database pool reset" if success else "Failed to reset pool"}
+    except Exception as e:
+        logger.error(f"Error resetting database pool: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset database pool")
 
 @app.get("/cars-management")
 async def cars_management_page(current_user = Depends(get_current_user)):

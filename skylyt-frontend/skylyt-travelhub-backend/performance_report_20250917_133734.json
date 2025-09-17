@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-09-17T13:37:31.816031",
+  "system": {
+    "cpu_percent": 7.8,
+    "memory_percent": 78.6,
+    "disk_percent": 4.6,
+    "load_average": [
+      1.6533203125,
+      1.92919921875,
+      2.44091796875
+    ]
+  },
+  "database": {
+    "error": "'QueuePool' object has no attribute 'invalid'"
+  },
+  "api": {
+    "/api/v1/health": {
+      "status_code": 503,
+      "response_time": 1.4441332817077637,
+      "success": false
+    },
+    "/api/v1/health/detailed": {
+      "status_code": 404,
+      "response_time": 0.011140823364257812,
+      "success": false
+    }
+  },
+  "cache": {
+    "error": "Error 61 connecting to localhost:6379. Connection refused."
+  },
+  "health_score": 60.0
+}

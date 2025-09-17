@@ -64,11 +64,35 @@ report:
 
 # Database optimization
 optimize-db:
-	python scripts/optimize_database.py
+	python scripts/optimize_database_performance.py
+
+# Fix database timeouts
+fix-timeouts:
+	python fix_database_timeouts.py
+
+# Run all performance fixes
+run-all-fixes:
+	python run_performance_fixes.py
 
 # Performance monitoring
 monitor:
 	python scripts/performance_monitor.py
+
+# Check performance metrics
+performance-check:
+	curl -s http://localhost:8000/api/v1/performance/summary | python -m json.tool
+
+# Reset database connection pool
+reset-pool:
+	curl -X POST http://localhost:8000/api/v1/performance/reset-pool
+
+# Health check
+health-check:
+	curl -s http://localhost:8000/api/v1/health | python -m json.tool
+
+# Test database connection
+test-db:
+	python test_database_connection.py
 
 # Run database migrations
 migrate:
@@ -100,7 +124,13 @@ help:
 	@echo "  security        - Run security checks"
 	@echo "  report          - Generate comprehensive test report"
 	@echo "  optimize-db     - Optimize database performance"
+	@echo "  fix-timeouts    - Fix database timeout issues"
+	@echo "  run-all-fixes   - Run all performance fixes"
 	@echo "  monitor         - Run performance monitoring"
+	@echo "  performance-check - Check performance metrics"
+	@echo "  reset-pool      - Reset database connection pool"
+	@echo "  health-check    - Check application health"
+	@echo "  test-db         - Test database connection"
 	@echo "  migrate         - Run database migrations"
 	@echo "  migration MESSAGE=name - Create new migration"
 	@echo "  validate        - Validate complete implementation"
