@@ -7,12 +7,13 @@ This document provides comprehensive solutions for database timeout issues you'v
 If you're experiencing database timeouts right now, run this command:
 
 ```bash
-# Run all performance fixes
+# Run all performance fixes (includes SSL fixes)
 make run-all-fixes
 
 # Or run individually:
-make fix-timeouts
-make optimize-db
+make fix-ssl         # Fix SSL connection issues (run this first!)
+make fix-timeouts    # Fix database timeout issues
+make optimize-db     # Optimize database performance
 ```
 
 ## 🔍 What Was Fixed
@@ -186,7 +187,9 @@ tail -f logs/app.log
 - Solution: Query is taking too long, optimize the query or increase timeout
 
 **"SSL connection has been closed unexpectedly"**
-- Solution: Network issue, the new keepalive settings should fix this
+- Solution: SSL connection timeout, run `make fix-ssl` to optimize SSL settings
+- The application now automatically retries SSL connections
+- Use `python monitor_ssl_connections.py` to monitor SSL health
 
 ## 📞 Getting Help
 

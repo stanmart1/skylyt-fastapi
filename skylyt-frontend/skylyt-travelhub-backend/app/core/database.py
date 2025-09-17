@@ -14,12 +14,15 @@ def get_connection_args():
     """Get database connection arguments based on database type"""
     if "postgresql" in settings.DATABASE_URL:
         return {
-            "connect_timeout": 15,  # Increased from 5
-            "keepalives_idle": 300,  # Reduced from 600 (5 minutes)
-            "keepalives_interval": 15,  # Reduced from 30
-            "keepalives_count": 5,  # Increased from 3
+            "connect_timeout": 20,  # Increased for SSL connections
+            "keepalives_idle": 120,  # Reduced to 2 minutes for faster detection
+            "keepalives_interval": 10,  # More frequent keepalives
+            "keepalives_count": 3,  # Fewer retries before giving up
             "application_name": "skylyt_api",
-            "sslmode": "prefer",
+            "sslmode": "require",  # Force SSL but handle errors gracefully
+            "sslcert": None,  # Don't require client certificates
+            "sslkey": None,
+            "sslrootcert": None,
             "options": "-c statement_timeout=45s -c idle_in_transaction_session_timeout=60s -c lock_timeout=30s"
         }
     return {}
@@ -46,7 +49,7 @@ pool_size, max_overflow = get_pool_config()
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=1800,  # 30 minutes instead of 5
+    pool_recycle=600,  # 10 minutes - shorter for SSL connections
     pool_timeout=180,  # 3 minutes timeout (increased from 60s)
     pool_size=pool_size,  # Dynamic sizing
     max_overflow=max_overflow,  # Dynamic overflow
@@ -57,7 +60,9 @@ engine = create_engine(
     execution_options={
         "autocommit": False,
         "isolation_level": "READ_COMMITTED"
-    }
+    },
+    # Enhanced error handling for SSL issues
+    pool_reset_on_return='commit'
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -101,11 +106,36 @@ def receive_after_cursor_execute(conn, cursor, statement, parameters, context, e
 def receive_invalidate(dbapi_connection, connection_record, exception):
     logger.error(f"Connection invalidated: {exception}")
     
-    # Immediate pool disposal for specific errors
-    critical_errors = ["SSL", "EOF", "timeout", "connection reset", "broken pipe"]
+    # Handle SSL connection errors specifically
+    if "SSL connection has been closed unexpectedly" in str(exception):
+        logger.warning("SSL connection closed unexpectedly - this is normal for idle connections")
+        # Don't dispose the entire pool for SSL timeouts, just let it reconnect
+        return
+    
+    # Immediate pool disposal for other critical errors
+    critical_errors = ["EOF", "connection reset", "broken pipe", "server closed the connection"]
     if any(error in str(exception).lower() for error in critical_errors):
         logger.error("Critical connection error detected, disposing entire pool")
         engine.dispose()
+
+# SSL connection error handler
+@event.listens_for(engine, "connect")
+def handle_ssl_connect(dbapi_connection, connection_record):
+    """Handle SSL connection setup"""
+    if "postgresql" in settings.DATABASE_URL:
+        try:
+            # Test the connection immediately
+            with dbapi_connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+        except Exception as e:
+            if "SSL" in str(e):
+                logger.warning(f"SSL connection issue during setup: {e}")
+                # Let SQLAlchemy handle the retry
+                raise
+            else:
+                logger.error(f"Connection test failed: {e}")
+                raise
 
 # Connection health monitoring
 @event.listens_for(engine, "connect")
@@ -151,79 +181,133 @@ def handle_error(exception_context):
             except:
                 pass
 
-# Enhanced session management with timeout handling
+# Enhanced session management with timeout and SSL error handling
 def get_db():
-    """Enhanced database session with timeout and error handling"""
-    db = SessionLocal()
+    """Enhanced database session with timeout and SSL error handling"""
+    db = None
     start_time = time.time()
+    max_retries = 3
+    retry_count = 0
     
-    try:
-        # Test connection immediately
-        db.execute(text("SELECT 1"))
-        yield db
-        
-    except Exception as e:
-        session_duration = time.time() - start_time
-        logger.error(f"Database session error after {session_duration:.2f}s: {e}")
-        
-        # Handle specific timeout errors
-        if "timeout" in str(e).lower() or "connection" in str(e).lower():
-            logger.error("Database timeout detected, invalidating connection")
-            try:
-                db.invalidate()
-            except:
-                pass
-        
-        # Attempt rollback with timeout protection
+    while retry_count < max_retries:
         try:
-            db.rollback()
-        except Exception as rollback_error:
-            logger.warning(f"Rollback failed: {rollback_error}")
+            db = SessionLocal()
+            
+            # Test connection immediately with timeout
+            db.execute(text("SELECT 1"))
+            
+            # If we get here, connection is good
+            yield db
+            break
+            
+        except Exception as e:
+            session_duration = time.time() - start_time
+            error_msg = str(e).lower()
+            
+            # Handle SSL connection errors with retry
+            if "ssl connection has been closed unexpectedly" in error_msg:
+                retry_count += 1
+                logger.warning(f"SSL connection error (attempt {retry_count}/{max_retries}): {e}")
+                
+                if db:
+                    try:
+                        db.close()
+                    except:
+                        pass
+                    db = None
+                
+                if retry_count < max_retries:
+                    # Wait a bit before retrying
+                    time.sleep(0.5 * retry_count)
+                    continue
+                else:
+                    logger.error("Max SSL retry attempts reached")
+                    raise
+            
+            # Handle other connection/timeout errors
+            elif "timeout" in error_msg or "connection" in error_msg:
+                logger.error(f"Database timeout/connection error after {session_duration:.2f}s: {e}")
+                
+                if db:
+                    try:
+                        db.rollback()
+                    except Exception as rollback_error:
+                        logger.warning(f"Rollback failed: {rollback_error}")
+                raise
+            else:
+                # Other errors - don't retry
+                logger.error(f"Database session error after {session_duration:.2f}s: {e}")
+                if db:
+                    try:
+                        db.rollback()
+                    except Exception as rollback_error:
+                        logger.warning(f"Rollback failed: {rollback_error}")
+                raise
         
-        raise
-        
-    finally:
-        session_duration = time.time() - start_time
-        
-        # Log long-running sessions
-        if session_duration > 30:
-            logger.warning(f"Long database session: {session_duration:.2f}s")
-        
-        # Safe session cleanup
-        try:
-            db.close()
-        except Exception as close_error:
-            logger.warning(f"Session close error: {close_error}")
+        finally:
+            if db:
+                session_duration = time.time() - start_time
+                
+                # Log long-running sessions
+                if session_duration > 30:
+                    logger.warning(f"Long database session: {session_duration:.2f}s")
+                
+                # Safe session cleanup
+                try:
+                    db.close()
+                except Exception as close_error:
+                    logger.warning(f"Session close error: {close_error}")
 
-# Health check function for database connectivity
+# Health check function for database connectivity with SSL error handling
 def check_database_health():
-    """Check database connectivity and performance"""
-    try:
-        start_time = time.time()
-        db = SessionLocal()
-        
-        # Simple connectivity test
-        result = db.execute(text("SELECT 1 as health_check"))
-        row = result.fetchone()
-        
-        connection_time = time.time() - start_time
-        
-        db.close()
-        
-        return {
-            "status": "healthy" if row and row[0] == 1 else "unhealthy",
-            "connection_time": round(connection_time * 1000, 2),  # ms
-            "pool_size": engine.pool.size(),
-            "checked_out": engine.pool.checkedout(),
-            "overflow": engine.pool.overflow()
-        }
-        
-    except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "connection_time": None
-        }
+    """Check database connectivity and performance with SSL error handling"""
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            start_time = time.time()
+            db = SessionLocal()
+            
+            # Simple connectivity test
+            result = db.execute(text("SELECT 1 as health_check"))
+            row = result.fetchone()
+            
+            connection_time = time.time() - start_time
+            
+            db.close()
+            
+            return {
+                "status": "healthy" if row and row[0] == 1 else "unhealthy",
+                "connection_time": round(connection_time * 1000, 2),  # ms
+                "pool_size": engine.pool.size(),
+                "checked_out": engine.pool.checkedout(),
+                "overflow": engine.pool.overflow(),
+                "attempt": attempt + 1
+            }
+            
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # Handle SSL errors with retry
+            if "ssl connection has been closed unexpectedly" in error_msg and attempt < max_retries - 1:
+                logger.warning(f"SSL error in health check (attempt {attempt + 1}): {e}")
+                time.sleep(0.5)
+                continue
+            
+            # Return error status
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "connection_time": None,
+                "attempt": attempt + 1
+            }
+    
+    return {
+        "status": "unhealthy",
+        "error": "Max retry attempts exceeded",
+        "connection_time": None,
+        "attempt": max_retries
+    }
 
 # Connection pool management utilities
 def reset_connection_pool():

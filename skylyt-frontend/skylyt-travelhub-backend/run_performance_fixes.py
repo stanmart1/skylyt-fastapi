@@ -41,6 +41,7 @@ def main():
     logger.info("🚀 Starting Skylyt Luxury Performance Optimization...")
     
     scripts = [
+        ("fix_ssl_connection_issues.py", "SSL Connection Fixes"),
         ("fix_database_timeouts.py", "Database Timeout Fixes"),
         ("scripts/optimize_database_performance.py", "Database Performance Optimization"),
     ]

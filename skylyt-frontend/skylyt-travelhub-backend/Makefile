@@ -70,6 +70,10 @@ optimize-db:
 fix-timeouts:
 	python fix_database_timeouts.py
 
+# Fix SSL connection issues
+fix-ssl:
+	python fix_ssl_connection_issues.py
+
 # Run all performance fixes
 run-all-fixes:
 	python run_performance_fixes.py
@@ -125,6 +129,7 @@ help:
 	@echo "  report          - Generate comprehensive test report"
 	@echo "  optimize-db     - Optimize database performance"
 	@echo "  fix-timeouts    - Fix database timeout issues"
+	@echo "  fix-ssl         - Fix SSL connection issues"
 	@echo "  run-all-fixes   - Run all performance fixes"
 	@echo "  monitor         - Run performance monitoring"
 	@echo "  performance-check - Check performance metrics"
