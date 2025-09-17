@@ -184,79 +184,33 @@ def handle_error(exception_context):
 # Enhanced session management with timeout and SSL error handling
 def get_db():
     """Enhanced database session with timeout and SSL error handling"""
-    db = None
+    db = SessionLocal()
     start_time = time.time()
-    max_retries = 3
-    retry_count = 0
     
-    while retry_count < max_retries:
+    try:
+        # Test connection immediately with timeout
+        db.execute(text("SELECT 1"))
+        yield db
+    except Exception as e:
+        session_duration = time.time() - start_time
+        logger.error(f"Database session error after {session_duration:.2f}s: {e}")
         try:
-            db = SessionLocal()
-            
-            # Test connection immediately with timeout
-            db.execute(text("SELECT 1"))
-            
-            # If we get here, connection is good
-            yield db
-            break
-            
-        except Exception as e:
-            session_duration = time.time() - start_time
-            error_msg = str(e).lower()
-            
-            # Handle SSL connection errors with retry
-            if "ssl connection has been closed unexpectedly" in error_msg:
-                retry_count += 1
-                logger.warning(f"SSL connection error (attempt {retry_count}/{max_retries}): {e}")
-                
-                if db:
-                    try:
-                        db.close()
-                    except:
-                        pass
-                    db = None
-                
-                if retry_count < max_retries:
-                    # Wait a bit before retrying
-                    time.sleep(0.5 * retry_count)
-                    continue
-                else:
-                    logger.error("Max SSL retry attempts reached")
-                    raise
-            
-            # Handle other connection/timeout errors
-            elif "timeout" in error_msg or "connection" in error_msg:
-                logger.error(f"Database timeout/connection error after {session_duration:.2f}s: {e}")
-                
-                if db:
-                    try:
-                        db.rollback()
-                    except Exception as rollback_error:
-                        logger.warning(f"Rollback failed: {rollback_error}")
-                raise
-            else:
-                # Other errors - don't retry
-                logger.error(f"Database session error after {session_duration:.2f}s: {e}")
-                if db:
-                    try:
-                        db.rollback()
-                    except Exception as rollback_error:
-                        logger.warning(f"Rollback failed: {rollback_error}")
-                raise
+            db.rollback()
+        except Exception as rollback_error:
+            logger.warning(f"Rollback failed: {rollback_error}")
+        raise
+    finally:
+        session_duration = time.time() - start_time
         
-        finally:
-            if db:
-                session_duration = time.time() - start_time
-                
-                # Log long-running sessions
-                if session_duration > 30:
-                    logger.warning(f"Long database session: {session_duration:.2f}s")
-                
-                # Safe session cleanup
-                try:
-                    db.close()
-                except Exception as close_error:
-                    logger.warning(f"Session close error: {close_error}")
+        # Log long-running sessions
+        if session_duration > 30:
+            logger.warning(f"Long database session: {session_duration:.2f}s")
+        
+        # Safe session cleanup
+        try:
+            db.close()
+        except Exception as close_error:
+            logger.warning(f"Session close error: {close_error}")
 
 # Health check function for database connectivity with SSL error handling
 def check_database_health():

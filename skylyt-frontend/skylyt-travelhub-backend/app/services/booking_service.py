@@ -14,12 +14,12 @@ from app.core.database import get_db
 
 
 class BookingService:
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self):
         self.email_service = EmailService()
 
     def get_bookings_with_filters(
         self,
+        db: Session,
         search: Optional[str] = None,
         status: Optional[str] = None,
         payment_status: Optional[str] = None,
@@ -32,7 +32,7 @@ class BookingService:
         per_page: int = 20
     ) -> Dict[str, Any]:
         """Get bookings with advanced filtering, search, and pagination"""
-        query = self.db.query(Booking)
+        query = db.query(Booking)
         
         # Search functionality
         if search:
@@ -79,9 +79,9 @@ class BookingService:
             "total_pages": (total + per_page - 1) // per_page
         }
 
-    def get_booking_details(self, booking_id: int) -> Optional[Dict[str, Any]]:
+    def get_booking_details(self, db: Session, booking_id: int) -> Optional[Dict[str, Any]]:
         """Get detailed booking information with related data"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return None
         
@@ -94,7 +94,7 @@ class BookingService:
                 item_id = data.get('item_id')
                 
                 if booking.booking_type == 'hotel' and item_id:
-                    hotel = self.db.query(Hotel).filter(Hotel.id == item_id).first()
+                    hotel = db.query(Hotel).filter(Hotel.id == item_id).first()
                     if hotel:
                         booking_data['hotel_details'] = {
                             'name': hotel.name,
@@ -103,7 +103,7 @@ class BookingService:
                             'amenities': hotel.amenities
                         }
                 elif booking.booking_type == 'car' and item_id:
-                    car = self.db.query(Car).filter(Car.id == item_id).first()
+                    car = db.query(Car).filter(Car.id == item_id).first()
                     if car:
                         booking_data['car_details'] = {
                             'name': car.name,
@@ -115,9 +115,9 @@ class BookingService:
         
         return booking_data
 
-    def update_booking_status(self, booking_id: int, new_status: str, user_id: int) -> bool:
+    def update_booking_status(self, db: Session, booking_id: int, new_status: str, user_id: int) -> bool:
         """Update booking status with lifecycle management"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
         
@@ -129,16 +129,16 @@ class BookingService:
         
         # Trigger notifications based on status change
         if new_status == "confirmed":
-            self.send_confirmation_email(booking_id)
+            self.send_confirmation_email(db, booking_id)
         elif new_status == "cancelled":
-            self.send_cancellation_email(booking_id)
+            self.send_cancellation_email(db, booking_id)
         
-        self.db.commit()
+        db.commit()
         return True
 
-    def cancel_booking(self, booking_id: int, reason: str, user_id: int) -> bool:
+    def cancel_booking(self, db: Session, booking_id: int, reason: str, user_id: int) -> bool:
         """Cancel booking with proper lifecycle management"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
         
@@ -146,14 +146,14 @@ class BookingService:
         booking.special_requests = f"{booking.special_requests or ''}\nCancellation reason: {reason}".strip()
         
         self._log_booking_history(booking_id, f"Booking cancelled: {reason}", user_id)
-        self.send_cancellation_email(booking_id)
+        self.send_cancellation_email(db, booking_id)
         
-        self.db.commit()
+        db.commit()
         return True
 
-    def send_confirmation_email(self, booking_id: int) -> bool:
+    def send_confirmation_email(self, db: Session, booking_id: int) -> bool:
         """Send booking confirmation email"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
         
@@ -170,9 +170,9 @@ class BookingService:
             print(f"Failed to send confirmation email: {e}")
             return False
 
-    def send_cancellation_email(self, booking_id: int) -> bool:
+    def send_cancellation_email(self, db: Session, booking_id: int) -> bool:
         """Send booking cancellation email"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
         
@@ -188,9 +188,9 @@ class BookingService:
             print(f"Failed to send cancellation email: {e}")
             return False
 
-    def generate_invoice_data(self, booking_id: int) -> Optional[Dict[str, Any]]:
+    def generate_invoice_data(self, db: Session, booking_id: int) -> Optional[Dict[str, Any]]:
         """Generate invoice data for booking"""
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return None
         
@@ -233,11 +233,11 @@ class BookingService:
             "booking_data": booking.booking_data
         }
 
-    def update_booking_status_helper(self, booking_id: int, status: str) -> Dict[str, Any]:
+    def update_booking_status_helper(self, db: Session, booking_id: int, status: str) -> Dict[str, Any]:
         """Helper function to update booking status with email notifications"""
         from app.utils.validators import validate_booking_status
         
-        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="Booking not found")
@@ -246,7 +246,7 @@ class BookingService:
         
         old_status = booking.status
         booking.status = status
-        self.db.commit()
+        db.commit()
         
         # Send email notification for status changes
         if old_status != status and booking.customer_email:

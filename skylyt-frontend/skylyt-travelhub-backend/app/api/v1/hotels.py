@@ -11,8 +11,15 @@ router = APIRouter(prefix="/hotels", tags=["hotels"])
 
 
 @router.get("/")
-def get_all_hotels(db: Session = Depends(get_db)):
+async def get_all_hotels(db: Session = Depends(get_db)):
     """Get all hotels for admin management"""
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_result = await api_cache.get_cached_response("hotels_all", {})
+    if cached_result:
+        return cached_result
+    
     try:
         from app.models.hotel import Hotel
         
@@ -35,14 +42,19 @@ def get_all_hotels(db: Session = Depends(get_db)):
                 "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
-        return {"hotels": hotel_list}
+        result = {"hotels": hotel_list}
+        
+        # Cache for 10 minutes
+        await api_cache.cache_response("hotels_all", {}, result, ttl=600)
+        
+        return result
     except Exception as e:
         print(f"Error fetching hotels: {e}")
         return {"hotels": []}
 
 
 @router.get("/search")
-def search_hotels(
+async def search_hotels(
     destination: Optional[str] = Query(None, description="Destination city"),
     city: Optional[str] = Query(None, description="City to search in"),
     checkin_date: Optional[str] = Query(None, description="Check-in date (YYYY-MM-DD)"),
@@ -60,7 +72,7 @@ def search_hotels(
     db: Session = Depends(get_db)
 ):
     """Search hotels with filters and caching"""
-    from app.services.cache_service import CacheService
+    from app.utils.cache import search_cache
     
     # Create cache key from search parameters
     search_params = {
@@ -72,7 +84,7 @@ def search_hotels(
     }
     
     # Try to get from cache first
-    cached_result = CacheService.get_cached_hotel_search(search_params)
+    cached_result = await search_cache.get_search_results(search_params)
     if cached_result:
         return cached_result
     
@@ -185,7 +197,7 @@ def search_hotels(
         result = {"hotels": hotel_list, "total": total}
         
         # Cache the result for 5 minutes
-        CacheService.cache_hotel_search(search_params, result, ttl=300)
+        await search_cache.cache_search_results(search_params, result, ttl=300)
         
         return result
     except Exception as e:
@@ -194,11 +206,18 @@ def search_hotels(
 
 
 @router.get("/featured")
-def get_featured_hotels(
+async def get_featured_hotels(
     currency: str = Query("NGN", description="Currency code"),
     db: Session = Depends(get_db)
 ):
     """Get featured hotels for landing page"""
+    from app.utils.cache import api_cache
+    
+    cache_key = f"featured_hotels_{currency}"
+    cached_result = await api_cache.get_cached_response("featured_hotels", {"currency": currency})
+    if cached_result:
+        return cached_result
+    
     try:
         from app.models.hotel import Hotel
         
@@ -248,21 +267,26 @@ def get_featured_hotels(
                 "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
-        return {"hotels": hotel_list}
+        result = {"hotels": hotel_list}
+        
+        # Cache for 15 minutes
+        await api_cache.cache_response("featured_hotels", {"currency": currency}, result, ttl=900)
+        
+        return result
     except Exception as e:
         print(f"Error fetching featured hotels: {e}")
         return {"hotels": []}
 
 
 @router.get("/destinations")
-def get_popular_destinations():
+async def get_popular_destinations():
     """Get popular hotel destinations with caching"""
-    from app.utils.cache_manager import cache_manager
+    from app.utils.cache import cache_manager
     
     # Cache for 1 hour since destinations don't change frequently
-    cached_destinations = cache_manager.get("popular_destinations")
+    cached_destinations = await cache_manager.get("popular_destinations")
     if cached_destinations:
-        return {"destinations": cached_destinations}
+        return cached_destinations
     
     destinations = [
         {"city": "New York", "country": "USA", "hotels_count": 1250},
@@ -271,8 +295,9 @@ def get_popular_destinations():
         {"city": "Tokyo", "country": "Japan", "hotels_count": 750}
     ]
     
-    cache_manager.set("popular_destinations", destinations, 3600)
-    return {"destinations": destinations}
+    result = {"destinations": destinations}
+    await cache_manager.set("popular_destinations", result, 3600)
+    return result
 
 
 @router.get("/{hotel_id}")

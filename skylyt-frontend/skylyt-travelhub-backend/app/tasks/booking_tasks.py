@@ -14,9 +14,10 @@ logger = get_logger(__name__)
 @celery_app.task(bind=True, max_retries=3)
 def process_booking_confirmation(self, booking_id: int):
     """Process booking confirmation after payment"""
+    db = None
     try:
         db = next(get_db())
-        booking_service = BookingService(db)
+        booking_service = BookingService()
         
         # Get booking details
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
@@ -54,10 +55,14 @@ def process_booking_confirmation(self, booking_id: int):
         if self.request.retries < self.max_retries:
             raise self.retry(countdown=60 * (self.request.retries + 1))
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task
 def check_pending_bookings():
     """Check for bookings that are pending payment for too long"""
+    db = None
     try:
         db = next(get_db())
         
@@ -84,10 +89,14 @@ def check_pending_bookings():
     except Exception as e:
         logger.error(f"Failed to check pending bookings: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task
 def send_booking_reminders():
     """Send reminders for upcoming bookings"""
+    db = None
     try:
         db = next(get_db())
         
@@ -121,10 +130,14 @@ def send_booking_reminders():
     except Exception as e:
         logger.error(f"Failed to send booking reminders: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task(bind=True, max_retries=3)
 def process_booking_cancellation(self, booking_id: int, cancellation_reason: str = None):
     """Process booking cancellation"""
+    db = None
     try:
         db = next(get_db())
         
@@ -157,6 +170,9 @@ def process_booking_cancellation(self, booking_id: int, cancellation_reason: str
         if self.request.retries < self.max_retries:
             raise self.retry(countdown=60 * (self.request.retries + 1))
         raise
+    finally:
+        if db:
+            db.close()
 
 def calculate_refund_amount(booking: Booking) -> float:
     """Calculate refund amount based on cancellation policy"""
@@ -179,6 +195,7 @@ def calculate_refund_amount(booking: Booking) -> float:
 @celery_app.task
 def generate_booking_reports():
     """Generate daily booking reports"""
+    db = None
     try:
         db = next(get_db())
         
@@ -205,3 +222,6 @@ def generate_booking_reports():
     except Exception as e:
         logger.error(f"Failed to generate booking reports: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()

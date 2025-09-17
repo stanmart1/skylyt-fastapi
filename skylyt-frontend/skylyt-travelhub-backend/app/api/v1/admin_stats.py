@@ -15,16 +15,18 @@ async def get_admin_stats(current_user = Depends(get_current_user), db: Session 
         raise HTTPException(status_code=403, detail="Admin access required")
     
     from app.services.analytics_service import AnalyticsService
-    from app.utils.cache_manager import cache_manager
+    from app.utils.cache import api_cache
     
-    # Try cache first (5 minute cache)
-    cache_key = "admin_stats"
-    cached_stats = cache_manager.get(cache_key)
+    # Try cache first (3 minute cache)
+    cached_stats = await api_cache.get_cached_response("admin_dashboard", {"user_id": current_user.id})
     if cached_stats:
         return cached_stats
     
     stats = AnalyticsService.get_admin_stats(db)
-    cache_manager.set(cache_key, stats, 300)
+    
+    # Cache for 3 minutes
+    await api_cache.cache_response("admin_dashboard", {"user_id": current_user.id}, stats, ttl=180)
+    
     return stats
 
 @router.get("/admin/active-users")
@@ -52,11 +54,11 @@ async def get_recent_activity(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        from app.utils.cache_manager import cache_manager
+        from app.utils.cache import api_cache
         
-        # Use cache for recent activity (2 minute cache)
-        cache_key = f"recent_activity_{activity_type or 'all'}"
-        cached_activity = cache_manager.get(cache_key)
+        # Use cache for recent activity (3 minute cache)
+        cache_params = {"activity_type": activity_type or "all", "user_id": current_user.id}
+        cached_activity = await api_cache.get_cached_response("admin_recent_activity", cache_params)
         if cached_activity:
             return cached_activity
         
@@ -83,7 +85,10 @@ async def get_recent_activity(
                 })
         
         result = {"activities": activities[:10]}
-        cache_manager.set(cache_key, result, 120)  # 2 minute cache
+        
+        # Cache for 3 minutes
+        await api_cache.cache_response("admin_recent_activity", cache_params, result, ttl=180)
+        
         return result
         
     except Exception as e:
@@ -95,6 +100,13 @@ async def get_car_stats(current_user = Depends(get_current_user), db: Session = 
     """Get car management statistics"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_stats = await api_cache.get_cached_response("admin_car_stats", {"user_id": current_user.id})
+    if cached_stats:
+        return cached_stats
     
     try:
         from app.models.car import Car
@@ -140,13 +152,18 @@ async def get_car_stats(current_user = Depends(get_current_user), db: Session = 
         if previous_revenue > 0:
             revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
         
-        return {
+        result = {
             "totalCars": total_cars,
             "availableCars": available_cars,
             "activeBookings": active_bookings,
             "totalRevenue": float(current_revenue),
             "revenueChange": round(revenue_change, 1)
         }
+        
+        # Cache for 3 minutes
+        await api_cache.cache_response("admin_car_stats", {"user_id": current_user.id}, result, ttl=180)
+        
+        return result
     except Exception as e:
         # Return default stats if there's an error
         return {
@@ -162,6 +179,13 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
     """Get hotel management statistics"""
     if not (current_user.is_admin() or current_user.is_superadmin()):
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_stats = await api_cache.get_cached_response("admin_hotel_stats", {"user_id": current_user.id})
+    if cached_stats:
+        return cached_stats
     
     try:
         from app.models.hotel import Hotel
@@ -212,7 +236,7 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
         if previous_revenue > 0:
             revenue_change = ((current_revenue - previous_revenue) / previous_revenue) * 100
         
-        return {
+        result = {
             "totalHotels": total_hotels,
             "totalRooms": int(total_rooms),
             "activeBookings": active_bookings,
@@ -220,6 +244,11 @@ async def get_hotel_stats(current_user = Depends(get_current_user), db: Session 
             "revenueChange": round(revenue_change, 1),
             "occupancyRate": occupancy_rate
         }
+        
+        # Cache for 3 minutes
+        await api_cache.cache_response("admin_hotel_stats", {"user_id": current_user.id}, result, ttl=180)
+        
+        return result
     except Exception as e:
         # Return default stats if there's an error
         return {

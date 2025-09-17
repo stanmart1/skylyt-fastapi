@@ -12,9 +12,16 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me")
-def get_current_user_profile(current_user = Depends(get_current_user)):
+async def get_current_user_profile(current_user = Depends(get_current_user)):
     """Get current user profile"""
-    return {
+    from app.utils.cache import session_cache
+    
+    # Check cache first
+    cached_profile = await session_cache.get_user_session(current_user.id)
+    if cached_profile:
+        return cached_profile
+    
+    profile_data = {
         "id": current_user.id,
         "email": current_user.email,
         "first_name": current_user.first_name,
@@ -35,6 +42,11 @@ def get_current_user_profile(current_user = Depends(get_current_user)):
             } for perm in role.permissions]
         } for role in current_user.roles]
     }
+    
+    # Cache profile for 30 minutes
+    await session_cache.set_user_session(current_user.id, profile_data)
+    
+    return profile_data
 
 
 @router.put("/me")
@@ -84,12 +96,23 @@ def delete_user_account(
 
 
 @router.get("/me/bookings", response_model=List[BookingResponse])
-def get_user_bookings(
+async def get_user_bookings(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get user bookings"""
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_bookings = await api_cache.get_cached_response("user_bookings", {"user_id": current_user.id})
+    if cached_bookings:
+        return cached_bookings
+    
     bookings = UserService.get_user_bookings(db, current_user.id)
+    
+    # Cache for 5 minutes
+    await api_cache.cache_response("user_bookings", {"user_id": current_user.id}, bookings, ttl=300)
+    
     return bookings
 
 
@@ -359,11 +382,18 @@ def change_password(
 
 
 @router.get("/me/stats")
-def get_user_stats(
+async def get_user_stats(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get user dashboard statistics"""
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_stats = await api_cache.get_cached_response("user_dashboard_stats", {"user_id": current_user.id})
+    if cached_stats:
+        return cached_stats
+    
     from app.models.booking import Booking
     from app.models.favorite import Favorite
     from sqlalchemy import func, and_
@@ -406,13 +436,18 @@ def get_user_stats(
         Favorite.user_id == current_user.id
     ).scalar() or 0
     
-    return {
+    result = {
         "total_bookings": total_bookings,
         "active_bookings": active_bookings,
         "total_spent": float(total_spent),
         "upcoming_bookings": upcoming_bookings,
         "total_favorites": total_favorites
     }
+    
+    # Cache for 3 minutes
+    await api_cache.cache_response("user_dashboard_stats", {"user_id": current_user.id}, result, ttl=180)
+    
+    return result
 
 
 @router.get("/me/notifications")

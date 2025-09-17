@@ -11,7 +11,7 @@ router = APIRouter(prefix="/cars", tags=["cars"])
 
 
 @router.get("/search")
-def search_cars(
+async def search_cars(
     location: Optional[str] = Query(None, description="Pickup location"),
     pickup_date: Optional[str] = Query(None, description="Pickup date (YYYY-MM-DD)"),
     return_date: Optional[str] = Query(None, description="Return date (YYYY-MM-DD)"),
@@ -29,7 +29,7 @@ def search_cars(
     db: Session = Depends(get_db)
 ):
     """Search cars with filters and caching"""
-    from app.services.cache_service import CacheService
+    from app.utils.cache import search_cache
     from app.models.car import Car
     from sqlalchemy import desc, asc, and_, or_
     
@@ -43,7 +43,7 @@ def search_cars(
     }
     
     # Try to get from cache first
-    cached_result = CacheService.get_cached_car_search(search_params)
+    cached_result = await search_cache.get_search_results(search_params)
     if cached_result:
         return cached_result
     
@@ -120,18 +120,24 @@ def search_cars(
     result = {"cars": cars_data, "total": total}
     
     # Cache the result for 5 minutes
-    CacheService.cache_car_search(search_params, result, ttl=300)
+    await search_cache.cache_search_results(search_params, result, ttl=300)
     
     return result
 
 @router.get("/")
-def get_all_cars(
+async def get_all_cars(
     currency: str = Query("NGN", description="Currency code"),
     db: Session = Depends(get_db)
 ):
     """Get all cars for cars page"""
-    from app.models.car import Car
+    from app.utils.cache import api_cache
     
+    # Check cache first
+    cached_result = await api_cache.get_cached_response("cars_all", {"currency": currency})
+    if cached_result:
+        return cached_result
+    
+    from app.models.car import Car
     from app.services.currency_service import CurrencyService
     
     cars = db.query(Car).filter(Car.is_available == True).all()
@@ -163,15 +169,25 @@ def get_all_cars(
             "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
         })
     
+    # Cache for 10 minutes
+    await api_cache.cache_response("cars_all", {"currency": currency}, cars_data, ttl=600)
+    
     return cars_data
 
 
 @router.get("/featured")
-def get_featured_cars(
+async def get_featured_cars(
     currency: str = Query("NGN", description="Currency code"),
     db: Session = Depends(get_db)
 ):
     """Get featured cars for landing page"""
+    from app.utils.cache import api_cache
+    
+    # Check cache first
+    cached_result = await api_cache.get_cached_response("featured_cars", {"currency": currency})
+    if cached_result:
+        return cached_result
+    
     try:
         from app.models.car import Car
         
@@ -207,7 +223,12 @@ def get_featured_cars(
                 "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
             })
         
-        return {"cars": car_list}
+        result = {"cars": car_list}
+        
+        # Cache for 15 minutes
+        await api_cache.cache_response("featured_cars", {"currency": currency}, result, ttl=900)
+        
+        return result
     except Exception as e:
         print(f"Error fetching featured cars: {e}")
         return {"cars": []}

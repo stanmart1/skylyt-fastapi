@@ -31,6 +31,7 @@ def cleanup_expired_sessions():
 @celery_app.task
 def cleanup_old_payment_proofs():
     """Clean up old payment proof files"""
+    db = None
     try:
         db = next(get_db())
         
@@ -74,10 +75,14 @@ def cleanup_old_payment_proofs():
     except Exception as e:
         logger.error(f"Payment proof cleanup failed: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task
 def cleanup_cancelled_bookings():
     """Clean up old cancelled bookings"""
+    db = None
     try:
         db = next(get_db())
         
@@ -104,10 +109,14 @@ def cleanup_cancelled_bookings():
     except Exception as e:
         logger.error(f"Cancelled bookings cleanup failed: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task
 def cleanup_unverified_users():
     """Clean up unverified user accounts older than 7 days"""
+    db = None
     try:
         db = next(get_db())
         
@@ -138,6 +147,9 @@ def cleanup_unverified_users():
     except Exception as e:
         logger.error(f"Unverified users cleanup failed: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 @celery_app.task
 def cleanup_temp_files():
@@ -206,6 +218,7 @@ def cleanup_old_logs():
 @celery_app.task
 def database_maintenance():
     """Perform database maintenance tasks"""
+    db = None
     try:
         db = next(get_db())
         
@@ -223,6 +236,9 @@ def database_maintenance():
     except Exception as e:
         logger.error(f"Database maintenance failed: {str(e)}")
         raise
+    finally:
+        if db:
+            db.close()
 
 # Periodic task to run all cleanup tasks
 @celery_app.task
