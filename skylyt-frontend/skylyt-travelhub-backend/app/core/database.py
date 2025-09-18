@@ -41,9 +41,16 @@ def get_pool_config():
         logger.warning(f"Failed to detect system resources: {e}, using defaults")
         return 100, 50
 
-# Fixed pool configuration
+# Fixed pool configuration with logging
+logger.info(f"Database URL: {settings.DATABASE_URL[:50]}...")
+logger.info(f"Creating engine with pool_size=100, max_overflow=50")
+
+# Remove any pool parameters from DATABASE_URL
+clean_db_url = settings.DATABASE_URL.split('?')[0]
+logger.info(f"Clean DB URL: {clean_db_url[:50]}...")
+
 engine = create_engine(
-    settings.DATABASE_URL,
+    clean_db_url,
     pool_pre_ping=True,
     pool_recycle=300,  # 5 minutes
     pool_timeout=60,  # 60 seconds timeout
@@ -58,6 +65,9 @@ engine = create_engine(
     },
     pool_reset_on_return='commit'
 )
+
+# Log actual pool configuration after creation
+logger.info(f"Engine created - Pool size: {engine.pool.size()}, Max overflow: {engine.pool._max_overflow}")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

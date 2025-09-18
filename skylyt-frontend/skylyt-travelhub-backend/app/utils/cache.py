@@ -3,11 +3,15 @@ import json
 from typing import Any, Optional, Union, Dict
 from datetime import timedelta
 import hashlib
+import logging
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class CacheManager:
     def __init__(self, redis_url: str = None):
         self.redis_client = None  # Disabled
+        logger.info("Cache disabled - Redis client set to None")
     
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
