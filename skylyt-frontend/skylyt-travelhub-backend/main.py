@@ -16,7 +16,7 @@ from app.models import Base
 from app.middleware import SecurityMiddleware, MonitoringMiddleware, setup_cors
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.database import DatabaseMiddleware
-from app.middleware.maintenance import MaintenanceMiddleware
+
 from app.middleware.performance import PerformanceMiddleware
 from app.middleware.compression import ResponseCompressionMiddleware
 from app.middleware.security_hardening import (
@@ -281,7 +281,7 @@ app.add_middleware(DynamicRateLimitMiddleware)
 # Monitoring and security
 app.add_middleware(SecurityMiddleware)
 app.add_middleware(MonitoringMiddleware)
-app.add_middleware(MaintenanceMiddleware)
+
 
 # Routes
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
