@@ -11,20 +11,23 @@ class QueryOptimizer:
     @staticmethod
     def optimize_user_bookings_query(query: Query) -> Query:
         """Optimize user bookings query with eager loading"""
+        from app.models.booking import Booking
         return query.options(
-            joinedload('payment'),
-            selectinload('user')
+            joinedload(Booking.payment),
+            selectinload(Booking.user)
         ).order_by(text('created_at DESC'))
     
     @staticmethod
     def optimize_hotel_query(query: Query) -> Query:
         """Optimize hotel queries with eager loading"""
-        return query.options(selectinload('hotel_images'))
+        from app.models.hotel import Hotel
+        return query.options(selectinload(Hotel.hotel_images))
     
     @staticmethod
     def optimize_car_query(query: Query) -> Query:
         """Optimize car queries with eager loading"""
-        return query.options(selectinload('car_images'))
+        from app.models.car import Car
+        return query.options(selectinload(Car.car_images))
     
     @staticmethod
     def preload_images_by_ids(db, model_class, entity_ids: List[str], id_field: str):
@@ -55,8 +58,10 @@ class QueryOptimizer:
     @staticmethod
     def optimize_payment_query(query: Query) -> Query:
         """Optimize payment queries"""
+        from app.models.payment import Payment
+        from app.models.booking import Booking
         return query.options(
-            joinedload('booking').joinedload('user')
+            joinedload(Payment.booking).joinedload(Booking.user)
         ).order_by(text('created_at DESC'))
     
     @staticmethod
