@@ -23,7 +23,7 @@ def get_connection_args():
             "sslcert": None,  # Don't require client certificates
             "sslkey": None,
             "sslrootcert": None,
-            "options": "-c statement_timeout=45s -c idle_in_transaction_session_timeout=60s -c lock_timeout=30s"
+            "options": "-c statement_timeout=30s -c idle_in_transaction_session_timeout=30s -c lock_timeout=15s"
         }
     return {}
 
@@ -181,32 +181,15 @@ def handle_error(exception_context):
 
 # Enhanced session management with timeout and SSL error handling
 def get_db():
-    """Enhanced database session with timeout and SSL error handling"""
+    """Database session with guaranteed cleanup"""
     db = SessionLocal()
-    start_time = time.time()
-    
     try:
-        # Test connection immediately with timeout
-        db.execute(text("SELECT 1"))
         yield db
-    except Exception as e:
-        session_duration = time.time() - start_time
-        logger.error(f"Database session error after {session_duration:.2f}s: {e}")
-        try:
-            db.rollback()
-        except Exception as rollback_error:
-            logger.warning(f"Rollback failed: {rollback_error}")
+    except Exception:
+        db.rollback()
         raise
     finally:
-        session_duration = time.time() - start_time
-        
-        # Log long-running sessions
-        if session_duration > 30:
-            logger.warning(f"Long database session: {session_duration:.2f}s")
-        
-        # Safe session cleanup
-        try:
-            db.close()
+        db.close()
         except Exception as close_error:
             logger.warning(f"Session close error: {close_error}")
 

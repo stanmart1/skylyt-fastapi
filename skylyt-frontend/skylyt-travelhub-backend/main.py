@@ -274,8 +274,10 @@ app.add_middleware(DatabaseMonitoringMiddleware)
 # Session cleanup and timeout
 from app.middleware.session_cleanup import SessionCleanupMiddleware
 from app.middleware.session_timeout import SessionTimeoutMiddleware
+from app.middleware.force_commit import ForceCommitMiddleware
+app.add_middleware(ForceCommitMiddleware)
 app.add_middleware(SessionCleanupMiddleware)
-app.add_middleware(SessionTimeoutMiddleware, timeout_seconds=300)
+app.add_middleware(SessionTimeoutMiddleware, timeout_seconds=30)
 
 # Connection monitoring
 from app.middleware.connection_monitor import ConnectionMonitoringMiddleware
