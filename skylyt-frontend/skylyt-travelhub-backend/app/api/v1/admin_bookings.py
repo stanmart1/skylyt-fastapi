@@ -43,7 +43,7 @@ async def get_admin_bookings(
     
     from app.services.booking_service import BookingService
     
-    booking_service = BookingService(db)
+    booking_service = BookingService()
     
     # Parse date strings
     parsed_start_date = None
@@ -119,7 +119,7 @@ async def update_booking_status_api(booking_id: int, status_update: BookingStatu
         from app.models.booking import Booking
         from app.tasks.email_tasks import send_booking_status_update_email
         
-        booking_service = BookingService(db)
+        booking_service = BookingService()
         result = booking_service.update_booking_status_helper(booking_id, status_update.status)
         
         # Send status update email immediately
@@ -160,7 +160,7 @@ async def update_booking_status(booking_id: int, status_update: BookingStatusUpd
     
     try:
         from app.services.booking_service import BookingService
-        booking_service = BookingService(db)
+        booking_service = BookingService()
         return booking_service.update_booking_status_helper(booking_id, status_update.status)
     except HTTPException:
         raise
@@ -470,7 +470,7 @@ async def resend_booking_confirmation(booking_id: int, current_user = Depends(ge
         raise HTTPException(status_code=403, detail="Admin access required")
     
     from app.services.booking_service import BookingService
-    booking_service = BookingService(db)
+    booking_service = BookingService()
     
     success = booking_service.send_confirmation_email(booking_id)
     if not success:
@@ -485,7 +485,7 @@ async def get_booking_invoice(booking_id: int, current_user = Depends(get_curren
         raise HTTPException(status_code=403, detail="Admin access required")
     
     from app.services.booking_service import BookingService
-    booking_service = BookingService(db)
+    booking_service = BookingService()
     
     invoice_data = booking_service.generate_invoice_data(booking_id)
     if not invoice_data:
@@ -562,7 +562,7 @@ async def get_hotel_bookings(
     
     from app.services.booking_service import BookingService
     
-    booking_service = BookingService(db)
+    booking_service = BookingService()
     
     # Parse date strings
     parsed_start_date = parse_date_string(start_date) if start_date else None
@@ -602,7 +602,7 @@ async def get_car_bookings(
     
     from app.services.booking_service import BookingService
     
-    booking_service = BookingService(db)
+    booking_service = BookingService()
     
     # Parse date strings
     parsed_start_date = parse_date_string(start_date) if start_date else None

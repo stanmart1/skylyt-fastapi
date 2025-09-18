@@ -146,13 +146,31 @@ async def search_hotels(
         # Get total count
         total = query.count()
         
-        # Apply pagination
-        hotels = query.offset((page - 1) * per_page).limit(per_page).all()
+        # Apply pagination with optimization
+        from app.utils.query_optimizer import QueryOptimizer
+        optimized_query = QueryOptimizer.optimize_hotel_query(query)
+        hotels = optimized_query.offset((page - 1) * per_page).limit(per_page).all()
         
         # Format response with currency conversion
         from app.services.currency_service import CurrencyService
         
         from app.models.hotel_image import HotelImage
+        
+        # Optimize: Get currency once and preload images
+        curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
+        symbol = curr_obj.symbol if curr_obj else currency.upper()
+        
+        # Preload all hotel images in one query
+        hotel_ids = [hotel.id for hotel in hotels]
+        hotel_images = db.query(HotelImage).filter(
+            HotelImage.hotel_id.in_(hotel_ids)
+        ).order_by(HotelImage.hotel_id, HotelImage.is_cover.desc(), HotelImage.display_order).all()
+        
+        # Group images by hotel_id
+        images_by_hotel = {}
+        for img in hotel_images:
+            if img.hotel_id not in images_by_hotel:
+                images_by_hotel[img.hotel_id] = img
         
         hotel_list = []
         for hotel in hotels:
@@ -166,20 +184,10 @@ async def search_hotels(
             else:
                 converted_price = float(base_price)
             
-            curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
-            symbol = curr_obj.symbol if curr_obj else currency.upper()
             exchange_rate = CurrencyService.convert_currency(1.0, base_currency, currency.upper(), db)
             
-            # Get cover image from HotelImage table
-            cover_image = db.query(HotelImage).filter(
-                HotelImage.hotel_id == hotel.id,
-                HotelImage.is_cover == True
-            ).first()
-            
-            if not cover_image:
-                cover_image = db.query(HotelImage).filter(
-                    HotelImage.hotel_id == hotel.id
-                ).order_by(HotelImage.display_order).first()
+            # Use preloaded image
+            cover_image = images_by_hotel.get(hotel.id)
             
             hotel_list.append({
                 "id": hotel.id,

@@ -5,12 +5,14 @@ from app.monitoring.metrics import metrics_collector
 from app.monitoring.alerting import health_checker, alert_manager
 from app.monitoring.error_tracking import error_tracker
 from app.utils.cache import cache_manager
+from app.core.performance import performance_monitor
 import redis
 import time
 
 router = APIRouter()
 
 @router.get("/health")
+@performance_monitor(threshold=0.5)
 def health_check(db: Session = Depends(get_db)):
     """System health check for admin dashboard"""
     import psutil
@@ -121,9 +123,9 @@ async def get_prometheus_metrics():
     )
 
 @router.get("/health/comprehensive")
-async def comprehensive_health_check():
+def comprehensive_health_check():
     """Comprehensive health check with all systems"""
-    health_results = await health_checker.run_health_checks()
+    health_results = health_checker.run_health_checks()
     
     # Add error tracking summary
     error_summary = error_tracker.get_error_summary()

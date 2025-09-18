@@ -8,6 +8,7 @@ import psutil
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+print("=== DATABASE.PY LOADING ===")
 
 # Enhanced database engine with aggressive timeout handling
 def get_connection_args():
@@ -67,6 +68,7 @@ engine = create_engine(
 )
 
 # Log actual pool configuration after creation
+print(f"=== ENGINE CREATED - Pool size: {engine.pool.size()}, Max overflow: {engine.pool._max_overflow} ===")
 logger.info(f"Engine created - Pool size: {engine.pool.size()}, Max overflow: {engine.pool._max_overflow}")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -144,12 +146,17 @@ def receive_checkout(dbapi_connection, connection_record, connection_proxy):
     """Monitor connection pool checkout"""
     pool = engine.pool
     
+    # Fixed pool monitoring
+    pool_size = pool.size()
+    max_overflow = getattr(pool, '_max_overflow', 0)
+    checked_out = pool.checkedout()
+    total_capacity = pool_size + max_overflow
+    
     # Only warn if pool is truly exhausted (95% utilization)
-    total_capacity = pool.size() + pool.overflow()
-    if pool.checkedout() > (total_capacity * 0.95):
-        logger.warning(f"Pool utilization critical: {pool.checkedout()}/{total_capacity}")
-    elif pool.checkedout() > (total_capacity * 0.9):
-        logger.info(f"Pool utilization high: {pool.checkedout()}/{total_capacity}")
+    if checked_out > (total_capacity * 0.95):
+        logger.warning(f"Pool utilization critical: {checked_out}/{total_capacity}")
+    elif checked_out > (total_capacity * 0.9):
+        logger.info(f"Pool utilization high: {checked_out}/{total_capacity}")
 
 # Connection timeout recovery
 @event.listens_for(engine, "handle_error")

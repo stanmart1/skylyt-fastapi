@@ -83,10 +83,13 @@ async def search_cars(
             if hasattr(Car, sort_by):
                 query = query.order_by(asc(getattr(Car, sort_by)))
     
-    # Get total and paginated results
+    # Get total and paginated results with optimization
     total = query.count()
     offset = (page - 1) * per_page
-    cars = query.offset(offset).limit(per_page).all()
+    
+    from app.utils.query_optimizer import QueryOptimizer
+    optimized_query = QueryOptimizer.optimize_car_query(query)
+    cars = optimized_query.offset(offset).limit(per_page).all()
     
     from app.services.currency_service import CurrencyService
     

@@ -17,6 +17,27 @@ class QueryOptimizer:
         ).order_by(text('created_at DESC'))
     
     @staticmethod
+    def optimize_hotel_query(query: Query) -> Query:
+        """Optimize hotel queries with eager loading"""
+        return query.options(selectinload('hotel_images'))
+    
+    @staticmethod
+    def optimize_car_query(query: Query) -> Query:
+        """Optimize car queries with eager loading"""
+        return query.options(selectinload('car_images'))
+    
+    @staticmethod
+    def preload_images_by_ids(db, model_class, entity_ids: List[str], id_field: str):
+        """Preload images for multiple entities to avoid N+1 queries"""
+        return db.query(model_class).filter(
+            getattr(model_class, id_field).in_(entity_ids)
+        ).order_by(
+            getattr(model_class, id_field),
+            model_class.is_cover.desc(),
+            model_class.display_order
+        ).all()
+    
+    @staticmethod
     def optimize_booking_search_query(query: Query, filters: Dict[str, Any]) -> Query:
         """Optimize booking search with proper indexing"""
         # Use indexes for common filters

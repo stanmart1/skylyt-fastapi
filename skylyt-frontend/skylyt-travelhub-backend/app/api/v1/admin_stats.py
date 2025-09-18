@@ -268,4 +268,4 @@ async def get_system_health_admin(current_user = Depends(get_current_user), db: 
     
     # Reuse the health endpoint logic
     from app.api.v1.health import health_check
-    return await health_check(db)
+    return health_check(db)

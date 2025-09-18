@@ -24,9 +24,11 @@ class PerformanceMiddleware:
                     # Calculate response time
                     response_time = time.time() - start_time
                     
-                    # Log slow requests
-                    if response_time > 2.0:  # 2 second threshold
+                    # Log slow requests with lower threshold
+                    if response_time > 1.0:  # 1 second threshold
                         logger.warning(f"Slow request: {request.method} {request.url.path} - {response_time:.2f}s")
+                    elif response_time > 0.5:  # Info for moderate slowness
+                        logger.info(f"Moderate request: {request.method} {request.url.path} - {response_time:.2f}s")
                     
                     # Record metrics
                     status_code = message["status"]
@@ -75,11 +77,11 @@ class DatabasePerformanceMiddleware:
                     headers[b"X-DB-Query-Time"] = f"{self.query_time:.3f}".encode()
                     message["headers"] = list(headers.items())
                     
-                    # Log excessive database usage
-                    if self.query_count > 10:
+                    # Log excessive database usage with lower thresholds
+                    if self.query_count > 5:
                         logger.warning(f"High DB query count: {self.query_count} queries for {request.url.path}")
                     
-                    if self.query_time > 1.0:
+                    if self.query_time > 0.5:
                         logger.warning(f"High DB query time: {self.query_time:.3f}s for {request.url.path}")
                 
                 await send(message)

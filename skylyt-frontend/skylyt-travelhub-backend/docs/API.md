@@ -5,7 +5,7 @@ The Skylyt TravelHub API provides comprehensive travel booking services includin
 
 ## Base URL
 - Development: `http://localhost:8000`
-- Production: `https://api.skylyt.com`
+- Production: `https://api.skylytluxury.com`
 
 ## Authentication
 All protected endpoints require a Bearer token in the Authorization header:
