@@ -11,7 +11,7 @@ import time
 router = APIRouter()
 
 @router.get("/health")
-async def health_check(db: Session = Depends(get_db)):
+def health_check(db: Session = Depends(get_db)):
     """System health check for admin dashboard"""
     import psutil
     
@@ -73,7 +73,7 @@ async def health_check(db: Session = Depends(get_db)):
     return health_data
 
 @router.get("/health/detailed")
-async def detailed_health_check(db: Session = Depends(get_db)):
+def detailed_health_check(db: Session = Depends(get_db)):
     """Detailed health check with dependency status"""
     health_status = {
         "status": "healthy",
@@ -84,6 +84,7 @@ async def detailed_health_check(db: Session = Depends(get_db)):
     
     # Database check
     try:
+        from sqlalchemy import text
         db.execute(text("SELECT 1"))
         health_status["checks"]["database"] = {"status": "healthy"}
     except Exception as e:

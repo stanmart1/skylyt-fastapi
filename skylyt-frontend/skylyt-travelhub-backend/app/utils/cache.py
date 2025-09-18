@@ -7,8 +7,7 @@ from app.core.config import settings
 
 class CacheManager:
     def __init__(self, redis_url: str = None):
-        from app.core.redis import get_redis
-        self.redis_client = get_redis()
+        self.redis_client = None  # Disabled
     
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""

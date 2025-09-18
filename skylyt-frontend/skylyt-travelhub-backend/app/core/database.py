@@ -31,15 +31,15 @@ def get_pool_config():
         cpu_count = psutil.cpu_count()
         memory_gb = psutil.virtual_memory().total / (1024**3)
         
-        # Base pool size on CPU cores and available memory
-        base_pool_size = max(20, min(cpu_count * 4, 50))
-        max_overflow = max(15, min(cpu_count * 2, 30))
+        # Increased pool size for higher concurrency
+        base_pool_size = 100
+        max_overflow = 50
         
         logger.info(f"Configured pool: size={base_pool_size}, overflow={max_overflow}")
         return base_pool_size, max_overflow
     except Exception as e:
         logger.warning(f"Failed to detect system resources: {e}, using defaults")
-        return 30, 20
+        return 100, 50
 
 pool_size, max_overflow = get_pool_config()
 
@@ -134,12 +134,13 @@ def set_connection_parameters(dbapi_connection, connection_record):
 def receive_checkout(dbapi_connection, connection_record, connection_proxy):
     """Monitor connection pool checkout"""
     pool = engine.pool
-    logger.debug(f"Pool status - Size: {pool.size()}, Checked out: {pool.checkedout()}, "
-                f"Overflow: {pool.overflow()}")
     
-    # Warn if pool is getting full
-    if pool.checkedout() > (pool.size() * 0.8):
-        logger.warning(f"Pool utilization high: {pool.checkedout()}/{pool.size() + pool.overflow()}")
+    # Only warn if pool is truly exhausted (95% utilization)
+    total_capacity = pool.size() + pool.overflow()
+    if pool.checkedout() > (total_capacity * 0.95):
+        logger.warning(f"Pool utilization critical: {pool.checkedout()}/{total_capacity}")
+    elif pool.checkedout() > (total_capacity * 0.9):
+        logger.info(f"Pool utilization high: {pool.checkedout()}/{total_capacity}")
 
 # Connection timeout recovery
 @event.listens_for(engine, "handle_error")
