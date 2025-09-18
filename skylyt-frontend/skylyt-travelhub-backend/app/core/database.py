@@ -99,13 +99,16 @@ def receive_after_cursor_execute(conn, cursor, statement, parameters, context, e
 # Enhanced connection recovery with retry logic
 @event.listens_for(engine, "invalidate")
 def receive_invalidate(dbapi_connection, connection_record, exception):
-    logger.error(f"Connection invalidated: {exception}")
+    logger.warning(f"Connection invalidated: {exception}")
     
-    # Immediate pool disposal for critical errors
-    critical_errors = ["EOF", "connection reset", "broken pipe", "server closed the connection"]
+    # Only dispose pool for truly critical errors, not server disconnections
+    critical_errors = ["EOF", "connection reset", "broken pipe"]
     if any(error in str(exception).lower() for error in critical_errors):
         logger.error("Critical connection error detected, disposing entire pool")
         engine.dispose()
+    elif "server closed the connection" in str(exception).lower():
+        logger.info("Server closed connection - will reconnect automatically")
+        # Let SQLAlchemy handle individual connection replacement
 
 
 
