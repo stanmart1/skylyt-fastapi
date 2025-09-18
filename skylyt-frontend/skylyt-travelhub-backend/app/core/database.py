@@ -189,7 +189,8 @@ def get_db():
         db.rollback()
         raise
     finally:
-        db.close()
+        try:
+            db.close()
         except Exception as close_error:
             logger.warning(f"Session close error: {close_error}")
 
