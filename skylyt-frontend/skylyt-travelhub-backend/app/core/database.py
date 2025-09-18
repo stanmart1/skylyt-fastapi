@@ -14,15 +14,12 @@ def get_connection_args():
     """Get database connection arguments based on database type"""
     if "postgresql" in settings.DATABASE_URL:
         return {
-            "connect_timeout": 20,  # Increased for SSL connections
+            "connect_timeout": 20,
             "keepalives_idle": 120,  # Reduced to 2 minutes for faster detection
             "keepalives_interval": 10,  # More frequent keepalives
             "keepalives_count": 3,  # Fewer retries before giving up
             "application_name": "skylyt_api",
-            "sslmode": "require",  # Force SSL but handle errors gracefully
-            "sslcert": None,  # Don't require client certificates
-            "sslkey": None,
-            "sslrootcert": None,
+            "sslmode": "disable",  # SSL disabled
             "options": "-c statement_timeout=30s -c idle_in_transaction_session_timeout=30s -c lock_timeout=15s"
         }
     return {}
@@ -104,36 +101,13 @@ def receive_after_cursor_execute(conn, cursor, statement, parameters, context, e
 def receive_invalidate(dbapi_connection, connection_record, exception):
     logger.error(f"Connection invalidated: {exception}")
     
-    # Handle SSL connection errors specifically
-    if "SSL connection has been closed unexpectedly" in str(exception):
-        logger.warning("SSL connection closed unexpectedly - this is normal for idle connections")
-        # Don't dispose the entire pool for SSL timeouts, just let it reconnect
-        return
-    
-    # Immediate pool disposal for other critical errors
+    # Immediate pool disposal for critical errors
     critical_errors = ["EOF", "connection reset", "broken pipe", "server closed the connection"]
     if any(error in str(exception).lower() for error in critical_errors):
         logger.error("Critical connection error detected, disposing entire pool")
         engine.dispose()
 
-# SSL connection error handler
-@event.listens_for(engine, "connect")
-def handle_ssl_connect(dbapi_connection, connection_record):
-    """Handle SSL connection setup"""
-    if "postgresql" in settings.DATABASE_URL:
-        try:
-            # Test the connection immediately
-            with dbapi_connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
-        except Exception as e:
-            if "SSL" in str(e):
-                logger.warning(f"SSL connection issue during setup: {e}")
-                # Let SQLAlchemy handle the retry
-                raise
-            else:
-                logger.error(f"Connection test failed: {e}")
-                raise
+
 
 # Connection health monitoring
 @event.listens_for(engine, "connect")
@@ -194,9 +168,9 @@ def get_db():
         except Exception as close_error:
             logger.warning(f"Session close error: {close_error}")
 
-# Health check function for database connectivity with SSL error handling
+# Health check function for database connectivity
 def check_database_health():
-    """Check database connectivity and performance with SSL error handling"""
+    """Check database connectivity and performance"""
     max_retries = 3
     
     for attempt in range(max_retries):
