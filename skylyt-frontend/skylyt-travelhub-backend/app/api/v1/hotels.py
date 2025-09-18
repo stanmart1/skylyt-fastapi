@@ -11,19 +11,25 @@ router = APIRouter(prefix="/hotels", tags=["hotels"])
 
 
 @router.get("/")
-async def get_all_hotels(db: Session = Depends(get_db)):
+async def get_all_hotels(
+    page: int = Query(1, description="Page number"),
+    per_page: int = Query(16, description="Items per page"),
+    db: Session = Depends(get_db)
+):
     """Get all hotels for admin management"""
     from app.utils.cache import api_cache
     
     # Check cache first
-    cached_result = await api_cache.get_cached_response("hotels_all", {})
+    cached_result = await api_cache.get_cached_response("hotels_all", {"page": page, "per_page": per_page})
     if cached_result:
         return cached_result
     
     try:
         from app.models.hotel import Hotel
         
-        hotels = db.query(Hotel).all()
+        query = db.query(Hotel)
+        total = query.count()
+        hotels = query.offset((page - 1) * per_page).limit(per_page).all()
         
         hotel_list = []
         for hotel in hotels:
@@ -42,10 +48,10 @@ async def get_all_hotels(db: Session = Depends(get_db)):
                 "canonical_url": f"https://skylytluxury.com/hotels/{hotel.id}"
             })
         
-        result = {"hotels": hotel_list}
+        result = {"hotels": hotel_list, "total": total, "page": page, "per_page": per_page}
         
         # Cache for 10 minutes
-        await api_cache.cache_response("hotels_all", {}, result, ttl=600)
+        await api_cache.cache_response("hotels_all", {"page": page, "per_page": per_page}, result, ttl=600)
         
         return result
     except Exception as e:
@@ -68,7 +74,7 @@ async def search_hotels(
     sort_by: Optional[str] = Query("price", description="Sort by field"),
     currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
-    per_page: int = Query(20, description="Items per page"),
+    per_page: int = Query(16, description="Items per page"),
     db: Session = Depends(get_db)
 ):
     """Search hotels with filters and caching"""

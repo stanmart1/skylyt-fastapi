@@ -17,6 +17,7 @@ import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeForLogging } from '@/utils/sanitize';
+import { Pagination } from '@/components/ui/pagination';
 
 const Hotels = () => {
   const { hotels, totalHotels, isLoading, searchHotels } = useSearch();
@@ -33,7 +34,7 @@ const Hotels = () => {
     const urlParams = new URLSearchParams(location.search);
     const params: SearchParams = {
       page: 1,
-      per_page: 50,
+      per_page: 16,
       currency
     };
     
@@ -228,10 +229,24 @@ const Hotels = () => {
                 <div className="max-w-md mx-auto">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No hotels found</h3>
                   <p className="text-gray-600 mb-4">Try adjusting your search criteria or browse our featured hotels</p>
-                  <Button onClick={() => handleSearch({ page: 1, per_page: 20 })} variant="outline">
+                  <Button onClick={() => handleSearch({ page: 1, per_page: 16 })} variant="outline">
                     Show All Hotels
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalHotels > 16 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalHotels / 16)}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    handleSearch({ ...searchParams, page, per_page: 16 });
+                  }}
+                />
               </div>
             )}
             </div>

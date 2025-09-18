@@ -49,19 +49,17 @@ pool_size, max_overflow = get_pool_config()
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=600,  # 10 minutes - shorter for SSL connections
-    pool_timeout=180,  # 3 minutes timeout (increased from 60s)
+    pool_recycle=300,  # 5 minutes
+    pool_timeout=60,  # 60 seconds timeout
     pool_size=pool_size,  # Dynamic sizing
     max_overflow=max_overflow,  # Dynamic overflow
     echo=False,
     poolclass=QueuePool,
     connect_args=get_connection_args(),
-    # Add engine-level timeouts
     execution_options={
         "autocommit": False,
         "isolation_level": "READ_COMMITTED"
     },
-    # Enhanced error handling for SSL issues
     pool_reset_on_return='commit'
 )
 

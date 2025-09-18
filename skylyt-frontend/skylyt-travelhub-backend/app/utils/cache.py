@@ -7,17 +7,18 @@ from app.core.config import settings
 
 class CacheManager:
     def __init__(self, redis_url: str = None):
-        self.redis_client = redis.from_url(redis_url or settings.REDIS_URL)
+        from app.core.redis import get_redis
+        self.redis_client = get_redis()
     
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
+        if not self.redis_client:
+            return None
         try:
             value = self.redis_client.get(key)
             if value is None:
                 return None
-            
-            # Only use safe JSON deserialization
-            return json.loads(value.decode('utf-8'))
+            return json.loads(value)
         except Exception:
             return None
     
@@ -28,10 +29,10 @@ class CacheManager:
         expire: Union[int, timedelta] = None
     ) -> bool:
         """Set value in cache"""
+        if not self.redis_client:
+            return False
         try:
-            # Only use safe JSON serialization
             serialized = json.dumps(value, default=str)
-            
             if expire:
                 if isinstance(expire, timedelta):
                     expire = int(expire.total_seconds())
@@ -43,6 +44,8 @@ class CacheManager:
     
     async def delete(self, key: str) -> bool:
         """Delete key from cache"""
+        if not self.redis_client:
+            return False
         try:
             return bool(self.redis_client.delete(key))
         except Exception:
@@ -50,6 +53,8 @@ class CacheManager:
     
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache"""
+        if not self.redis_client:
+            return False
         try:
             return bool(self.redis_client.exists(key))
         except Exception:
@@ -57,6 +62,8 @@ class CacheManager:
     
     async def clear_pattern(self, pattern: str) -> int:
         """Clear all keys matching pattern"""
+        if not self.redis_client:
+            return 0
         try:
             keys = self.redis_client.keys(pattern)
             if keys:

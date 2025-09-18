@@ -13,6 +13,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
 import { sanitizeForLogging } from '@/utils/sanitize';
+import { Pagination } from '@/components/ui/pagination';
 
 const Cars = () => {
   const { cars, totalCars, isLoading, searchCars } = useSearch();
@@ -27,7 +28,7 @@ const Cars = () => {
     const urlParams = new URLSearchParams(location.search);
     const params: SearchParams = {
       page: 1,
-      per_page: 20,
+      per_page: 16,
       currency
     };
     
@@ -222,10 +223,24 @@ const Cars = () => {
                   <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No cars found</h3>
                   <p className="text-gray-600 mb-4">Try adjusting your search criteria or browse our featured cars</p>
-                  <Button onClick={() => handleSearch({ page: 1, per_page: 20 })} variant="outline">
+                  <Button onClick={() => handleSearch({ page: 1, per_page: 16 })} variant="outline">
                     Show All Cars
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalCars > 16 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalCars / 16)}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    handleSearch({ ...searchParams, page, per_page: 16 });
+                  }}
+                />
               </div>
             )}
           </div>

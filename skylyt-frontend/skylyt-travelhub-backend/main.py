@@ -271,6 +271,16 @@ app.add_middleware(PerformanceMiddleware)
 app.add_middleware(DatabaseMiddleware)
 app.add_middleware(DatabaseMonitoringMiddleware)
 
+# Session cleanup and timeout
+from app.middleware.session_cleanup import SessionCleanupMiddleware
+from app.middleware.session_timeout import SessionTimeoutMiddleware
+app.add_middleware(SessionCleanupMiddleware)
+app.add_middleware(SessionTimeoutMiddleware, timeout_seconds=300)
+
+# Connection monitoring
+from app.middleware.connection_monitor import ConnectionMonitoringMiddleware
+app.add_middleware(ConnectionMonitoringMiddleware)
+
 # Rate limiting (before other middleware)
 app.add_middleware(DynamicRateLimitMiddleware)
 

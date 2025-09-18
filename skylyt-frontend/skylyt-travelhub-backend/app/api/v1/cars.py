@@ -25,7 +25,7 @@ async def search_cars(
     sort_by: Optional[str] = Query("price", description="Sort by field"),
     currency: str = Query("NGN", description="Currency code"),
     page: int = Query(1, description="Page number"),
-    per_page: int = Query(20, description="Items per page"),
+    per_page: int = Query(16, description="Items per page"),
     db: Session = Depends(get_db)
 ):
     """Search cars with filters and caching"""
@@ -126,6 +126,8 @@ async def search_cars(
 
 @router.get("/")
 async def get_all_cars(
+    page: int = Query(1, description="Page number"),
+    per_page: int = Query(16, description="Items per page"),
     currency: str = Query("NGN", description="Currency code"),
     db: Session = Depends(get_db)
 ):
@@ -133,14 +135,16 @@ async def get_all_cars(
     from app.utils.cache import api_cache
     
     # Check cache first
-    cached_result = await api_cache.get_cached_response("cars_all", {"currency": currency})
+    cached_result = await api_cache.get_cached_response("cars_all", {"currency": currency, "page": page, "per_page": per_page})
     if cached_result:
         return cached_result
     
     from app.models.car import Car
     from app.services.currency_service import CurrencyService
     
-    cars = db.query(Car).filter(Car.is_available == True).all()
+    query = db.query(Car).filter(Car.is_available == True)
+    total = query.count()
+    cars = query.offset((page - 1) * per_page).limit(per_page).all()
     
     cars_data = []
     for car in cars:
@@ -169,10 +173,12 @@ async def get_all_cars(
             "canonical_url": f"https://skylytluxury.com/cars/{car.id}"
         })
     
-    # Cache for 10 minutes
-    await api_cache.cache_response("cars_all", {"currency": currency}, cars_data, ttl=600)
+    result = {"cars": cars_data, "total": total, "page": page, "per_page": per_page}
     
-    return cars_data
+    # Cache for 10 minutes
+    await api_cache.cache_response("cars_all", {"currency": currency, "page": page, "per_page": per_page}, result, ttl=600)
+    
+    return result
 
 
 @router.get("/featured")
