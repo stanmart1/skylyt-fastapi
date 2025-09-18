@@ -5,14 +5,13 @@ from app.monitoring.metrics import metrics_collector
 from app.monitoring.alerting import health_checker, alert_manager
 from app.monitoring.error_tracking import error_tracker
 from app.utils.cache import cache_manager
-from app.core.performance import performance_monitor
+
 import redis
 import time
 
 router = APIRouter()
 
 @router.get("/health")
-@performance_monitor(threshold=0.5)
 def health_check(db: Session = Depends(get_db)):
     """System health check for admin dashboard"""
     import psutil
