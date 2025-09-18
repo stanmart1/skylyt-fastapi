@@ -41,15 +41,14 @@ def get_pool_config():
         logger.warning(f"Failed to detect system resources: {e}, using defaults")
         return 100, 50
 
-pool_size, max_overflow = get_pool_config()
-
+# Fixed pool configuration
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,  # 5 minutes
     pool_timeout=60,  # 60 seconds timeout
-    pool_size=pool_size,  # Dynamic sizing
-    max_overflow=max_overflow,  # Dynamic overflow
+    pool_size=100,  # Fixed size
+    max_overflow=50,  # Fixed overflow
     echo=False,
     poolclass=QueuePool,
     connect_args=get_connection_args(),
