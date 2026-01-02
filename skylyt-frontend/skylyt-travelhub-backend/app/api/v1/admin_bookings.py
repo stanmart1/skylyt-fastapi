@@ -569,6 +569,7 @@ async def get_hotel_bookings(
     parsed_end_date = parse_date_string(end_date) if end_date else None
     
     return booking_service.get_bookings_with_filters(
+        db=db,
         search=search,
         status=status,
         payment_status=payment_status,
@@ -609,6 +610,7 @@ async def get_car_bookings(
     parsed_end_date = parse_date_string(end_date) if end_date else None
     
     return booking_service.get_bookings_with_filters(
+        db=db,
         search=search,
         status=status,
         payment_status=payment_status,
