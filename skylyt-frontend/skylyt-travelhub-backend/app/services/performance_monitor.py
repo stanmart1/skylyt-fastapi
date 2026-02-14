@@ -143,6 +143,7 @@ class PerformanceMonitor:
                 except Exception as e:
                     logger.warning(f"Failed to get {key}: {e}")
                     stats[key] = None
+                    db.rollback()
             
             return stats
         except Exception as e:
@@ -211,6 +212,7 @@ class PerformanceMonitor:
                 except Exception as e:
                     logger.warning(f"Failed to get {key}: {e}")
                     metrics[key] = 0
+                    db.rollback()
             
             return {
                 'timestamp': datetime.now().isoformat(),
