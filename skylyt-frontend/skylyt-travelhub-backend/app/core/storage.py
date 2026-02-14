@@ -23,25 +23,27 @@ class StorageManager:
     def ensure_directory(cls, path: Path) -> None:
         """Ensure directory exists with proper permissions"""
         try:
+            # Check if directory exists and is writable
             if path.exists():
-                # Directory already exists, verify it's writable
-                if not os.access(path, os.W_OK):
-                    logger.warning(f"Storage directory exists but not writable: {path}")
-                else:
+                if os.access(path, os.W_OK):
                     logger.info(f"Storage directory ready: {path}")
-            else:
-                path.mkdir(parents=True, exist_ok=True)
-                logger.info(f"Storage directory created: {path}")
-        except PermissionError as e:
-            # If directory exists but we can't recreate it, check if it's usable
+                    return
+                else:
+                    logger.warning(f"Storage directory exists but not writable: {path}")
+                    return
+            
+            # Try to create directory
+            path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Storage directory created: {path}")
+        except PermissionError:
+            # Directory might exist but we don't have permission to check/create
+            # If it exists and is writable, that's fine
             if path.exists() and os.access(path, os.W_OK):
                 logger.info(f"Storage directory ready: {path}")
             else:
-                logger.error(f"Failed to create storage directory {path}: {e}")
-                raise
+                logger.warning(f"Cannot create/access storage directory {path}, continuing anyway")
         except Exception as e:
-            logger.error(f"Failed to create storage directory {path}: {e}")
-            raise
+            logger.warning(f"Storage directory check failed for {path}: {e}, continuing anyway")
     
     @classmethod
     def get_upload_path(cls, category: str, filename: str) -> Path:
