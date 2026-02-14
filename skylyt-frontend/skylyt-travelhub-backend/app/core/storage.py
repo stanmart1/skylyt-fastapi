@@ -43,11 +43,3 @@ class StorageManager:
     def get_serve_url(cls, category: str, filename: str) -> str:
         """Get URL for serving file"""
         return f"/uploads/{category}/{filename}"
-
-# Initialize all storage directories on import
-try:
-    StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
-    for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:
-        StorageManager.ensure_directory(StorageManager.get_storage_path(category))
-except Exception as e:
-    logger.warning(f"Storage initialization failed: {e}")
