@@ -68,10 +68,6 @@ async def lifespan(app: FastAPI):
         
         startup_logger.info(f"Database connected successfully in {db_health['connection_time']}ms")
         
-        # Create database tables
-        Base.metadata.create_all(bind=engine)
-        startup_logger.info("Database tables created/verified")
-        
         # Ensure storage directories exist
         StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
         for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:
