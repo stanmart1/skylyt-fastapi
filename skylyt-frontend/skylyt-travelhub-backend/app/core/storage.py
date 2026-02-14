@@ -23,8 +23,22 @@ class StorageManager:
     def ensure_directory(cls, path: Path) -> None:
         """Ensure directory exists with proper permissions"""
         try:
-            path.mkdir(parents=True, exist_ok=True)
-            logger.info(f"Storage directory ready: {path}")
+            if path.exists():
+                # Directory already exists, verify it's writable
+                if not os.access(path, os.W_OK):
+                    logger.warning(f"Storage directory exists but not writable: {path}")
+                else:
+                    logger.info(f"Storage directory ready: {path}")
+            else:
+                path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Storage directory created: {path}")
+        except PermissionError as e:
+            # If directory exists but we can't recreate it, check if it's usable
+            if path.exists() and os.access(path, os.W_OK):
+                logger.info(f"Storage directory ready: {path}")
+            else:
+                logger.error(f"Failed to create storage directory {path}: {e}")
+                raise
         except Exception as e:
             logger.error(f"Failed to create storage directory {path}: {e}")
             raise
