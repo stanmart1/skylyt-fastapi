@@ -31,6 +31,7 @@ from app.utils.logger import setup_logging
 from app.utils.cache import cache_warmer
 from app.api.v1 import auth, users, hotels, cars, search, bookings, rbac, health, admin_cars, admin_hotels, roles, permissions, settings, emails, destinations, hotel_images, car_images, localization, payment_webhooks, payment_config, currency_rates, currencies, footer_settings, contact_settings, about_settings, seo, health_check, rate_limit_test, cache
 from app.api.v1 import payments, bank_accounts, admin_reviews, admin_support, admin_notifications, notifications, drivers, admin_bookings, admin_payments, admin_stats, driver
+from app.api.v1 import misc
 from app.core.openapi import custom_openapi
 from app.core.redis import RedisService
 from app.core.storage import StorageManager
@@ -323,6 +324,7 @@ app.include_router(about_settings.router, prefix="/api/v1", tags=["About Setting
 app.include_router(seo.router, prefix="/api/v1", tags=["SEO"])
 app.include_router(rate_limit_test.router, prefix="/api/v1", tags=["Rate Limit"])
 app.include_router(cache.router, prefix="/api/v1", tags=["Cache"])
+app.include_router(misc.router, prefix="/api/v1", tags=["Misc"])
 
 
 # Simple image serving endpoint without security middleware
@@ -473,75 +475,6 @@ async def sitemap_xml(db: Session = Depends(get_db)):
     """Serve sitemap.xml from root"""
     from app.api.v1.seo import generate_sitemap
     return await generate_sitemap(db)
-
-@app.get("/api/v1/test")
-async def test_connection():
-    """Test endpoint to verify frontend-backend connection"""
-    from datetime import datetime
-    return {
-        "status": "success",
-        "message": "Backend is connected and working!",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "cors_enabled": True
-    }
-
-@app.get("/api/v1/test-admin")
-async def test_admin(db: Session = Depends(get_db)):
-    """Test admin user exists"""
-    from app.models.user import User
-    admin_user = db.query(User).filter(User.email == "admin@skylyt.com").first()
-    if admin_user:
-        return {
-            "exists": True,
-            "email": admin_user.email,
-            "is_active": admin_user.is_active,
-            "roles_count": len(admin_user.roles)
-        }
-    return {"exists": False}
-
-@app.get("/api/v1/performance/metrics")
-async def get_performance_metrics(db: Session = Depends(get_db)):
-    """Get comprehensive performance metrics"""
-    try:
-        metrics = performance_monitor.get_comprehensive_metrics(db)
-        return metrics
-    except Exception as e:
-        logger.error(f"Error getting performance metrics: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get performance metrics")
-
-@app.get("/api/v1/performance/summary")
-async def get_performance_summary(db: Session = Depends(get_db)):
-    """Get performance summary"""
-    try:
-        summary = performance_monitor.get_performance_summary(db)
-        return summary
-    except Exception as e:
-        logger.error(f"Error getting performance summary: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get performance summary")
-
-@app.post("/api/v1/performance/reset-pool")
-async def reset_database_pool():
-    """Reset database connection pool (admin only)"""
-    try:
-        success = reset_connection_pool()
-        return {"success": success, "message": "Database pool reset" if success else "Failed to reset pool"}
-    except Exception as e:
-        logger.error(f"Error resetting database pool: {e}")
-        raise HTTPException(status_code=500, detail="Failed to reset database pool")
-
-@app.get("/cars-management")
-async def cars_management_page(current_user = Depends(get_current_user)):
-    """Serve cars management dashboard page"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return {"message": "Cars Management Dashboard", "user": current_user.email}
-
-@app.get("/hotel-management")
-async def hotel_management_page(current_user = Depends(get_current_user)):
-    """Serve hotel management dashboard page"""
-    if not (current_user.is_admin() or current_user.is_superadmin()):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return {"message": "Hotel Management Dashboard", "user": current_user.email}
 
 # Admin car, stats, payment, and review endpoints moved to respective router files
 
