@@ -139,13 +139,13 @@ def create_admin_user():
             db.add(admin_user)
             db.commit()
             db.refresh(admin_user)
-            
+
             # Assign superadmin role
             superadmin_role = db.query(Role).filter(Role.name == "superadmin").first()
             if superadmin_role:
                 admin_user.roles.append(superadmin_role)
                 db.commit()
-            
+
             print("✅ Admin user created: admin@skylyt.com / admin123")
         else:
             print("ℹ️ Admin user already exists")
