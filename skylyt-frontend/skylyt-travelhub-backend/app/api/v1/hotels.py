@@ -18,6 +18,7 @@ async def get_all_hotels(
 ):
     """Get all hotels for admin management"""
     from app.utils.cache import api_cache
+    from app.utils.query_optimizer import QueryOptimizer
     
     # Check cache first
     cached_result = await api_cache.get_cached_response("hotels_all", {"page": page, "per_page": per_page})
@@ -27,19 +28,27 @@ async def get_all_hotels(
     try:
         from app.models.hotel import Hotel
         
-        query = db.query(Hotel)
+        # Use QueryOptimizer to eager load images
+        query = QueryOptimizer.optimize_hotel_query(db.query(Hotel))
         total = query.count()
         hotels = query.offset((page - 1) * per_page).limit(per_page).all()
         
         hotel_list = []
         for hotel in hotels:
+            # Use preloaded images instead of lazy loading
+            image_url = None
+            if hotel.hotel_images and len(hotel.hotel_images) > 0:
+                # Get cover image or first image
+                cover_image = next((img for img in hotel.hotel_images if img.is_cover), None)
+                image_url = (cover_image.image_url if cover_image else hotel.hotel_images[0].image_url)
+            
             hotel_list.append({
                 "id": hotel.id,
                 "name": hotel.name,
                 "location": hotel.location,
                 "rating": float(hotel.star_rating),
                 "price": float(hotel.price_per_night),
-                "image_url": hotel.images[0] if hotel.images and len(hotel.images) > 0 else None,
+                "image_url": image_url,
                 "image_alt": f"{hotel.name} - Luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
@@ -226,6 +235,7 @@ async def get_featured_hotels(
 ):
     """Get featured hotels for landing page"""
     from app.utils.cache import api_cache
+    from app.utils.query_optimizer import QueryOptimizer
     
     cache_key = f"featured_hotels_{currency}"
     cached_result = await api_cache.get_cached_response("featured_hotels", {"currency": currency})
@@ -234,12 +244,13 @@ async def get_featured_hotels(
     
     try:
         from app.models.hotel import Hotel
+        from app.models.hotel_image import HotelImage
         
-        hotels = db.query(Hotel).filter(Hotel.is_featured == True).limit(6).all()
+        # Use QueryOptimizer to eager load images
+        query = QueryOptimizer.optimize_hotel_query(db.query(Hotel))
+        hotels = query.filter(Hotel.is_featured == True).limit(6).all()
         
         from app.services.currency_service import CurrencyService
-        
-        from app.models.hotel_image import HotelImage
         
         hotel_list = []
         for hotel in hotels:
@@ -253,16 +264,11 @@ async def get_featured_hotels(
             curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
             symbol = curr_obj.symbol if curr_obj else currency.upper()
             
-            # Get cover image from HotelImage table
-            cover_image = db.query(HotelImage).filter(
-                HotelImage.hotel_id == hotel.id,
-                HotelImage.is_cover == True
-            ).first()
-            
-            if not cover_image:
-                cover_image = db.query(HotelImage).filter(
-                    HotelImage.hotel_id == hotel.id
-                ).order_by(HotelImage.display_order).first()
+            # Use preloaded images instead of N+1 query
+            image_url = None
+            if hotel.hotel_images and len(hotel.hotel_images) > 0:
+                cover_image = next((img for img in hotel.hotel_images if img.is_cover), None)
+                image_url = (cover_image.image_url if cover_image else hotel.hotel_images[0].image_url)
             
             hotel_list.append({
                 "id": hotel.id,
@@ -272,7 +278,7 @@ async def get_featured_hotels(
                 "price": converted_price,
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
-                "image_url": cover_image.image_url if cover_image else None,
+                "image_url": image_url,
                 "image_alt": f"{hotel.name} - Featured luxury hotel in {hotel.location}",
                 "amenities": hotel.amenities or [],
                 "description": hotel.description or "",
