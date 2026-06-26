@@ -79,7 +79,21 @@ async def lifespan(app: FastAPI):
             raise Exception("Database not healthy")
         
         startup_logger.info(f"Database connected successfully in {db_health['connection_time']}ms")
-        
+
+        # Run essential database seeding (super admin, roles, permissions)
+        try:
+            from init_database import (
+                create_initial_permissions,
+                create_initial_roles,
+                create_admin_user,
+            )
+            create_initial_permissions()
+            create_initial_roles()
+            create_admin_user()
+            startup_logger.info("Essential database seeding completed")
+        except Exception as e:
+            startup_logger.error(f"Database seeding failed: {e}")
+
         # Ensure storage directories exist
         StorageManager.ensure_directory(StorageManager.BASE_STORAGE_PATH)
         for category in ["hotels", "cars", "general", "payment_proofs", "documents"]:

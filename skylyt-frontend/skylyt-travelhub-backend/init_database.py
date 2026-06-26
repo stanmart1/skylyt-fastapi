@@ -123,14 +123,16 @@ def create_initial_roles():
 
 def create_admin_user():
     """Create initial admin user"""
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@skylyt.com")
+    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
     db = SessionLocal()
     try:
         # Check if admin user exists
-        admin_user = db.query(User).filter(User.email == "admin@skylyt.com").first()
+        admin_user = db.query(User).filter(User.email == admin_email).first()
         if not admin_user:
             admin_user = User(
-                email="admin@skylyt.com",
-                hashed_password=get_password_hash("admin123"),
+                email=admin_email,
+                hashed_password=get_password_hash(admin_password),
                 first_name="Admin",
                 last_name="User",
                 is_active=True,
@@ -139,14 +141,14 @@ def create_admin_user():
             db.add(admin_user)
             db.commit()
             db.refresh(admin_user)
-            
+
             # Assign superadmin role
             superadmin_role = db.query(Role).filter(Role.name == "superadmin").first()
             if superadmin_role:
                 admin_user.roles.append(superadmin_role)
                 db.commit()
-            
-            print("✅ Admin user created: admin@skylyt.com / admin123")
+
+            print(f"✅ Admin user created: {admin_email}")
         else:
             print("ℹ️ Admin user already exists")
     except Exception as e:
@@ -180,4 +182,5 @@ if __name__ == "__main__":
     create_admin_user()
     
     print("✅ Database initialization complete!")
-    print("🔑 Admin login: admin@skylyt.com / admin123")
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@skylyt.com")
+    print(f"🔑 Admin login: {admin_email}")
