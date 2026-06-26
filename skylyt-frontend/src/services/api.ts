@@ -15,9 +15,13 @@ import { sanitizeHtml, sanitizeForLogging } from '@/utils/sanitize';
 class ApiService {
   private baseURL = import.meta.env.VITE_API_BASE_URL;
   private token: string | null = null;
+  private refreshToken: string | null = null;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor() {
     this.token = localStorage.getItem('access_token');
+    this.refreshToken = localStorage.getItem('refresh_token');
   }
 
   setToken(token: string) {
@@ -25,9 +29,55 @@ class ApiService {
     localStorage.setItem('access_token', token);
   }
 
+  setRefreshToken(token: string) {
+    this.refreshToken = token;
+    localStorage.setItem('refresh_token', token);
+  }
+
   clearToken() {
     this.token = null;
+    this.refreshToken = null;
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+  }
+
+  private async tryRefreshToken(): Promise<string | null> {
+    // If a refresh is already in progress, wait for it
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    if (!this.refreshToken) {
+      return null;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const response = await fetch(`${this.baseURL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: this.refreshToken }),
+        });
+
+        if (!response.ok) {
+          this.clearToken();
+          return null;
+        }
+
+        const data = await response.json();
+        this.setToken(data.access_token);
+        return data.access_token;
+      } catch {
+        this.clearToken();
+        return null;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
   async request<T>(
@@ -55,8 +105,34 @@ class ApiService {
     };
 
     try {
-      const response = await this.fetchWithRetry(url, requestOptions, 3);
+      let response = await this.fetchWithRetry(url, requestOptions, 3);
       clearTimeout(timeoutId);
+
+      // If 401, try to refresh the token and retry once
+      if (response.status === 401 && this.refreshToken && !options.headers?.['X-Retried']) {
+        const newToken = await this.tryRefreshToken();
+        if (newToken) {
+          // Retry the original request with the new token
+          const retryHeaders: HeadersInit = {
+            ...headers,
+            Authorization: `Bearer ${newToken}`,
+            'X-Retried': 'true',
+          };
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), 30000);
+          try {
+            response = await this.fetchWithRetry(url, {
+              ...options,
+              headers: retryHeaders,
+              signal: retryController.signal,
+            }, 3);
+            clearTimeout(retryTimeoutId);
+          } catch (retryError) {
+            clearTimeout(retryTimeoutId);
+            throw retryError;
+          }
+        }
+      }
 
       if (!response.ok) {
         let errorMessage = 'API request failed';

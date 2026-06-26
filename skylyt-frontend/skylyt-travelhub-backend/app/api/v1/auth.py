@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.auth import UserCreate, UserLogin, Token, PasswordReset, PasswordUpdate, PasswordResetConfirm
@@ -6,6 +6,7 @@ from app.schemas.user import UserResponse
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.core.dependencies import get_current_user
+from app.core.security import verify_refresh_token
 from datetime import timedelta
 import logging
 
@@ -48,14 +49,16 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         
         # Create access token for immediate login
         access_token = AuthService.create_access_token(user)
-        
+        refresh_token = AuthService.create_refresh_token(user)
+
         # Determine redirect path based on user roles
         redirect_path = "/dashboard"  # default for regular users
         if user.is_admin() or user.is_superadmin():
             redirect_path = "/admin"
-        
+
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "redirect_path": redirect_path,
             "user": {
@@ -102,7 +105,8 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     logger.info("User authenticated successfully")
     access_token = AuthService.create_access_token(user)
-    
+    refresh_token = AuthService.create_refresh_token(user)
+
     # Cache user session data
     session_data = {
         "user_id": user.id,
@@ -110,14 +114,15 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         "roles": [role.name for role in user.roles]
     }
     CacheService.cache_user_session(user.id, session_data)
-    
+
     # Determine redirect path based on user roles
     redirect_path = "/dashboard"  # default for regular users
     if user.is_admin() or user.is_superadmin():
         redirect_path = "/admin"
-    
+
     return {
-        "access_token": access_token, 
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
         "redirect_path": redirect_path,
         "user": {
@@ -142,11 +147,46 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/refresh", response_model=Token)
-def refresh_token(current_user = Depends(get_current_user)):
-    """Refresh access token"""
-    access_token = AuthService.create_access_token(current_user)
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.post("/refresh")
+def refresh_token(refresh_token: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    """Refresh access token using a refresh token.
+
+    Accepts a refresh token (not an access token) and returns a new access token.
+    This allows users to stay logged in after their access token expires.
+    """
+    payload = verify_refresh_token(refresh_token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+
+    from app.models.user import User
+    try:
+        user_id_int = int(user_id)
+        user = db.query(User).filter(User.id == user_id_int).first()
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
+
+    new_access_token = AuthService.create_access_token(user)
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 
 @router.post("/logout")
