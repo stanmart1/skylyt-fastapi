@@ -105,8 +105,12 @@ def list_user_bookings(
     db: Session = Depends(get_db)
 ):
     """List user bookings"""
-    from app.services.user_service import UserService
-    return UserService.get_user_bookings(db, current_user.id)
+    try:
+        from app.services.user_service import UserService
+        return UserService.get_user_bookings(db, current_user.id)
+    except Exception as e:
+        logger.error(f"Error fetching user bookings: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch bookings")
 
 
 @router.get("/{booking_id}", response_model=BookingResponse)
