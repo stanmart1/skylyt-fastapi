@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import JSONB
 from typing import Optional
 from app.core.database import get_db
 from app.schemas.car import CarSearchRequest, CarResponse
@@ -71,7 +72,8 @@ async def search_cars(
         feature_list = [f.strip() for f in amenities.split(',') if f.strip()]
         if feature_list:
             for feature in feature_list:
-                query = query.filter(Car.features.op('?')(feature))
+                # Cast to jsonb since the ? operator only works on jsonb, not json
+                query = query.filter(Car.features.cast(JSONB).op('?')(feature))
     
     # Apply sorting
     if sort_by:
