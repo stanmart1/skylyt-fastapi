@@ -151,7 +151,7 @@ const FeaturedHotels = memo(() => {
                     <CardContent className="p-0">
                       <div className="relative overflow-hidden rounded-t-lg">
                         <img
-                          src={hotel.image_url || '/placeholder.svg'}
+                          src={apiService.getImageUrl(hotel.image_url) || '/placeholder.svg'}
                           alt={hotel.name}
                           className="w-full h-48 md:h-56 object-cover group-hover:scale-110 transition-transform duration-500"
                           loading="lazy"
@@ -244,6 +244,6 @@ const FeaturedHotels = memo(() => {
       </div>
     </section>
   );
-};
+});
 
 export default FeaturedHotels;

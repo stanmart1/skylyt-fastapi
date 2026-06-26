@@ -148,20 +148,16 @@ const HotelDetail = () => {
                 <div className="relative">
                   {/* Main Image */}
                   <img
-                    src={hotelImages.length > 0 
-                      ? (hotelImages[selectedImageIndex]?.image_url?.startsWith('http') 
-                        ? hotelImages[selectedImageIndex].image_url 
-                        : `https://skylytapi.scaleitpro.com${hotelImages[selectedImageIndex]?.image_url}`)
+                    src={hotelImages.length > 0
+                      ? apiService.getImageUrl(hotelImages[selectedImageIndex]?.image_url || '')
                       : (hotel.images && hotel.images.length > 0 ? hotel.images[0] : '/placeholder.svg')
                     }
                     alt={hotel.name}
                     className="w-full h-64 md:h-96 object-cover rounded-t-lg cursor-pointer"
                     onClick={() => {
                       // Simple lightbox - could be enhanced with a proper modal
-                      const imageUrl = hotelImages.length > 0 
-                        ? (hotelImages[selectedImageIndex]?.image_url?.startsWith('http') 
-                          ? hotelImages[selectedImageIndex].image_url 
-                          : `https://skylytapi.scaleitpro.com${hotelImages[selectedImageIndex]?.image_url}`)
+                      const imageUrl = hotelImages.length > 0
+                        ? apiService.getImageUrl(hotelImages[selectedImageIndex]?.image_url || '')
                         : (hotel.images && hotel.images.length > 0 ? hotel.images[0] : '/placeholder.svg');
                       window.open(imageUrl, '_blank');
                     }}
@@ -189,9 +185,7 @@ const HotelDetail = () => {
                       {hotelImages.map((image, index) => (
                         <img
                           key={image.id}
-                          src={image.image_url?.startsWith('http') 
-                            ? image.image_url 
-                            : `https://skylytapi.scaleitpro.com${image.image_url}`}
+                          src={apiService.getImageUrl(image.image_url || '')}
                           alt={`${hotel.name} - Image ${index + 1}`}
                           className={`w-16 h-16 object-cover rounded cursor-pointer border-2 transition-all ${
                             selectedImageIndex === index 

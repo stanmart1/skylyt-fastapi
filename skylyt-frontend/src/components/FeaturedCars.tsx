@@ -153,7 +153,7 @@ const FeaturedCars = memo(() => {
                     <CardContent className="p-0">
                       <div className="relative overflow-hidden rounded-t-lg">
                         <img
-                          src={car.image_url}
+                          src={apiService.getImageUrl(car.image_url) || '/placeholder.svg'}
                           alt={car.name}
                           className="w-full h-48 md:h-56 object-cover group-hover:scale-110 transition-transform duration-500"
                         />

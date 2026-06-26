@@ -13,6 +13,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDisplay from '@/components/PriceDisplay';
 import { useLocation } from 'react-router-dom';
 import { sanitizeForLogging } from '@/utils/sanitize';
+import { apiService } from '@/services/api';
 import { Pagination } from '@/components/ui/pagination';
 
 const Cars = () => {
@@ -140,7 +141,7 @@ const Cars = () => {
               >
                 <div className="relative">
                   <img
-                    src={car.image_url || '/placeholder.svg'}
+                    src={apiService.getImageUrl(car.image_url) || '/placeholder.svg'}
                     alt={car.name}
                     className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
