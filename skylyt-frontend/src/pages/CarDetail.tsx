@@ -139,23 +139,19 @@ const CarDetail = () => {
               {(carImages.length > 0) || (car.images && car.images.length > 0) || car.image_url ? (
                 <img
                   src={carImages.length > 0 && selectedImageIndex < carImages.length
-                    ? (carImages[selectedImageIndex]?.image_url?.startsWith('http')
-                      ? carImages[selectedImageIndex].image_url
-                      : `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`)
+                    ? apiService.getImageUrl(carImages[selectedImageIndex]?.image_url || '')
                     : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
                       ? car.images[selectedImageIndex]
-                      : car.image_url)
+                      : apiService.getImageUrl(car.image_url || ''))
                   }
                   alt={car.name}
                   className="w-full h-96 object-cover rounded-lg shadow-lg cursor-pointer"
                   onClick={() => {
                     const imageUrl = carImages.length > 0 && selectedImageIndex < carImages.length
-                      ? (carImages[selectedImageIndex]?.image_url?.startsWith('http')
-                        ? carImages[selectedImageIndex].image_url
-                        : `${import.meta.env.VITE_API_BASE_URL}${carImages[selectedImageIndex]?.image_url}`)
+                      ? apiService.getImageUrl(carImages[selectedImageIndex]?.image_url || '')
                       : (car.images && car.images.length > 0 && selectedImageIndex < car.images.length
                         ? car.images[selectedImageIndex]
-                        : car.image_url);
+                        : apiService.getImageUrl(car.image_url || ''));
                     window.open(imageUrl, '_blank');
                   }}
                 />
@@ -206,10 +202,8 @@ const CarDetail = () => {
                     }`}
                   >
                     <img
-                      src={carImages.length > 0 
-                        ? (image.image_url?.startsWith('http')
-                          ? image.image_url
-                          : `${import.meta.env.VITE_API_BASE_URL}${image.image_url}`)
+                      src={carImages.length > 0
+                        ? apiService.getImageUrl(image.image_url || '')
                         : image
                       }
                       alt={`${car.name} ${index + 1}`}

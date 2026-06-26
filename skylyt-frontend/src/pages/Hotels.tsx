@@ -9,6 +9,7 @@ import { AdvancedSearch } from '@/components/search/AdvancedSearch';
 import { useSearch } from '@/hooks/useSearch';
 import { useFavorites } from '@/hooks/useFavorites';
 import { SearchParams } from '@/types/api';
+import { apiService } from '@/services/api';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SearchResultsSkeleton } from '@/components/LoadingStates';
 import { ServerStatus } from '@/components/ServerStatus';
@@ -139,7 +140,7 @@ const Hotels = () => {
                   >
                     <div className="relative">
                       <img 
-                        src={hotel.image_url || '/placeholder.svg'} 
+                        src={apiService.getImageUrl(hotel.image_url) || '/placeholder.svg'} 
                         alt={hotel.name} 
                         className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
                       />
