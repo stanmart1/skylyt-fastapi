@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.auth import UserCreate
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from app.models.settings import Settings
 from datetime import timedelta
 from typing import Optional
@@ -61,6 +61,11 @@ class AuthService:
     def create_access_token(user: User, expires_delta: Optional[timedelta] = None) -> str:
         data = {"sub": str(user.id), "email": user.email}
         return create_access_token(data, expires_delta)
+
+    @staticmethod
+    def create_refresh_token(user: User, expires_delta: Optional[timedelta] = None) -> str:
+        data = {"sub": str(user.id), "email": user.email}
+        return create_refresh_token(data, expires_delta)
     
     @staticmethod
     def verify_email(db: Session, user_id: int) -> bool:

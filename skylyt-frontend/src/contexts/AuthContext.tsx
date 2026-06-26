@@ -33,8 +33,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('access_token');
+      const refreshToken = localStorage.getItem('refresh_token');
       if (token) {
         apiService.setToken(token);
+        if (refreshToken) {
+          apiService.setRefreshToken(refreshToken);
+        }
         try {
           const currentUser = await apiService.getCurrentUser();
           setUser(currentUser);
@@ -55,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Failed to get current user:', sanitizeForLogging(error));
           apiService.clearToken();
           localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
         }
       }
       setIsLoading(false);
@@ -66,8 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (credentials: LoginRequest): Promise<{ success: boolean; redirectTo?: string; error?: string }> => {
     try {
       const response: TokenResponse = await apiService.login(credentials);
-      
+
       apiService.setToken(response.access_token);
+      if (response.refresh_token) {
+        apiService.setRefreshToken(response.refresh_token);
+      }
       setUser(response.user);
       
       // Use redirect_path from backend response or determine based on role
@@ -105,9 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
       const response: TokenResponse = await apiService.register(userData);
-      
+
       // Auto-login after successful registration
       apiService.setToken(response.access_token);
+      if (response.refresh_token) {
+        apiService.setRefreshToken(response.refresh_token);
+      }
       setUser(response.user);
       
       return { success: true };
@@ -140,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     apiService.clearToken();
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     
     // Show logout toast before redirect
     const event = new CustomEvent('show-toast', {

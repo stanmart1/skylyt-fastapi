@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import JSONB
 from typing import Optional, List
 from app.core.database import get_db
 from app.schemas.hotel import HotelSearchRequest, HotelResponse
@@ -133,7 +134,7 @@ async def search_hotels(
             if amenity_list:
                 for amenity in amenity_list:
                     # Use safe parameterized query
-                    query = query.filter(Hotel.amenities.op('?')(amenity))
+                    query = query.filter(Hotel.amenities.cast(JSONB).op('?')(amenity))
         
         # Apply sorting with whitelist validation
         if sort_by:
