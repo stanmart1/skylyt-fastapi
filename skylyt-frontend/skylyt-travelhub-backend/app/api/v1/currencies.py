@@ -17,23 +17,37 @@ router = APIRouter()
 def get_currencies(db: Session = Depends(get_db)):
     """Get all active currencies with caching"""
     from app.utils.cache_manager import cache_manager
-    
+
     # Use cache for currencies (10 minute cache)
     cache_key = "active_currencies"
     try:
         cached_currencies = cache_manager.get(cache_key)
-        if cached_currencies:
+        if cached_currencies and isinstance(cached_currencies, list) and all(isinstance(c, dict) for c in cached_currencies):
             return cached_currencies
     except Exception as e:
         print(f"Cache error, fetching from database: {e}")
-    
+
     currencies = CurrencyService.get_active_currencies(db)
-    
+
+    # Serialize ORM objects to dicts before caching
     try:
-        cache_manager.set(cache_key, currencies, 600)  # 10 minute cache
+        serialized = [
+            {
+                "id": c.id,
+                "code": c.code,
+                "name": c.name,
+                "symbol": c.symbol,
+                "rate_to_ngn": c.rate_to_ngn,
+                "is_active": c.is_active,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+            }
+            for c in currencies
+        ]
+        cache_manager.set(cache_key, serialized, 600)  # 10 minute cache
     except Exception as e:
         print(f"Cache set error, continuing without cache: {e}")
-    
+
     return currencies
 
 

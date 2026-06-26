@@ -26,6 +26,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     libpq5 \
     curl \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder stage
@@ -33,6 +34,10 @@ COPY --from=builder /usr/local /usr/local
 
 # Copy application code
 COPY --from=builder /app /app
+
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app
@@ -42,8 +47,6 @@ RUN mkdir -p /app/storage/hotels /app/storage/cars /app/storage/general /app/sto
     && chown -R app:app /app \
     && chmod -R 755 /app/storage
 
-USER app
-
 # Expose port
 EXPOSE 8000
 
@@ -51,5 +54,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD echo "OK" || exit 1
 
-# Run application
+# Entrypoint fixes storage permissions (for mounted volumes) then drops to app user
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
