@@ -20,12 +20,20 @@ def get_currencies(db: Session = Depends(get_db)):
     
     # Use cache for currencies (10 minute cache)
     cache_key = "active_currencies"
-    cached_currencies = cache_manager.get(cache_key)
-    if cached_currencies:
-        return cached_currencies
+    try:
+        cached_currencies = cache_manager.get(cache_key)
+        if cached_currencies:
+            return cached_currencies
+    except Exception as e:
+        print(f"Cache error, fetching from database: {e}")
     
     currencies = CurrencyService.get_active_currencies(db)
-    cache_manager.set(cache_key, currencies, 600)  # 10 minute cache
+    
+    try:
+        cache_manager.set(cache_key, currencies, 600)  # 10 minute cache
+    except Exception as e:
+        print(f"Cache set error, continuing without cache: {e}")
+    
     return currencies
 
 
