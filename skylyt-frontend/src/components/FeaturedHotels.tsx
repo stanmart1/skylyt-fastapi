@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, MapPin, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Hotel } from '@/types/api';
 import { useCurrencySearch } from '@/hooks/useCurrencySearch';
 import PriceDisplay from './PriceDisplay';
 
-const FeaturedHotels = () => {
+const FeaturedHotels = memo(() => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);

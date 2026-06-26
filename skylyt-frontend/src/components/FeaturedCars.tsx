@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, Users, Car, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Car as CarType } from '@/types/api';
 import { useCurrencySearch } from '@/hooks/useCurrencySearch';
 import PriceDisplay from './PriceDisplay';
 
-const FeaturedCars = () => {
+const FeaturedCars = memo(() => {
   const [cars, setCars] = useState<CarType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -244,6 +244,8 @@ const FeaturedCars = () => {
       </div>
     </section>
   );
-};
+});
+
+FeaturedCars.displayName = 'FeaturedCars';
 
 export default FeaturedCars;

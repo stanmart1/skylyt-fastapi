@@ -12,11 +12,13 @@ import FeaturedCars from '@/components/FeaturedCars';
 import FeaturedHotels from '@/components/FeaturedHotels';
 import TrendingDestinations from '@/components/destinations/TrendingDestinations';
 import Footer from '@/components/Footer';
+import { useStore } from '@/store/useStore';
 import '../styles/hero-animations.css';
 
 const Index = () => {
-  const [searchType, setSearchType] = useState('cars');
   const navigate = useNavigate();
+  const { addToSearchHistory } = useStore();
+  const [searchType, setSearchType] = useState('cars');
   const [searchData, setSearchData] = useState({
     cars: { location: '', pickupDate: '', returnDate: '' },
     hotels: { destination: '', checkinDate: '', checkoutDate: '' }
@@ -31,7 +33,10 @@ const Index = () => {
 
   const handleCarSearch = () => {
     const params = new URLSearchParams();
-    if (searchData.cars.location) params.set('location', searchData.cars.location);
+    if (searchData.cars.location) {
+      params.set('location', searchData.cars.location);
+      addToSearchHistory(searchData.cars.location);
+    }
     if (searchData.cars.pickupDate) params.set('pickup_date', searchData.cars.pickupDate);
     if (searchData.cars.returnDate) params.set('return_date', searchData.cars.returnDate);
     navigate(`/cars?${params.toString()}`);
@@ -39,7 +44,10 @@ const Index = () => {
 
   const handleHotelSearch = () => {
     const params = new URLSearchParams();
-    if (searchData.hotels.destination) params.set('destination', searchData.hotels.destination);
+    if (searchData.hotels.destination) {
+      params.set('destination', searchData.hotels.destination);
+      addToSearchHistory(searchData.hotels.destination);
+    }
     if (searchData.hotels.checkinDate) params.set('checkin_date', searchData.hotels.checkinDate);
     if (searchData.hotels.checkoutDate) params.set('checkout_date', searchData.hotels.checkoutDate);
     navigate(`/hotels?${params.toString()}`);

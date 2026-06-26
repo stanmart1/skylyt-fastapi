@@ -10,11 +10,18 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useFeatures } from '@/contexts/FeaturesContext';
 import CurrencySelector from './CurrencySelector';
+import { useStore } from '@/store/useStore';
 
 const Navigation = () => {
+  const { sidebarOpen, toggleSidebar } = useStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+    toggleSidebar();
+  };
   
   // Batch DOM measurements to prevent forced reflows
   const measureNav = useCallback(() => {
@@ -207,7 +214,7 @@ const Navigation = () => {
               </div>
             )}
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={handleMenuToggle}
               className="p-2 -m-2 touch-manipulation"
               aria-label="Toggle menu"
             >

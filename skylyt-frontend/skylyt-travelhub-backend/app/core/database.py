@@ -53,10 +53,10 @@ logger.info(f"Clean DB URL: {clean_db_url[:50]}...")
 engine = create_engine(
     clean_db_url,
     pool_pre_ping=True,
-    pool_recycle=300,  # 5 minutes
+    pool_recycle=3600,  # 1 hour (increased from 5 minutes)
     pool_timeout=60,  # 60 seconds timeout
-    pool_size=100,  # Fixed size
-    max_overflow=50,  # Fixed overflow
+    pool_size=20,  # Reduced from 100 for better resource usage
+    max_overflow=10,  # Reduced from 50 for better resource usage
     echo=False,
     poolclass=QueuePool,
     connect_args=get_connection_args(),
