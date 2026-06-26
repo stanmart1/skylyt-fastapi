@@ -92,7 +92,10 @@ class HTTPSRedirectMiddleware:
             
             # Check if request is HTTP
             scheme = scope.get("scheme", "http")
-            if scheme == "http":
+            method = scope.get("method", "")
+            
+            # Skip redirect for OPTIONS requests (CORS preflight)
+            if scheme == "http" and method.upper() != "OPTIONS":
                 # Redirect to HTTPS
                 host = headers.get(b"host", b"localhost").decode()
                 path = scope.get("path", "/")
