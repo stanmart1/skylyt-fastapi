@@ -1,10 +1,11 @@
 # Stage 1: Build
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+RUN npm install -g bun
+COPY package.json ./
+RUN bun install
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Serve
 FROM node:20-alpine
