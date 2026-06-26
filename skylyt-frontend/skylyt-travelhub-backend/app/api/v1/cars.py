@@ -105,6 +105,12 @@ async def search_cars(
         curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
         symbol = curr_obj.symbol if curr_obj else currency.upper()
         
+        # Use preloaded images instead of lazy loading
+        image_url = None
+        if car.car_images and len(car.car_images) > 0:
+            cover_image = next((img for img in car.car_images if img.is_cover), None)
+            image_url = (cover_image.image_url if cover_image else car.car_images[0].image_url)
+        
         cars_data.append({
             "id": car.id,
             "name": car.name or f"{car.make} {car.model}",
@@ -112,7 +118,7 @@ async def search_cars(
             "price": converted_price,
             "currency": currency.upper(),
             "currency_symbol": symbol,
-            "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
+            "image_url": image_url,
             "image_alt": f"{car.make} {car.model} - Luxury {car.category} car rental",
             "passengers": car.seats,
             "transmission": car.transmission,
@@ -136,6 +142,7 @@ async def get_all_cars(
 ):
     """Get all cars for cars page"""
     from app.utils.cache import api_cache
+    from app.utils.query_optimizer import QueryOptimizer
     
     # Check cache first
     cached_result = await api_cache.get_cached_response("cars_all", {"currency": currency, "page": page, "per_page": per_page})
@@ -145,7 +152,9 @@ async def get_all_cars(
     from app.models.car import Car
     from app.services.currency_service import CurrencyService
     
-    query = db.query(Car).filter(Car.is_available == True)
+    # Use QueryOptimizer to eager load images
+    query = QueryOptimizer.optimize_car_query(db.query(Car))
+    query = query.filter(Car.is_available == True)
     total = query.count()
     cars = query.offset((page - 1) * per_page).limit(per_page).all()
     
@@ -161,6 +170,12 @@ async def get_all_cars(
         curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
         symbol = curr_obj.symbol if curr_obj else currency.upper()
         
+        # Use preloaded images instead of lazy loading
+        image_url = None
+        if car.car_images and len(car.car_images) > 0:
+            cover_image = next((img for img in car.car_images if img.is_cover), None)
+            image_url = (cover_image.image_url if cover_image else car.car_images[0].image_url)
+        
         cars_data.append({
             "id": car.id,
             "name": car.name or f"{car.make} {car.model}",
@@ -168,7 +183,7 @@ async def get_all_cars(
             "price": converted_price,
             "currency": currency.upper(),
             "currency_symbol": symbol,
-            "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images else None),
+            "image_url": image_url,
             "image_alt": f"{car.make} {car.model} - Luxury {car.category} car rental",
             "passengers": car.seats,
             "transmission": car.transmission,
@@ -191,6 +206,7 @@ async def get_featured_cars(
 ):
     """Get featured cars for landing page"""
     from app.utils.cache import api_cache
+    from app.utils.query_optimizer import QueryOptimizer
     
     # Check cache first
     cached_result = await api_cache.get_cached_response("featured_cars", {"currency": currency})
@@ -200,7 +216,9 @@ async def get_featured_cars(
     try:
         from app.models.car import Car
         
-        cars = db.query(Car).filter(Car.is_featured == True).limit(6).all()
+        # Use QueryOptimizer to eager load images
+        query = QueryOptimizer.optimize_car_query(db.query(Car))
+        cars = query.filter(Car.is_featured == True).limit(6).all()
         
         from app.services.currency_service import CurrencyService
         
@@ -216,6 +234,12 @@ async def get_featured_cars(
             curr_obj = CurrencyService.get_currency_by_code(currency.upper(), db)
             symbol = curr_obj.symbol if curr_obj else currency.upper()
             
+            # Use preloaded images instead of N+1 query
+            image_url = None
+            if car.car_images and len(car.car_images) > 0:
+                cover_image = next((img for img in car.car_images if img.is_cover), None)
+                image_url = (cover_image.image_url if cover_image else car.car_images[0].image_url)
+            
             car_list.append({
                 "id": car.id,
                 "name": car.name,
@@ -223,7 +247,7 @@ async def get_featured_cars(
                 "price": converted_price,
                 "currency": currency.upper(),
                 "currency_symbol": symbol,
-                "image_url": (car.car_images[0].image_url if car.car_images else None) or (car.images[0] if car.images and len(car.images) > 0 else None),
+                "image_url": image_url,
                 "image_alt": f"{car.name} - Featured luxury {car.category} car rental",
                 "passengers": car.seats,
                 "transmission": car.transmission,

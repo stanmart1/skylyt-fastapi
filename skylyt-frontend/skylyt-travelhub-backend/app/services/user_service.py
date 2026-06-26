@@ -41,8 +41,11 @@ class UserService:
     
     @staticmethod
     def get_user_bookings(db: Session, user_id: int) -> List[Booking]:
-        # Get all bookings for the user
-        all_bookings = db.query(Booking).filter(Booking.user_id == user_id).all()
+        from app.utils.query_optimizer import QueryOptimizer
+        
+        # Use QueryOptimizer to eager load payments and user
+        query = QueryOptimizer.optimize_user_bookings_query(db.query(Booking))
+        all_bookings = query.filter(Booking.user_id == user_id).all()
         
         # Group bookings by similar characteristics to identify duplicates
         unique_bookings = {}
