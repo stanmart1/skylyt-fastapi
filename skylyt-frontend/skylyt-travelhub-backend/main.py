@@ -252,8 +252,9 @@ app.add_middleware(
 app.add_middleware(ErrorHandlingMiddleware, error_tracker=error_tracker)
 
 # Security middleware (disabled for uploads)
-if not config_settings.DEBUG:
-    app.add_middleware(HTTPSRedirectMiddleware, force_https=True)
+# HTTPS redirect disabled to prevent 301 redirects on API requests
+# if not config_settings.DEBUG:
+#     app.add_middleware(HTTPSRedirectMiddleware, force_https=True)
 
 # Skip security headers that block Swagger UI and CORS
 # app.add_middleware(SecurityHeadersMiddleware)  # Blocks Swagger UI resources
