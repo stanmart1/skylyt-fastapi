@@ -60,6 +60,18 @@ async def lifespan(app: FastAPI):
     startup_logger.info("Starting Skylyt Luxury API...")
     
     try:
+        # Run database migrations automatically on startup
+        try:
+            from alembic.config import Config
+            from alembic import command
+            alembic_cfg = Config("alembic.ini")
+            command.upgrade(alembic_cfg, "head")
+            startup_logger.info("Database migrations completed successfully")
+        except Exception as e:
+            startup_logger.error(f"Migration failed: {e}")
+            # Continue startup even if migration fails
+            startup_logger.warning("Continuing startup despite migration failure")
+        
         # Check database health before starting
         db_health = check_database_health()
         if db_health['status'] != 'healthy':
@@ -246,22 +258,12 @@ app.add_middleware(
 )
 
 # Middleware (order matters - last added is executed first)
-# Redis client initialization moved to where it's actually used
 
 # Error handling (outermost)
 app.add_middleware(ErrorHandlingMiddleware, error_tracker=error_tracker)
 
-# Security middleware (disabled for uploads)
-# HTTPS redirect disabled to prevent 301 redirects on API requests
-# if not config_settings.DEBUG:
-#     app.add_middleware(HTTPSRedirectMiddleware, force_https=True)
-
-# Skip security headers that block Swagger UI and CORS
-# app.add_middleware(SecurityHeadersMiddleware)  # Blocks Swagger UI resources
-# app.add_middleware(RequestValidationMiddleware)
-
 # Performance middleware - optimized compression
-app.add_middleware(GZipMiddleware, minimum_size=500)  # Lower threshold for better compression
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(PerformanceMiddleware)
 
 # Database connection handling
@@ -272,10 +274,10 @@ app.add_middleware(DatabaseMonitoringMiddleware)
 from app.middleware.connection_monitor import ConnectionMonitoringMiddleware
 app.add_middleware(ConnectionMonitoringMiddleware)
 
-# Rate limiting (before other middleware)
+# Rate limiting
 app.add_middleware(DynamicRateLimitMiddleware)
 
-# Monitoring and security
+# Security and monitoring
 app.add_middleware(SecurityMiddleware)
 app.add_middleware(MonitoringMiddleware)
 
