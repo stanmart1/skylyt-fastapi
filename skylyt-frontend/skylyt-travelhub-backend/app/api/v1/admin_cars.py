@@ -77,7 +77,7 @@ def create_car(
         make=car_data.get("make", "Unknown"),
         model=car_data.get("model", "Unknown"),
         year=car_data.get("year"),
-        plate_number=car_data.get("plate_number"),
+        plate_number=car_data.get("plate_number") or None,
         category=car_data["category"],
         price_per_day=car_data["price_per_day"],
         currency=car_data.get("currency", "USD"),
@@ -127,6 +127,9 @@ def update_car(
                         setattr(car, field, datetime.fromisoformat(value))
                     except (ValueError, TypeError):
                         setattr(car, field, None)
+            elif field == 'plate_number':
+                # Convert empty strings to None to avoid unique constraint violations
+                setattr(car, field, value if value else None)
             else:
                 setattr(car, field, value)
     
