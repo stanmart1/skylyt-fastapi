@@ -108,20 +108,6 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             startup_logger.warning(f"Cache warming failed: {e}")
         
-        # Initialize default currencies
-        from app.services.currency_service import CurrencyService
-        from app.core.database import SessionLocal
-        db = None
-        try:
-            db = SessionLocal()
-            CurrencyService.seed_default_currencies(db)
-            startup_logger.info("Default currencies initialized")
-        except Exception as e:
-            startup_logger.error(f"Failed to initialize currencies: {e}")
-        finally:
-            if db:
-                db.close()
-        
         # Log startup performance metrics
         try:
             from app.core.database import SessionLocal
