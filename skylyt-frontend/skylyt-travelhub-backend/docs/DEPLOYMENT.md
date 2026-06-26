@@ -35,7 +35,7 @@ nano .env
 Required production environment variables:
 ```bash
 DATABASE_URL=postgresql://user:password@db-host:5432/skylyt_db
-REDIS_URL=redis://redis-host:6379/0
+DRAGONFLY_URL=redis://redis-host:6379/0
 SECRET_KEY=your-production-secret-key
 DEBUG=false
 STRIPE_SECRET_KEY=sk_live_...

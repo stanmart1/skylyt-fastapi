@@ -1,14 +1,18 @@
 import redis
 import os
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 load_dotenv()
 
-# Get Dragonfly connection details from .env
-host = os.getenv('DRAGONFLY_HOST')
-port = int(os.getenv('DRAGONFLY_PORT'))
-password = os.getenv('DRAGONFLY_PASSWORD')
-db = int(os.getenv('DRAGONFLY_DB'))
+# Get Dragonfly connection details from DRAGONFLY_URL
+dragonfly_url = os.getenv('DRAGONFLY_URL')
+parsed = urlparse(dragonfly_url)
+
+host = parsed.hostname or 'localhost'
+port = parsed.port or 6379
+password = parsed.password
+db = int(parsed.path.lstrip('/')) if parsed.path else 0
 
 try:
     # Connect to Dragonfly

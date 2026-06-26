@@ -4,8 +4,8 @@ from app.core.config import settings
 # Create Celery app
 celery_app = Celery(
     "skylyt_tasks",
-    broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL,
+    broker=settings.DRAGONFLY_URL,
+    backend=settings.DRAGONFLY_URL,
     include=[
         "app.tasks.email_tasks",
         "app.tasks.booking_tasks", 

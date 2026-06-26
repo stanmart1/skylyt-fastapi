@@ -6,6 +6,8 @@ import time
 from redis.connection import ConnectionPool
 from redis.retry import Retry
 from redis.backoff import ExponentialBackoff
+from urllib.parse import urlparse
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +16,30 @@ class RedisService:
     _pool: Optional[ConnectionPool] = None
     
     @classmethod
+    def _parse_dragonfly_url(cls) -> dict:
+        """Parse DRAGONFLY_URL into connection parameters"""
+        dragonfly_url = settings.DRAGONFLY_URL
+        parsed = urlparse(dragonfly_url)
+        
+        return {
+            'host': parsed.hostname or 'localhost',
+            'port': parsed.port or 6379,
+            'password': parsed.password,
+            'db': int(parsed.path.lstrip('/')) if parsed.path else 0
+        }
+    
+    @classmethod
     def get_connection_pool(cls) -> ConnectionPool:
         """Get Redis connection pool with enhanced timeout handling"""
         if cls._pool is None:
             try:
+                params = cls._parse_dragonfly_url()
+                
                 cls._pool = ConnectionPool(
-                    host=os.getenv('DRAGONFLY_HOST', 'localhost'),
-                    port=int(os.getenv('DRAGONFLY_PORT', 6379)),
-                    password=os.getenv('DRAGONFLY_PASSWORD'),
-                    db=int(os.getenv('DRAGONFLY_DB', 0)),
+                    host=params['host'],
+                    port=params['port'],
+                    password=params['password'],
+                    db=params['db'],
                     decode_responses=True,
                     socket_connect_timeout=10,  # Increased from 5
                     socket_timeout=15,  # Increased from 5

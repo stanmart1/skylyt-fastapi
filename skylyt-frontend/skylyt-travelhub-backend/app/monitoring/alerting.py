@@ -194,7 +194,7 @@ class HealthChecker:
         """Check Redis connectivity"""
         try:
             import redis
-            redis_client = redis.from_url(settings.REDIS_URL)
+            redis_client = redis.from_url(settings.DRAGONFLY_URL)
             redis_client.ping()
             return {"healthy": True}
             

@@ -5,17 +5,9 @@ from typing import Optional
 class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
-    DATABASE_HOST: str
-    DATABASE_PORT: int
-    DATABASE_NAME: str
-    DATABASE_USER: str = ""
-    DATABASE_PASSWORD: str = ""
     
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
+    # Redis/Dragonfly
+    DRAGONFLY_URL: str = "redis://localhost:6379/0"
     
     # JWT
     SECRET_KEY: str
