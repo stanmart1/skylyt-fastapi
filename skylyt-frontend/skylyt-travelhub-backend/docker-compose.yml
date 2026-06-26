@@ -7,7 +7,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/skylyt_db
-      - REDIS_URL=redis://redis:6379/0
+      - DRAGONFLY_URL=redis://redis:6379/0
       - DEBUG=true
     depends_on:
       - db
@@ -39,7 +39,7 @@ services:
     command: celery -A celery_app worker --loglevel=info
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/skylyt_db
-      - REDIS_URL=redis://redis:6379/0
+      - DRAGONFLY_URL=redis://redis:6379/0
     depends_on:
       - db
       - redis
@@ -52,7 +52,7 @@ services:
     command: celery -A celery_app beat --loglevel=info
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/skylyt_db
-      - REDIS_URL=redis://redis:6379/0
+      - DRAGONFLY_URL=redis://redis:6379/0
     depends_on:
       - db
       - redis

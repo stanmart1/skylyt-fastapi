@@ -6,7 +6,7 @@ from app.core.config import settings
 
 class CacheManager:
     def __init__(self):
-        self.redis_client = redis.from_url(settings.REDIS_URL)
+        self.redis_client = redis.from_url(settings.DRAGONFLY_URL)
         self.default_ttl = 300  # 5 minutes
     
     def get(self, key: str) -> Optional[Any]:

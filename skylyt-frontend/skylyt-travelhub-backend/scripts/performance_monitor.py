@@ -83,7 +83,7 @@ class PerformanceMonitor:
             import redis
             from app.core.config import settings
             
-            redis_client = redis.from_url(settings.REDIS_URL)
+            redis_client = redis.from_url(settings.DRAGONFLY_URL)
             
             # Test cache response time
             start_time = time.time()

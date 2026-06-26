@@ -16,8 +16,8 @@ logger = get_logger(__name__)
 # Celery app configuration
 celery_app = Celery(
     "skylyt_tasks",
-    broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL
+    broker=settings.DRAGONFLY_URL,
+    backend=settings.DRAGONFLY_URL
 )
 
 celery_app.conf.update(

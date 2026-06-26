@@ -64,21 +64,21 @@ jobs:
         pytest tests/unit/ -v --cov=app --cov-report=xml
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379/0
+        DRAGONFLY_URL: redis://localhost:6379/0
     
     - name: Run integration tests
       run: |
         pytest tests/integration/ -v
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379/0
+        DRAGONFLY_URL: redis://localhost:6379/0
     
     - name: Run performance tests
       run: |
         pytest tests/performance/ -v -m "not slow"
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379/0
+        DRAGONFLY_URL: redis://localhost:6379/0
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

@@ -56,7 +56,7 @@ class RateLimiter:
 def rate_limit(max_requests: int = 100, window_seconds: int = 3600):
     def decorator(func):
         async def wrapper(request: Request, *args, **kwargs):
-            redis_client = redis.from_url(settings.REDIS_URL)
+            redis_client = redis.from_url(settings.DRAGONFLY_URL)
             limiter = RateLimiter(redis_client)
             
             if not await limiter.check_rate_limit(request, max_requests, window_seconds):

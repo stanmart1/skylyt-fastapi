@@ -109,7 +109,7 @@ class PerformanceMonitor:
                 'idle_connections': "SELECT count(*) FROM pg_stat_activity WHERE state = 'idle'",
                 'database_size': "SELECT pg_size_pretty(pg_database_size(current_database()))",
                 'table_stats': """
-                    SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del, n_live_tup, n_dead_tup
+                    SELECT schemaname, relname, n_tup_ins, n_tup_upd, n_tup_del, n_live_tup, n_dead_tup
                     FROM pg_stat_user_tables 
                     WHERE schemaname = 'public'
                     ORDER BY n_live_tup DESC 
@@ -137,7 +137,11 @@ class PerformanceMonitor:
                     elif key == 'database_size':
                         result = db.execute(text(query)).scalar()
                         stats[key] = result
-                    elif key in ['table_stats', 'slow_queries']:
+                    elif key == 'table_stats':
+                        result = db.execute(text(query)).fetchall()
+                        # Map relname to tablename for backward compatibility
+                        stats[key] = [{**dict(row._mapping), 'tablename': row._mapping['relname']} for row in result]
+                    elif key == 'slow_queries':
                         result = db.execute(text(query)).fetchall()
                         stats[key] = [dict(row._mapping) for row in result]
                 except Exception as e:

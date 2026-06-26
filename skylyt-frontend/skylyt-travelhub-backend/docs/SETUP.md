@@ -61,9 +61,9 @@ Update `.env` with your database credentials:
 DATABASE_URL=postgresql://user:password@localhost:5432/skylyt_db
 ```
 
-### Redis Configuration
+### Redis/Dragonfly Configuration
 ```
-REDIS_URL=redis://localhost:6379/0
+DRAGONFLY_URL=redis://localhost:6379/0
 ```
 
 ## Testing
