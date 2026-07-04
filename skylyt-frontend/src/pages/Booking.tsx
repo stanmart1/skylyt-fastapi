@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiService } from '@/services/api';
 import PriceDisplay from '@/components/PriceDisplay';
+import { usePaymentGateways } from '@/hooks/usePaymentGateways';
 
 const Booking = () => {
   const [searchParams] = useSearchParams();
@@ -59,8 +60,7 @@ const Booking = () => {
     numberOfChildren: 0
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
-  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
+  const { gateways: availablePaymentMethods, loading: loadingPaymentMethods } = usePaymentGateways();
 
   useEffect(() => {
     if (user && isAuthenticated) {
@@ -85,32 +85,12 @@ const Booking = () => {
     }
   }, [isAuthenticated]);
 
+  // Set default payment method when available methods load
   useEffect(() => {
-    const fetchAvailablePaymentMethods = async () => {
-      try {
-        setLoadingPaymentMethods(true);
-        const response = await apiService.request('/payment-config/gateways');
-        if (response.success && response.gateways) {
-          // Filter only configured gateways
-          const configured = response.gateways.filter((g: any) => g.configured);
-          setAvailablePaymentMethods(configured);
-          
-          // Set default to first available gateway
-          if (configured.length > 0) {
-            setSelectedPaymentMethod(configured[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch available payment methods:', error);
-        // Fallback to empty array if API fails
-        setAvailablePaymentMethods([]);
-      } finally {
-        setLoadingPaymentMethods(false);
-      }
-    };
-
-    fetchAvailablePaymentMethods();
-  }, []);
+    if (availablePaymentMethods.length > 0) {
+      setSelectedPaymentMethod(availablePaymentMethods[0].id);
+    }
+  }, [availablePaymentMethods]);
 
   useEffect(() => {
     const fetchItemDetails = async () => {
@@ -264,7 +244,9 @@ const Booking = () => {
       case 1:
         return bookingData.firstName && bookingData.lastName && bookingData.email;
       case 2:
-        return bookingData.pickupDate && bookingData.returnDate && bookingData.state && bookingData.pickupLocation;
+        const baseValid = bookingData.pickupDate && bookingData.returnDate && bookingData.state && bookingData.pickupLocation;
+        if (type === 'car') return baseValid && bookingData.destination;
+        return baseValid;
       case 3:
         return true;
       case 4:
@@ -417,14 +399,13 @@ const Booking = () => {
                   {type === 'car' && (
                     <div>
                       <Label htmlFor="destination">
-                        Destination *
+                        Destination
                       </Label>
                       <Input
                         id="destination"
                         value={bookingData.destination}
                         onChange={(e) => handleInputChange('destination', e.target.value)}
                         placeholder="Enter destination"
-                        required
                       />
                     </div>
                   )}

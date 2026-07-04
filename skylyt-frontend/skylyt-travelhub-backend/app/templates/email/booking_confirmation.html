@@ -59,10 +59,12 @@
                         <span style="color: #1e293b;">{{ booking.pickup_location or pickup_location }}</span>
                     </div>
                     {% endif %}
+                    {% if booking.destination or destination %}
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
                         <span style="font-weight: 600; color: #0369a1;">Destination:</span>
                         <span style="color: #1e293b;">{{ booking.destination or destination }}</span>
                     </div>
+                    {% endif %}
                     {% if booking.pickup_time or pickup_time %}
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #bae6fd;">
                         <span style="font-weight: 600; color: #0369a1;">Pickup Time:</span>

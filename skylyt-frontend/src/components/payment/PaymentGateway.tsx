@@ -10,7 +10,7 @@ import { FlutterwavePayment } from './FlutterwavePayment';
 import { PaystackPayment } from './PaystackPayment';
 import { PayPalPayment } from './PayPalPayment';
 import { BankTransferUpload } from './BankTransferUpload';
-import { apiService } from '@/services/api';
+import { usePaymentGateways } from '@/hooks/usePaymentGateways';
 
 interface PaymentGatewayProps {
   amount: number;
@@ -28,8 +28,7 @@ export const PaymentGateway = ({
   onError 
 }: PaymentGatewayProps) => {
   const [selectedGateway, setSelectedGateway] = useState(PAYMENT_GATEWAYS.STRIPE);
-  const [availableGateways, setAvailableGateways] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { gateways: availableGateways, loading, error } = usePaymentGateways();
 
   const allGateways = [
     {
@@ -69,31 +68,12 @@ export const PaymentGateway = ({
     },
   ];
 
+  // Set default to first available gateway when data loads
   useEffect(() => {
-    const fetchAvailableGateways = async () => {
-      try {
-        const response = await apiService.request('/payment-config/gateways');
-        if (response.success && response.gateways) {
-          // Filter only configured gateways
-          const configured = response.gateways.filter((g: any) => g.configured);
-          setAvailableGateways(configured);
-          
-          // Set default to first available gateway if current selection is not available
-          if (configured.length > 0 && !configured.find((g: any) => g.id === selectedGateway)) {
-            setSelectedGateway(configured[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch available gateways:', error);
-        // Fallback to all gateways if API fails
-        setAvailableGateways(allGateways);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAvailableGateways();
-  }, [selectedGateway]);
+    if (availableGateways.length > 0 && !availableGateways.find(g => g.id === selectedGateway)) {
+      setSelectedGateway(availableGateways[0].id);
+    }
+  }, [availableGateways, selectedGateway]);
 
   // Filter gateways to show only configured ones
   const gateways = allGateways.filter(gateway => 
@@ -105,6 +85,16 @@ export const PaymentGateway = ({
 
   if (loading) {
     return <div className="text-center py-8">Loading payment options...</div>;
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-red-600">{error}</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (gateways.length === 0) {
