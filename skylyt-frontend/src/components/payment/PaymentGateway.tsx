@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -10,6 +10,7 @@ import { FlutterwavePayment } from './FlutterwavePayment';
 import { PaystackPayment } from './PaystackPayment';
 import { PayPalPayment } from './PayPalPayment';
 import { BankTransferUpload } from './BankTransferUpload';
+import { apiService } from '@/services/api';
 
 interface PaymentGatewayProps {
   amount: number;
@@ -27,8 +28,10 @@ export const PaymentGateway = ({
   onError 
 }: PaymentGatewayProps) => {
   const [selectedGateway, setSelectedGateway] = useState(PAYMENT_GATEWAYS.STRIPE);
+  const [availableGateways, setAvailableGateways] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const gateways = [
+  const allGateways = [
     {
       id: PAYMENT_GATEWAYS.STRIPE,
       name: 'Credit/Debit Card',
@@ -66,8 +69,55 @@ export const PaymentGateway = ({
     },
   ];
 
+  useEffect(() => {
+    const fetchAvailableGateways = async () => {
+      try {
+        const response = await apiService.request('/payment-config/gateways');
+        if (response.success && response.gateways) {
+          // Filter only configured gateways
+          const configured = response.gateways.filter((g: any) => g.configured);
+          setAvailableGateways(configured);
+          
+          // Set default to first available gateway if current selection is not available
+          if (configured.length > 0 && !configured.find((g: any) => g.id === selectedGateway)) {
+            setSelectedGateway(configured[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch available gateways:', error);
+        // Fallback to all gateways if API fails
+        setAvailableGateways(allGateways);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAvailableGateways();
+  }, [selectedGateway]);
+
+  // Filter gateways to show only configured ones
+  const gateways = allGateways.filter(gateway => 
+    availableGateways.find(ag => ag.id === gateway.id)
+  );
+
   const selectedGatewayConfig = gateways.find(g => g.id === selectedGateway);
   const PaymentComponent = selectedGatewayConfig?.component;
+
+  if (loading) {
+    return <div className="text-center py-8">Loading payment options...</div>;
+  }
+
+  if (gateways.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-gray-600">
+            No payment gateways are currently configured. Please contact support.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -258,7 +258,7 @@ async def get_driver_bookings(
             "start_date": booking.start_date,
             "end_date": booking.end_date,
             "pickup_location": booking.booking_data.get("pickup_location") if booking.booking_data else None,
-            "dropoff_location": booking.booking_data.get("dropoff_location") if booking.booking_data else None,
+            "destination": booking.booking_data.get("destination") if booking.booking_data else None,
             "special_requests": booking.special_requests,
             "created_at": booking.created_at
         })

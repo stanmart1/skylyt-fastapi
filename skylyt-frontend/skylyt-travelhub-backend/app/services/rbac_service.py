@@ -179,7 +179,7 @@ class RBACService:
             ("driver.view_assigned_trips", "driver", "view_assigned_trips", "View only assigned bookings and trips"),
             ("driver.update_trip_status", "driver", "update_trip_status", "Update trip status (Pending → En Route → In Progress → Completed → Cancelled)"),
             ("driver.view_customer_contact", "driver", "view_customer_contact", "View customer contact details for assigned trips only"),
-            ("driver.view_trip_details", "driver", "view_trip_details", "Access pickup and drop-off details for assigned trips"),
+            ("driver.view_trip_details", "driver", "view_trip_details", "Access pickup and destination details for assigned trips"),
             ("driver.receive_notifications", "driver", "receive_notifications", "Receive trip assignment notifications via app/email/SMS"),
             ("driver.view_dashboard", "driver", "view_dashboard", "Access driver dashboard interface"),
             

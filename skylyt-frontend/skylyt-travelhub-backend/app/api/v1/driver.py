@@ -63,7 +63,7 @@ def serialize_trip(booking) -> dict:
         "start_date": booking.start_date.isoformat() if booking.start_date else None,
         "end_date": booking.end_date.isoformat() if booking.end_date else None,
         "pickup_location": booking.booking_data.get('pickup_location') if booking.booking_data else None,
-        "dropoff_location": booking.booking_data.get('dropoff_location') if booking.booking_data else None,
+        "destination": booking.booking_data.get('destination') if booking.booking_data else None,
         "special_requests": booking.special_requests,
         "total_amount": float(booking.total_amount) if booking.total_amount else 0,
         "currency": booking.currency,

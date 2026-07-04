@@ -332,8 +332,8 @@ const BookingManagement = () => {
                 {editingBooking?.booking_data && (
                   <div className="text-sm text-gray-600 mt-1">
                     <p>Pickup Location: {JSON.parse(editingBooking.booking_data).pickup_location || 'N/A'}</p>
-                    {JSON.parse(editingBooking.booking_data).dropoff_location && (
-                      <p>Dropoff Location: {JSON.parse(editingBooking.booking_data).dropoff_location}</p>
+                    {JSON.parse(editingBooking.booking_data).destination && (
+                      <p>Destination: {JSON.parse(editingBooking.booking_data).destination}</p>
                     )}
                   </div>
                 )}

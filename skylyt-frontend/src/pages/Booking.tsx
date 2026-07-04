@@ -17,7 +17,8 @@ import {
   Star,
   ArrowLeft,
   Check,
-  Clock
+  Clock,
+  Building2
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +48,7 @@ const Booking = () => {
     returnDate: '',
     state: '',
     pickupLocation: '',
-    dropoffLocation: '',
+    destination: '',
     specialRequests: '',
     cardNumber: '',
     expiryDate: '',
@@ -58,6 +59,8 @@ const Booking = () => {
     numberOfChildren: 0
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
 
   useEffect(() => {
     if (user && isAuthenticated) {
@@ -81,6 +84,33 @@ const Booking = () => {
       }
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const fetchAvailablePaymentMethods = async () => {
+      try {
+        setLoadingPaymentMethods(true);
+        const response = await apiService.request('/payment-config/gateways');
+        if (response.success && response.gateways) {
+          // Filter only configured gateways
+          const configured = response.gateways.filter((g: any) => g.configured);
+          setAvailablePaymentMethods(configured);
+          
+          // Set default to first available gateway
+          if (configured.length > 0) {
+            setSelectedPaymentMethod(configured[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch available payment methods:', error);
+        // Fallback to empty array if API fails
+        setAvailablePaymentMethods([]);
+      } finally {
+        setLoadingPaymentMethods(false);
+      }
+    };
+
+    fetchAvailablePaymentMethods();
+  }, []);
 
   useEffect(() => {
     const fetchItemDetails = async () => {
@@ -187,7 +217,7 @@ const Booking = () => {
             guest_email: bookingData.email,
             special_requests: bookingData.specialRequests,
             pickup_location: bookingData.pickupLocation,
-            dropoff_location: bookingData.dropoffLocation,
+            destination: bookingData.destination,
             number_of_guests: bookingData.numberOfGuests,
             number_of_children: bookingData.numberOfChildren
           },
@@ -386,14 +416,15 @@ const Booking = () => {
                   </div>
                   {type === 'car' && (
                     <div>
-                      <Label htmlFor="dropoffLocation">
-                        Dropoff Location (Optional)
+                      <Label htmlFor="destination">
+                        Destination *
                       </Label>
                       <Input
-                        id="dropoffLocation"
-                        value={bookingData.dropoffLocation}
-                        onChange={(e) => handleInputChange('dropoffLocation', e.target.value)}
-                        placeholder="Enter dropoff location"
+                        id="destination"
+                        value={bookingData.destination}
+                        onChange={(e) => handleInputChange('destination', e.target.value)}
+                        placeholder="Enter destination"
+                        required
                       />
                     </div>
                   )}
@@ -480,110 +511,51 @@ const Booking = () => {
 
             {step === 4 && (
               <>
-                <div className="grid gap-4">
-                  <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        className="w-4 h-4" 
-                        checked={selectedPaymentMethod === 'stripe'}
-                        onChange={() => setSelectedPaymentMethod('stripe')}
-                      />
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <CreditCard className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Stripe</h3>
-                        <p className="text-sm text-gray-600">Pay securely with credit/debit card</p>
-                      </div>
-                    </div>
+                {loadingPaymentMethods ? (
+                  <div className="text-center py-8">Loading payment options...</div>
+                ) : availablePaymentMethods.length === 0 ? (
+                  <div className="text-center py-8 text-gray-600">
+                    No payment gateways are currently configured. Please contact support.
                   </div>
-
-                  <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        className="w-4 h-4" 
-                        checked={selectedPaymentMethod === 'flutterwave'}
-                        onChange={() => setSelectedPaymentMethod('flutterwave')}
-                      />
-                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 bg-orange-600 rounded text-white text-xs flex items-center justify-center font-bold">
-                          F
+                ) : (
+                  <div className="grid gap-4">
+                    {availablePaymentMethods.map((method) => (
+                      <div key={method.id} className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            className="w-4 h-4" 
+                            checked={selectedPaymentMethod === method.id}
+                            onChange={() => setSelectedPaymentMethod(method.id)}
+                          />
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            method.id === 'stripe' ? 'bg-blue-100' :
+                            method.id === 'flutterwave' ? 'bg-orange-100' :
+                            method.id === 'paystack' ? 'bg-teal-100' :
+                            method.id === 'paypal' ? 'bg-yellow-100' : 'bg-gray-100'
+                          }`}>
+                            {method.id === 'stripe' && <CreditCard className="h-6 w-6 text-blue-600" />}
+                            {method.id === 'flutterwave' && (
+                              <div className="w-6 h-6 bg-orange-600 rounded text-white text-xs flex items-center justify-center font-bold">F</div>
+                            )}
+                            {method.id === 'paystack' && (
+                              <div className="w-6 h-6 bg-teal-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>
+                            )}
+                            {method.id === 'paypal' && (
+                              <div className="w-6 h-6 bg-yellow-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>
+                            )}
+                            {method.id === 'bank_transfer' && <Building2 className="h-6 w-6 text-gray-600" />}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{method.name}</h3>
+                            <p className="text-sm text-gray-600">{method.description}</p>
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold">Flutterwave</h3>
-                        <p className="text-sm text-gray-600">Pay with Flutterwave gateway</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-
-                  <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        className="w-4 h-4" 
-                        checked={selectedPaymentMethod === 'paystack'}
-                        onChange={() => setSelectedPaymentMethod('paystack')}
-                      />
-                      <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 bg-teal-600 rounded text-white text-xs flex items-center justify-center font-bold">
-                          P
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Paystack</h3>
-                        <p className="text-sm text-gray-600">Pay with Paystack gateway</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        className="w-4 h-4" 
-                        checked={selectedPaymentMethod === 'paypal'}
-                        onChange={() => setSelectedPaymentMethod('paypal')}
-                      />
-                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 bg-yellow-600 rounded text-white text-xs flex items-center justify-center font-bold">
-                          P
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">PayPal</h3>
-                        <p className="text-sm text-gray-600">Pay with your PayPal account</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        className="w-4 h-4" 
-                        checked={selectedPaymentMethod === 'bank_transfer'}
-                        onChange={() => setSelectedPaymentMethod('bank_transfer')}
-                      />
-                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 bg-green-600 rounded text-white text-xs flex items-center justify-center font-bold">
-                          B
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Bank Transfer</h3>
-                        <p className="text-sm text-gray-600">Direct bank transfer</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
                 
                 {selectedPaymentMethod && (
                   <div className="mt-6">

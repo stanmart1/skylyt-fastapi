@@ -11,7 +11,7 @@ class CarRentalAPIBase(ABC):
         self.base_url = base_url
     
     @abstractmethod
-    def search_cars(self, pickup_location: str, dropoff_location: str, 
+    def search_cars(self, pickup_location: str, destination: str, 
                    pickup_date: datetime, dropoff_date: datetime, **filters) -> List[Dict[str, Any]]:
         """Search for available cars"""
         pass
