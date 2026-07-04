@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -10,6 +10,7 @@ import { FlutterwavePayment } from './FlutterwavePayment';
 import { PaystackPayment } from './PaystackPayment';
 import { PayPalPayment } from './PayPalPayment';
 import { BankTransferUpload } from './BankTransferUpload';
+import { usePaymentGateways } from '@/hooks/usePaymentGateways';
 
 interface PaymentGatewayProps {
   amount: number;
@@ -27,8 +28,9 @@ export const PaymentGateway = ({
   onError 
 }: PaymentGatewayProps) => {
   const [selectedGateway, setSelectedGateway] = useState(PAYMENT_GATEWAYS.STRIPE);
+  const { gateways: availableGateways, loading, error } = usePaymentGateways();
 
-  const gateways = [
+  const allGateways = [
     {
       id: PAYMENT_GATEWAYS.STRIPE,
       name: 'Credit/Debit Card',
@@ -66,8 +68,46 @@ export const PaymentGateway = ({
     },
   ];
 
+  // Set default to first available gateway when data loads
+  useEffect(() => {
+    if (availableGateways.length > 0 && !availableGateways.find(g => g.id === selectedGateway)) {
+      setSelectedGateway(availableGateways[0].id);
+    }
+  }, [availableGateways, selectedGateway]);
+
+  // Filter gateways to show only configured ones
+  const gateways = allGateways.filter(gateway => 
+    availableGateways.find(ag => ag.id === gateway.id)
+  );
+
   const selectedGatewayConfig = gateways.find(g => g.id === selectedGateway);
   const PaymentComponent = selectedGatewayConfig?.component;
+
+  if (loading) {
+    return <div className="text-center py-8">Loading payment options...</div>;
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-red-600">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (gateways.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <p className="text-center text-gray-600">
+            No payment gateways are currently configured. Please contact support.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

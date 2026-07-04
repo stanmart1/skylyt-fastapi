@@ -271,7 +271,7 @@ async def get_featured_cars(
 
 @router.get("/locations")
 def get_pickup_locations():
-    """Get available pickup/dropoff locations"""
+    """Get available pickup/destination locations"""
     return {
         "locations": [
             {"city": "New York", "country": "USA", "airport_code": "JFK"},

@@ -12,7 +12,7 @@ class HertzAPI(CarRentalAPIBase):
     def __init__(self, api_key: str):
         super().__init__(api_key, "https://api.hertz.com/v1")
     
-    def search_cars(self, pickup_location: str, dropoff_location: str,
+    def search_cars(self, pickup_location: str, destination: Optional[str] = None,
                    pickup_date: datetime, dropoff_date: datetime, **filters) -> List[Dict[str, Any]]:
         """Search cars via Hertz API"""
         try:

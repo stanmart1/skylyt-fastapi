@@ -6,7 +6,7 @@ from .search import LocationSearch, DateRange, PaginationParams
 
 class CarSearchRequest(BaseModel):
     pickup_location: LocationSearch
-    dropoff_location: Optional[LocationSearch] = None
+    destination: Optional[LocationSearch] = None
     dates: DateRange
     driver_age: int = 25
     car_type: Optional[str] = None

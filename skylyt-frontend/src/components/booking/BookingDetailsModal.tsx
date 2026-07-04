@@ -300,10 +300,10 @@ const BookingDetailsModal = ({ booking, isOpen, onClose }: BookingDetailsModalPr
                       <span className="font-medium">{booking.booking_data.pickup_location}</span>
                     </div>
                   )}
-                  {booking.booking_data.dropoff_location && (
+                  {booking.booking_data.destination && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Dropoff Location:</span>
-                      <span className="font-medium">{booking.booking_data.dropoff_location}</span>
+                      <span className="text-gray-600">Destination:</span>
+                      <span className="font-medium">{booking.booking_data.destination}</span>
                     </div>
                   )}
                 </div>

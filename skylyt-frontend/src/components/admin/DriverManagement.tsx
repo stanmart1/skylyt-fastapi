@@ -49,7 +49,7 @@ interface Trip {
   start_date: string;
   end_date: string;
   pickup_location?: string;
-  dropoff_location?: string;
+  destination?: string;
   special_requests?: string;
   created_at: string;
 }
@@ -948,10 +948,10 @@ const DriverManagement: React.FC = () => {
                             <span className="text-xs">{trip.pickup_location}</span>
                           </div>
                         )}
-                        {trip.dropoff_location && (
+                        {trip.destination && (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            <span className="text-xs">→ {trip.dropoff_location}</span>
+                            <span className="text-xs">→ {trip.destination}</span>
                           </div>
                         )}
                       </div>

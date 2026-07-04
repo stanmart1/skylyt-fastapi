@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class CarRentalAPIBase(ABC):
         self.base_url = base_url
     
     @abstractmethod
-    def search_cars(self, pickup_location: str, dropoff_location: str, 
+    def search_cars(self, pickup_location: str, destination: Optional[str] = None, 
                    pickup_date: datetime, dropoff_date: datetime, **filters) -> List[Dict[str, Any]]:
         """Search for available cars"""
         pass

@@ -62,7 +62,7 @@ interface Trip {
   start_date: string;
   end_date: string;
   pickup_location?: string;
-  dropoff_location?: string;
+  destination?: string;
   special_requests?: string;
   total_amount: number;
   currency: string;
@@ -487,7 +487,7 @@ const DriverDashboard = () => {
                           </div>
                         </div>
                         
-                        {(trip.pickup_location || trip.dropoff_location) && (
+                        {(trip.pickup_location || trip.destination) && (
                           <div className="mt-3 flex items-center gap-4 text-sm">
                             {trip.pickup_location && (
                               <div className="flex items-center gap-1">
@@ -495,10 +495,10 @@ const DriverDashboard = () => {
                                 <span>{trip.pickup_location}</span>
                               </div>
                             )}
-                            {trip.dropoff_location && (
+                            {trip.destination && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3 text-red-500" />
-                                <span>→ {trip.dropoff_location}</span>
+                                <span>→ {trip.destination}</span>
                               </div>
                             )}
                           </div>

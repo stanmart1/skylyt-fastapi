@@ -41,6 +41,7 @@ def search_bundles(
     # Search cars
     car_search = CarSearchRequest(
         pickup_location=LocationSearch(city=city),
+        destination=LocationSearch(city=city),
         dates=DateRange(
             start_date=datetime.strptime(check_in, "%Y-%m-%d").date(),
             end_date=datetime.strptime(check_out, "%Y-%m-%d").date()
