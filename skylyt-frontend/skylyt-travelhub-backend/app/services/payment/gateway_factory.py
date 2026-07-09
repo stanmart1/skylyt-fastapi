@@ -64,7 +64,7 @@ class PaymentGatewayFactory:
         """Get list of available payment gateways based on configured keys"""
         settings = db.query(Settings).first()
         if not settings:
-            return []
+            return ['bank_transfer']  # Always include bank transfer as fallback
         
         available = []
         
@@ -79,5 +79,8 @@ class PaymentGatewayFactory:
         
         if settings.paypal_client_id and settings.paypal_client_secret:
             available.append('paypal')
+        
+        # Bank transfer is always available as it doesn't require API keys
+        available.append('bank_transfer')
         
         return available

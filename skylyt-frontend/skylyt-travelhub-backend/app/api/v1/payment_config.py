@@ -31,7 +31,8 @@ def get_payment_gateways(db: Session = Depends(get_db)):
             'stripe': {'name': 'Stripe', 'description': 'Credit/Debit Cards', 'type': 'card'},
             'paystack': {'name': 'Paystack', 'description': 'Nigerian Payment Gateway', 'type': 'redirect'},
             'flutterwave': {'name': 'Flutterwave', 'description': 'African Payment Gateway', 'type': 'redirect'},
-            'paypal': {'name': 'PayPal', 'description': 'PayPal Account', 'type': 'redirect'}
+            'paypal': {'name': 'PayPal', 'description': 'PayPal Account', 'type': 'redirect'},
+            'bank_transfer': {'name': 'Bank Transfer', 'description': 'Direct bank transfer', 'type': 'manual'}
         }
         
         configured_gateways = []
@@ -66,7 +67,8 @@ def get_payment_gateways(db: Session = Depends(get_db)):
                 {'id': 'stripe', 'name': 'Stripe', 'description': 'Credit/Debit Cards', 'configured': False},
                 {'id': 'paystack', 'name': 'Paystack', 'description': 'Nigerian Payment Gateway', 'configured': False},
                 {'id': 'flutterwave', 'name': 'Flutterwave', 'description': 'African Payment Gateway', 'configured': False},
-                {'id': 'paypal', 'name': 'PayPal', 'description': 'PayPal Account', 'configured': False}
+                {'id': 'paypal', 'name': 'PayPal', 'description': 'PayPal Account', 'configured': False},
+                {'id': 'bank_transfer', 'name': 'Bank Transfer', 'description': 'Direct bank transfer', 'configured': False}
             ]
         }
 

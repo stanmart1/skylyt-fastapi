@@ -158,7 +158,8 @@ class PaymentProcessor:
                 'stripe': {'name': 'Stripe', 'description': 'Credit/Debit Cards'},
                 'paystack': {'name': 'Paystack', 'description': 'Nigerian Payment Gateway'},
                 'flutterwave': {'name': 'Flutterwave', 'description': 'African Payment Gateway'},
-                'paypal': {'name': 'PayPal', 'description': 'PayPal Account'}
+                'paypal': {'name': 'PayPal', 'description': 'PayPal Account'},
+                'bank_transfer': {'name': 'Bank Transfer', 'description': 'Direct bank transfer'}
             }
             
             available_gateways = []
